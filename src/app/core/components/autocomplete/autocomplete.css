@@ -1,0 +1,44 @@
+:host {
+  display: block;
+}
+
+.autocomplete-wrapper {
+  position: relative;
+}
+
+.autocomplete-dropdown {
+  position: fixed;
+  z-index: 10000;
+  max-height: 160px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  margin-top: 2px;
+}
+
+.autocomplete-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.autocomplete-item:last-child {
+  border-bottom: none;
+}
+
+.autocomplete-item.highlighted {
+  background: #eef2ff;
+  color: #667eea;
+}
+
+.autocomplete-item:hover {
+  background: #f0f4ff;
+  color: #667eea;
+}
+
+.input-invalid {
+  border-color: #e74c3c;
+}

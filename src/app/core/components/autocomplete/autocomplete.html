@@ -1,0 +1,32 @@
+<div #wrapper class="autocomplete-wrapper">
+  <input
+    type="text"
+    class="grid-input"
+    [class.input-invalid]="invalid()"
+    [placeholder]="placeholder()"
+    [(ngModel)]="value"
+    (input)="onInput()"
+    (focus)="onFocus()"
+    (keydown)="onKeydown($event)"
+    (blur)="handleBlur()"
+  />
+  @if (open() && filtered().length > 0 && position()) {
+    <div
+      class="autocomplete-dropdown"
+      [style.top.px]="position()?.top"
+      [style.left.px]="position()?.left"
+      [style.width.px]="position()?.width"
+    >
+      @for (item of filtered(); track item; let i = $index) {
+        <div
+          class="autocomplete-item"
+          [class.highlighted]="highlight() === i"
+          (mousedown)="$event.preventDefault()"
+          (click)="select(item)"
+        >
+          {{ item }}
+        </div>
+      }
+    </div>
+  }
+</div>

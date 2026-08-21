@@ -1,0 +1,9 @@
+@if (toast.message()) {
+  <div
+    class="toast"
+    [class.toast-success]="toast.type() === 'success'"
+    [class.toast-error]="toast.type() === 'error'"
+  >
+    {{ toast.message() }}
+  </div>
+}

@@ -1,0 +1,67 @@
+<div class="card">
+  <div class="card-header">
+    <h3>{{ 'buyer.txn.history' | i18n }}</h3>
+  </div>
+  <div class="card-body">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="histBuyerName">{{ 'buyer.name' | i18n }} <span class="required">*</span></label>
+        <app-autocomplete
+          [items]="master().buyers"
+          [invalid]="buyerInvalid()"
+          [(value)]="buyer"
+          (onSelect)="buyer.set($event)"
+          (blur)="validateBuyer()"
+        />
+        @if (buyerInvalid()) {
+          <span class="field-error">{{ 'txn.error.buyer.notfound' | i18n }}</span>
+        }
+      </div>
+      <div class="form-group">
+        <label for="histFromDate">{{ 'txn.from.date' | i18n }} <span class="required">*</span></label>
+        <input id="histFromDate" name="histFromDate" type="date" [(ngModel)]="fromDate" required />
+      </div>
+      <div class="form-group">
+        <label for="histToDate">{{ 'txn.to.date' | i18n }} <span class="required">*</span></label>
+        <input id="histToDate" name="histToDate" type="date" [(ngModel)]="toDate" required />
+      </div>
+      <div class="form-group form-actions-inline">
+        <button type="button" class="btn btn-primary" [disabled]="loading()" (click)="search()">
+          <span class="material-symbols-rounded">search</span>
+          {{ 'btn.search' | i18n }}
+        </button>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th style="width: 50px">{{ 'txn.sno' | i18n }}</th>
+            <th style="width: 130px">{{ 'txn.date' | i18n }}</th>
+            <th>{{ 'buyer.name' | i18n }}</th>
+            <th class="ob-amount-col">{{ 'buyer.txn.amount.received' | i18n }}</th>
+            <th class="ob-amount-col">{{ 'buyer.txn.discount' | i18n }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (txn of transactions(); track txn.buyerTransactionId; let i = $index) {
+            <tr>
+              <td>{{ i + 1 }}</td>
+              <td>{{ txn.transactionDate }}</td>
+              <td>{{ txn.buyerName }}</td>
+              <td class="ob-amount-col">{{ formatCurrency(txn.cashPaidAmt) }}</td>
+              <td class="ob-amount-col">{{ formatCurrency(txn.disAmt) }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="no-records">
+                {{ searched() ? ('msg.no.records' | i18n) : '' }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

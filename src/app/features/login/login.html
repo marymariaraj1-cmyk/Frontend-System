@@ -1,0 +1,29 @@
+<div class="login-body">
+  <div class="login-container">
+    <div class="login-box">
+      <div class="login-lang">
+        <button type="button" class="lang-btn" [class.active]="i18n.lang() === 'en'" (click)="switchLang('en')">EN</button>
+        <button type="button" class="lang-btn" [class.active]="i18n.lang() === 'ta'" (click)="switchLang('ta')">த</button>
+      </div>
+      <h2>{{ 'login.title' | i18n }}</h2>
+      <p class="subtitle">{{ 'login.subtitle' | i18n }}</p>
+      <form (ngSubmit)="onSubmit()">
+        <div class="form-group">
+          <label for="username">{{ 'login.username' | i18n }}</label>
+          <input id="username" name="username" type="text" [(ngModel)]="username" autocomplete="username" />
+        </div>
+        <div class="form-group">
+          <label for="password">{{ 'login.password' | i18n }}</label>
+          <input id="password" name="password" type="password" [(ngModel)]="password" autocomplete="current-password" />
+        </div>
+        @if (error) {
+          <div class="error-msg">{{ error }}</div>
+        }
+        <button type="submit" class="btn btn-primary btn-block" [disabled]="submitting">
+          <span class="material-symbols-rounded">login</span>
+          {{ 'login.submit' | i18n }}
+        </button>
+      </form>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,24 @@
+.login-lang {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.lang-btn {
+  border: 1px solid #d0d7de;
+  background: #fff;
+  color: #333;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lang-btn.active {
+  background: #667eea;
+  color: #fff;
+  border-color: #667eea;
+}

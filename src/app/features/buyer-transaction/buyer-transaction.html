@@ -1,0 +1,94 @@
+<div class="card">
+  <div class="card-header">
+    <h3>{{ 'buyer.txn.details' | i18n }}</h3>
+  </div>
+  <div class="card-body">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="txnBuyerName">{{ 'buyer.name' | i18n }} <span class="required">*</span></label>
+        <app-autocomplete
+          [items]="master().buyers"
+          [invalid]="buyerInvalid()"
+          [(value)]="buyer"
+          (onSelect)="onBuyerSelected($event)"
+          (blur)="validateBuyer()"
+        />
+        @if (buyerInvalid()) {
+          <span class="field-error">{{ 'txn.error.buyer.notfound' | i18n }}</span>
+        }
+      </div>
+      <div class="form-group">
+        <label for="txnDate">{{ 'txn.date' | i18n }} <span class="required">*</span></label>
+        <input id="txnDate" name="txnDate" type="date" [(ngModel)]="txnDate" required />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="openingBalance">{{ 'buyer.txn.opening.balance' | i18n }}</label>
+        <div class="input-with-icon">
+          <span class="input-icon">&#8377;</span>
+          <input
+            id="openingBalance"
+            name="openingBalance"
+            type="text"
+            readonly
+            [value]="formatCurrency(openingBalance())"
+          />
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="closingBalance">{{ 'buyer.txn.closing.balance' | i18n }}</label>
+        <div class="input-with-icon">
+          <span class="input-icon">&#8377;</span>
+          <input
+            id="closingBalance"
+            name="closingBalance"
+            type="text"
+            readonly
+            [value]="formatCurrency(closingBalance())"
+          />
+        </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="amountReceived">{{ 'buyer.txn.amount.received' | i18n }}</label>
+        <div class="input-with-icon">
+          <span class="input-icon">&#8377;</span>
+          <input
+            id="amountReceived"
+            name="amountReceived"
+            type="text"
+            autocomplete="off"
+            [ngModel]="amountReceived()"
+            (ngModelChange)="sanitizeAmountReceived($event)"
+          />
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="discountAmt">{{ 'buyer.txn.discount' | i18n }}</label>
+        <div class="input-with-icon">
+          <span class="input-icon">&#8377;</span>
+          <input
+            id="discountAmt"
+            name="discountAmt"
+            type="text"
+            autocomplete="off"
+            [ngModel]="discountAmt()"
+            (ngModelChange)="sanitizeDiscount($event)"
+          />
+        </div>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="save()">
+        <span class="material-symbols-rounded">save</span>
+        {{ 'btn.save' | i18n }}
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="clearForm()">
+        <span class="material-symbols-rounded">cleaning_services</span>
+        {{ 'btn.clear' | i18n }}
+      </button>
+    </div>
+  </div>
+</div>

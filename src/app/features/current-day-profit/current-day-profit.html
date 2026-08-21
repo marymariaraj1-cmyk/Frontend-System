@@ -1,0 +1,139 @@
+<div class="card">
+  <div class="card-header">
+    <h3>{{ 'current.day.total.commission.title' | i18n }}</h3>
+  </div>
+  <div class="card-body">
+    <div class="form-actions">
+      <button type="button" class="btn btn-primary" [disabled]="loading()" (click)="search()">
+        <span class="material-symbols-rounded">calculate</span>
+        {{ 'current.day.total.commission.generate.btn' | i18n }}
+      </button>
+    </div>
+  </div>
+</div>
+
+@if (searched()) {
+  <div class="card report-card">
+    <div class="card-header">
+      <h3>{{ 'current.day.total.commission.grid.title' | i18n }}</h3>
+    </div>
+    <div class="card-body">
+      <div class="table-container">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>{{ 'current.day.total.commission.col.farmer.name' | i18n }}</th>
+              <th class="amount-col">{{ 'current.day.total.commission.col.total.sales.amt' | i18n }}</th>
+              <th class="amount-col">{{ 'current.day.total.commission.col.total.net.amt' | i18n }}</th>
+              <th class="amount-col">{{ 'current.day.total.commission.col.debit.amt' | i18n }}</th>
+              <th class="amount-col">{{ 'current.day.total.commission.col.final.amt' | i18n }}</th>
+              <th class="amount-col">{{ 'current.day.total.commission.col.commission.amt' | i18n }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of rows(); track $index) {
+              <tr>
+                <td>
+                  <span class="material-symbols-rounded farmer-icon">agriculture</span>
+                  {{ row.farmerName }}
+                </td>
+                <td class="amount-col">{{ formatCurrency(row.totalSalesAmt) }}</td>
+                <td class="amount-col">{{ formatCurrency(row.totalNetAmt) }}</td>
+                <td class="amount-col">{{ formatCurrency(row.debitAmt) }}</td>
+                <td class="amount-col">{{ formatCurrency(row.finalAmt) }}</td>
+                <td class="amount-col">
+                  {{ formatCurrency(row.commissionAmt) }}
+                  <a class="view-link" (click)="openSalesDetail(row.farmerId, row.farmerName)" title="View">
+                    <span class="material-symbols-rounded view-icon">visibility</span>
+                  </a>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="no-records">
+                  {{ 'current.day.total.commission.no.records' | i18n }}
+                </td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr class="report-footer-row">
+              <td>{{ 'report.total' | i18n }}</td>
+              <td class="amount-col">{{ formatCurrency(totalSales()) }}</td>
+              <td class="amount-col">{{ formatCurrency(totalNet()) }}</td>
+              <td class="amount-col">{{ formatCurrency(totalDebit()) }}</td>
+              <td class="amount-col">{{ formatCurrency(totalFinal()) }}</td>
+              <td class="amount-col">
+                {{ formatCurrency(totalCommission()) }}
+                @if (rows().length > 0) {
+                  <a class="view-link" (click)="openSalesDetail('', '')" title="View">
+                    <span class="material-symbols-rounded view-icon">visibility</span>
+                  </a>
+                }
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+}
+
+@if (popupOpen()) {
+  <div class="report-popup-overlay" (click)="onOverlayClick($event)">
+    <div class="report-popup" appDraggable>
+      <div class="report-popup-header">
+        <h3>{{ popupTitle() }}</h3>
+        <button class="report-popup-close" (click)="closePopup()">&times;</button>
+      </div>
+      <div class="report-popup-body">
+        <div class="table-container">
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>{{ 'current.day.total.commission.popup.col.farmer.name' | i18n }}</th>
+                <th>{{ 'current.day.total.commission.popup.col.customer.name' | i18n }}</th>
+                <th>{{ 'current.day.total.commission.popup.col.flower.type' | i18n }}</th>
+                <th class="amount-col">{{ 'current.day.total.commission.popup.col.quantity' | i18n }}</th>
+                <th class="amount-col">{{ 'current.day.total.commission.popup.col.rate' | i18n }}</th>
+                <th class="amount-col">{{ 'current.day.total.commission.popup.col.amount' | i18n }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of popupItems(); track $index) {
+                <tr>
+                  <td>{{ item.farmerName }}</td>
+                  <td>{{ item.custName }}</td>
+                  <td>{{ item.flowerType }}</td>
+                  <td class="amount-col">{{ formatDecimal(item.totalWeight) }}</td>
+                  <td class="amount-col">{{ formatCurrency(item.perKgRate) }}</td>
+                  <td class="amount-col">{{ formatCurrency(item.price) }}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="6" class="no-records">
+                    {{ popupLoading() ? '' : ('msg.no.records' | i18n) }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr class="report-footer-row">
+                <td colspan="5" class="amount-col">
+                  {{ 'current.day.total.commission.popup.total' | i18n }}
+                </td>
+                <td class="amount-col">{{ formatCurrency(popupTotal()) }}</td>
+              </tr>
+              <tr class="report-footer-row">
+                <td colspan="5" class="amount-col">
+                  {{ 'current.day.total.commission.popup.commission' | i18n }}
+                </td>
+                <td class="amount-col">{{ formatCurrency(popupCommission()) }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+}

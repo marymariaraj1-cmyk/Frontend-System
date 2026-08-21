@@ -1,0 +1,122 @@
+<div class="card">
+  <div class="card-header">
+    <h3>{{ 'fac.title' | i18n }}</h3>
+  </div>
+  <div class="card-body">
+    <div class="form-row">
+      <div class="form-group">
+        <label>{{ 'farmer.name' | i18n }} <span class="required">*</span></label>
+        <app-autocomplete
+          [items]="farmerNames()"
+          [invalid]="farmerInvalid()"
+          [(value)]="farmer"
+          (onSelect)="onFarmerSelected($event)"
+          (blur)="validateFarmer()"
+          [placeholder]="'opening.balance.config.farmer.placeholder' | i18n"
+        />
+        @if (farmerInvalid()) {
+          <span class="field-error">{{ 'txn.error.farmer.notfound' | i18n }}</span>
+        }
+      </div>
+      <div class="form-group form-actions-inline">
+        <button
+          type="button"
+          class="btn btn-primary"
+          [disabled]="loading()"
+          (click)="viewActiveLedger()"
+        >
+          <span class="material-symbols-rounded">visibility</span>
+          {{ 'fac.view.active.ledger' | i18n }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+@if (loaded()) {
+  <div class="card">
+    <div class="card-header">
+      <h3>{{ 'fac.active.ledger.rows' | i18n }}</h3>
+    </div>
+    <div class="card-body">
+      @if (activeRows().length === 0) {
+        <p class="no-data">{{ 'fac.no.active.rows' | i18n }}</p>
+      } @else {
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="left">#</th>
+                <th class="left">{{ 'ledger.report.col.sales.date' | i18n }}</th>
+                <th class="right">{{ 'fac.col.credit.or.sale' | i18n }}</th>
+                <th class="right">{{ 'fac.col.debit.or.advance' | i18n }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of activeRows(); track $index) {
+                <tr>
+                  <td class="left">{{ $index + 1 }}</td>
+                  <td class="left">{{ row.salesDate }}</td>
+                  <td class="right">{{ formatCurrency(row.creditAmt) }}</td>
+                  <td class="right">{{ formatCurrency(row.debitAmt) }}</td>
+                </tr>
+              }
+              <tr class="total-row">
+                <td class="left"></td>
+                <td class="left"><strong>{{ 'fac.total' | i18n }}</strong></td>
+                <td class="right"><strong>{{ formatCurrency(totalCredit()) }}</strong></td>
+                <td class="right"><strong>{{ formatCurrency(totalDebit()) }}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="model-buttons">
+          <button type="button" class="btn btn-secondary" (click)="calculate('model1')" [disabled]="loading()">
+            {{ 'fac.model.1.button' | i18n }}
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="calculate('model2')" [disabled]="loading()">
+            {{ 'fac.model.2.button' | i18n }}
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="calculate('model3')" [disabled]="loading()">
+            {{ 'fac.model.3.button' | i18n }}
+          </button>
+        </div>
+
+        @if (modelResult()) {
+          <div class="calc-result">
+            <h3>{{ modelResult()!.label }}</h3>
+            <table class="calc-table">
+              @for (line of modelResult()!.lines; track $index) {
+                <tr>
+                  <td class="lbl">{{ line.label }}</td>
+                  <td class="amt">{{ formatCurrency(line.value) }}</td>
+                </tr>
+              }
+              <tr class="final">
+                <td class="lbl">{{ modelResult()!.finalLabel }}</td>
+                <td class="amt">{{ formatCurrency(modelResult()!.finalAmount) }}</td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="form-actions">
+            <button
+              type="button"
+              class="btn btn-primary"
+              [disabled]="updating()"
+              (click)="updateLedger()"
+            >
+              <span class="material-symbols-rounded">save</span>
+              {{ 'fac.update.ledger' | i18n }}
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="printReceipt()">
+              <span class="material-symbols-rounded">print</span>
+              {{ 'btn.print' | i18n }}
+            </button>
+          </div>
+        }
+      }
+    </div>
+  </div>
+}

@@ -1,0 +1,259 @@
+<div class="dashboard-welcome">
+  <h2>{{ 'dashboard.welcome' | i18n }} {{ auth.user()?.shopName }}</h2>
+  <p>{{ 'app.name' | i18n }}</p>
+</div>
+
+@if (data(); as d) {
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-green">
+      <div class="kpi-icon"><span class="material-symbols-rounded">payments</span></div>
+      <div class="kpi-body">
+        <div class="kpi-label">{{ 'dashboard.kpi.today.sales' | i18n }}</div>
+        <div class="kpi-value">{{ formatCurrency(d.kpis.todaySales) }}</div>
+        <div class="kpi-sub">
+          @if (d.kpis.yesterdaySales > 0) {
+            {{ 'dashboard.kpi.vs.yesterday' | i18n }}: {{ formatCurrency(d.kpis.yesterdaySales) }}
+          } @else {
+            {{ 'dashboard.kpi.no.previous' | i18n }}
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="kpi-card kpi-blue">
+      <div class="kpi-icon"><span class="material-symbols-rounded">scale</span></div>
+      <div class="kpi-body">
+        <div class="kpi-label">{{ 'dashboard.kpi.total.kg' | i18n }}</div>
+        <div class="kpi-value">{{ formatDecimal(d.kpis.todayKg) }} Kg</div>
+      </div>
+    </div>
+
+    <div class="kpi-card kpi-purple">
+      <div class="kpi-icon"><span class="material-symbols-rounded">percent</span></div>
+      <div class="kpi-body">
+        <div class="kpi-label">{{ 'dashboard.kpi.today.commission' | i18n }}</div>
+        <div class="kpi-value">{{ formatCurrency(d.kpis.todayCommission) }}</div>
+      </div>
+    </div>
+
+    <div class="kpi-card kpi-orange">
+      <div class="kpi-icon"><span class="material-symbols-rounded">agriculture</span></div>
+      <div class="kpi-body">
+        <div class="kpi-label">{{ 'dashboard.kpi.active.farmers' | i18n }}</div>
+        <div class="kpi-value">{{ d.kpis.activeFarmers }}</div>
+      </div>
+    </div>
+
+    <div class="kpi-card kpi-red">
+      <div class="kpi-icon"><span class="material-symbols-rounded">shopping_cart</span></div>
+      <div class="kpi-body">
+        <div class="kpi-label">{{ 'dashboard.kpi.active.buyers' | i18n }}</div>
+        <div class="kpi-value">{{ d.kpis.activeBuyers }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="master-count-grid">
+    <div class="master-count-card">
+      <span class="material-symbols-rounded master-count-icon">agriculture</span>
+      <div>
+        <div class="master-count-value">{{ d.masterCounts.farmers }}</div>
+        <div class="master-count-label">{{ 'dashboard.master.total.farmers' | i18n }}</div>
+      </div>
+    </div>
+    <div class="master-count-card">
+      <span class="material-symbols-rounded master-count-icon">shopping_cart</span>
+      <div>
+        <div class="master-count-value">{{ d.masterCounts.buyers }}</div>
+        <div class="master-count-label">{{ 'dashboard.master.total.buyers' | i18n }}</div>
+      </div>
+    </div>
+    <div class="master-count-card">
+      <span class="material-symbols-rounded master-count-icon">local_florist</span>
+      <div>
+        <div class="master-count-value">{{ d.masterCounts.flowers }}</div>
+        <div class="master-count-label">{{ 'dashboard.master.total.flowers' | i18n }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dash-grid">
+    <div class="card dash-card dash-card-wide">
+      <div class="card-header">
+        <h3>{{ 'dashboard.trend.title' | i18n }}</h3>
+        <div class="trend-toggle">
+          <button
+            type="button"
+            class="trend-toggle-btn"
+            [class.active]="trendRange() === 'week'"
+            (click)="setTrendRange('week')"
+          >{{ 'dashboard.trend.week' | i18n }}</button>
+          <button
+            type="button"
+            class="trend-toggle-btn"
+            [class.active]="trendRange() === 'month'"
+            (click)="setTrendRange('month')"
+          >{{ 'dashboard.trend.month' | i18n }}</button>
+        </div>
+      </div>
+      <div class="card-body">
+        @if (activeTrend().length > 0 && trendMax() > 0) {
+          <div class="trend-chart">
+            @for (row of activeTrend(); track row.salesDate) {
+              <div class="trend-col" [attr.title]="row.salesDate">
+                <div class="trend-value">{{ compactAmount(row.amount) }}</div>
+                <div class="trend-bar-wrap">
+                  <div
+                    class="trend-bar"
+                    [class.trend-bar-empty]="(row.amount ?? 0) <= 0"
+                    [style.height]="trendPct(row.amount, trendMax()) + '%'"
+                  ></div>
+                </div>
+                <div class="trend-label">{{ shortDay(row.salesDate) }}</div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="no-records">{{ 'dashboard.no.data' | i18n }}</div>
+        }
+      </div>
+    </div>
+
+    <div class="card dash-card">
+      <div class="card-header">
+        <h3>{{ 'dashboard.top.flowers' | i18n }}</h3>
+      </div>
+      <div class="card-body">
+        @if (d.topFlowers.length > 0) {
+          @for (row of d.topFlowers; track $index) {
+            <div class="hbar-row">
+              <div class="hbar-label">{{ row.flowerType || '-' }}</div>
+              <div class="hbar-track">
+                <div
+                  class="hbar-fill"
+                  [style.width]="flowerPct(row.totalKg, flowersMax()) + '%'"
+                ></div>
+              </div>
+              <div class="hbar-value">
+                {{ formatDecimal(row.totalKg) }} {{ 'dashboard.top.kg.suffix' | i18n }}
+              </div>
+            </div>
+          }
+        } @else {
+          <div class="no-records">{{ 'dashboard.no.data' | i18n }}</div>
+        }
+      </div>
+    </div>
+
+    <div class="card dash-card">
+      <div class="card-header">
+        <h3>{{ 'dashboard.top.farmers' | i18n }}</h3>
+      </div>
+      <div class="card-body">
+        @if (d.topFarmers.length > 0) {
+          @for (row of d.topFarmers; track $index) {
+            <div class="name-list-row">
+              <span class="material-symbols-rounded name-list-icon">agriculture</span>
+              <span class="name-list-name">{{ row.farmerName || row.farmerId || '-' }}</span>
+              <span class="name-list-value">{{ formatCurrency(row.totalSalesAmt) }}</span>
+            </div>
+          }
+        } @else {
+          <div class="no-records">{{ 'dashboard.no.data' | i18n }}</div>
+        }
+      </div>
+    </div>
+
+    <div class="card dash-card">
+      <div class="card-header">
+        <h3>{{ 'dashboard.outstanding.farmers' | i18n }}</h3>
+      </div>
+      <div class="card-body">
+        @if (d.outstandingFarmers.length > 0) {
+          @for (row of d.outstandingFarmers; track $index) {
+            <div class="name-list-row">
+              <span class="material-symbols-rounded name-list-icon">agriculture</span>
+              <span class="name-list-name">{{ row.farmerName || row.farmerId || '-' }}</span>
+              <span class="name-list-value">{{ formatCurrency(row.outstandingBalance) }}</span>
+            </div>
+          }
+        } @else {
+          <div class="no-records">{{ 'dashboard.no.data' | i18n }}</div>
+        }
+      </div>
+    </div>
+
+    <div class="card dash-card">
+      <div class="card-header">
+        <h3>{{ 'dashboard.outstanding.buyers' | i18n }}</h3>
+      </div>
+      <div class="card-body">
+        @if (d.outstandingBuyers.length > 0) {
+          @for (row of d.outstandingBuyers; track $index) {
+            <div class="name-list-row">
+              <span class="material-symbols-rounded name-list-icon">shopping_cart</span>
+              <span class="name-list-name">{{ row.buyerName || row.buyerId || '-' }}</span>
+              <span class="name-list-value">{{ formatCurrency(row.outstandingBalance) }}</span>
+            </div>
+          }
+        } @else {
+          <div class="no-records">{{ 'dashboard.no.data' | i18n }}</div>
+        }
+      </div>
+    </div>
+
+    <div class="card dash-card dash-card-wide">
+      <div class="card-header">
+        <h3>{{ 'dashboard.direct.title' | i18n }}</h3>
+      </div>
+      <div class="card-body">
+        <div class="direct-grid">
+          <div class="direct-card direct-cash">
+            <div class="direct-icon"><span class="material-symbols-rounded">payments</span></div>
+            <div class="direct-body">
+              <div class="direct-label">{{ 'dashboard.direct.cash' | i18n }}</div>
+              <div class="direct-row">
+                <span class="direct-sub">{{ 'dashboard.direct.today' | i18n }}</span>
+                <span class="direct-value">{{ formatCurrency(d.directPayments.cashToday) }}</span>
+              </div>
+              <div class="direct-row">
+                <span class="direct-sub">{{ 'dashboard.direct.month' | i18n }}</span>
+                <span class="direct-value">{{ formatCurrency(d.directPayments.cashMonth) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="direct-card direct-upi">
+            <div class="direct-icon"><span class="material-symbols-rounded">qr_code_scanner</span></div>
+            <div class="direct-body">
+              <div class="direct-label">{{ 'dashboard.direct.upi' | i18n }}</div>
+              <div class="direct-row">
+                <span class="direct-sub">{{ 'dashboard.direct.today' | i18n }}</span>
+                <span class="direct-value">{{ formatCurrency(d.directPayments.upiToday) }}</span>
+              </div>
+              <div class="direct-row">
+                <span class="direct-sub">{{ 'dashboard.direct.month' | i18n }}</span>
+                <span class="direct-value">{{ formatCurrency(d.directPayments.upiMonth) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="direct-card direct-other">
+            <div class="direct-icon"><span class="material-symbols-rounded">account_balance</span></div>
+            <div class="direct-body">
+              <div class="direct-label">{{ 'dashboard.direct.other' | i18n }}</div>
+              <div class="direct-row">
+                <span class="direct-sub">{{ 'dashboard.direct.today' | i18n }}</span>
+                <span class="direct-value">{{ formatCurrency(d.directPayments.otherToday) }}</span>
+              </div>
+              <div class="direct-row">
+                <span class="direct-sub">{{ 'dashboard.direct.month' | i18n }}</span>
+                <span class="direct-value">{{ formatCurrency(d.directPayments.otherMonth) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+}

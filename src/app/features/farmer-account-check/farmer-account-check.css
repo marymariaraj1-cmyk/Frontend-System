@@ -1,0 +1,139 @@
+:host {
+  display: block;
+}
+
+.form-actions-inline {
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 5px;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.data-table th,
+.data-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.data-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #555;
+  white-space: nowrap;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.data-table th.left,
+.data-table td.left {
+  text-align: left;
+}
+
+.data-table th.right,
+.data-table td.right {
+  text-align: right;
+}
+
+.data-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.data-table .total-row td {
+  border-top: 2px solid #dee2e6;
+  background: #e8f0fe;
+}
+
+.no-data {
+  text-align: center;
+  color: #888;
+  padding: 20px;
+  font-size: 14px;
+}
+
+.model-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.calc-result {
+  margin-top: 20px;
+  padding: 16px;
+  background: #f8f9fa;
+  border: 1px solid #e4e7ec;
+  border-radius: 8px;
+}
+
+.calc-result h3 {
+  font-size: 15px;
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.calc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.calc-table td {
+  padding: 6px 4px;
+  border: none;
+}
+
+.calc-table td.lbl {
+  width: 60%;
+  text-align: left;
+  color: #555;
+  font-weight: 500;
+}
+
+.calc-table td.amt {
+  width: 40%;
+  text-align: right;
+  color: #333;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.calc-table tr.final td {
+  font-size: 16px;
+  font-weight: 700;
+  border-top: 2px solid #1565C0;
+  padding-top: 8px;
+  color: #1565C0;
+}
+
+@media (max-width: 600px) {
+  .model-buttons {
+    flex-direction: column;
+  }
+
+  .model-buttons .btn {
+    width: 100%;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+
+  .calc-table {
+    font-size: 13px;
+  }
+
+  .calc-table tr.final td {
+    font-size: 14px;
+  }
+}

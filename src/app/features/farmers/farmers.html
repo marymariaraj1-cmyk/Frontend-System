@@ -1,0 +1,116 @@
+<div class="card">
+  <div class="card-header">
+    <h3>{{ 'farmer.master.title' | i18n }}</h3>
+    <div class="card-header-actions">
+      <button type="button" class="btn btn-primary btn-sm" (click)="startAdd()">
+        <span class="material-symbols-rounded">add</span>
+        {{ 'btn.add.new' | i18n }}
+      </button>
+    </div>
+  </div>
+  <div class="card-body">
+    @if (showForm()) {
+      <form class="master-form" (ngSubmit)="submit()">
+        <h4 class="form-title">
+          {{ editing ? ('farmer.details' | i18n) : ('farmer.add.title' | i18n) }}
+        </h4>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="farmerName">{{ 'farmer.name' | i18n }}</label>
+            <input id="farmerName" name="farmerName" type="text" [(ngModel)]="form.farmerName" />
+          </div>
+          <div class="form-group">
+            <label for="farmerContactNo">{{ 'farmer.contact' | i18n }}</label>
+            <input
+              id="farmerContactNo"
+              name="farmerContactNo"
+              type="text"
+              [(ngModel)]="form.farmerContactNo"
+            />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group form-group-wide">
+            <label for="farmerAddress">{{ 'farmer.address' | i18n }}</label>
+            <input
+              id="farmerAddress"
+              name="farmerAddress"
+              type="text"
+              [(ngModel)]="form.farmerAddress"
+            />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" [disabled]="submitting">
+            <span class="material-symbols-rounded">{{ editing ? 'update' : 'save' }}</span>
+            {{ editing ? ('btn.update' | i18n) : ('btn.save' | i18n) }}
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="cancel()">
+            <span class="material-symbols-rounded">close</span>
+            {{ 'btn.cancel' | i18n }}
+          </button>
+        </div>
+      </form>
+    }
+
+    <div class="table-container">
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th style="width: 50px">{{ 'farmer.sno' | i18n }}</th>
+            <th>{{ 'farmer.name' | i18n }}</th>
+            <th>{{ 'farmer.contact' | i18n }}</th>
+            <th>{{ 'farmer.address' | i18n }}</th>
+            <th style="width: 100px">{{ 'farmer.actions' | i18n }}</th>
+          </tr>
+          <tr class="filter-row">
+            <td></td>
+            <td>
+              <input
+                type="text"
+                [placeholder]="'search.placeholder' | i18n"
+                [(ngModel)]="nameFilter"
+              />
+            </td>
+            <td>
+              <input
+                type="text"
+                [placeholder]="'search.placeholder' | i18n"
+                [(ngModel)]="contactFilter"
+              />
+            </td>
+            <td>
+              <input
+                type="text"
+                [placeholder]="'search.placeholder' | i18n"
+                [(ngModel)]="addressFilter"
+              />
+            </td>
+            <td></td>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of filteredRows(); track row.farmerId; let i = $index) {
+            <tr>
+              <td>{{ i + 1 }}</td>
+              <td>{{ row.farmerName }}</td>
+              <td>{{ row.farmerContactNo || '-' }}</td>
+              <td>{{ row.farmerAddress || '-' }}</td>
+              <td>
+                <div class="action-btns">
+                  <button type="button" class="btn btn-sm btn-secondary btn-icon-only" [attr.title]="'btn.edit' | i18n" [attr.aria-label]="'btn.edit' | i18n" (click)="startEdit(row)">
+                    <span class="material-symbols-rounded">edit</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="no-records">{{ 'common.no.records' | i18n }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

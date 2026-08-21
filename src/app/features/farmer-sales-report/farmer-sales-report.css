@@ -1,0 +1,12 @@
+:host {
+  display: block;
+}
+
+.form-actions-inline {
+  display: flex;
+  align-items: flex-end;
+}
+
+.amount-col {
+  text-align: right;
+}

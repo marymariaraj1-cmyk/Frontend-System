@@ -1,0 +1,360 @@
+<div class="app-shell" [class.sidebar-collapsed]="collapsed()">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a class="header-logo" routerLink="/dashboard">
+        <span class="brand-icon material-symbols-rounded">local_florist</span>
+        <span class="brand-name">{{ 'app.brand.name' | i18n }}</span>
+      </a>
+      <button
+        type="button"
+        class="toggler"
+        [attr.aria-label]="'sidebar.toggle' | i18n"
+        [title]="'sidebar.toggle' | i18n"
+        (click)="toggleSidebar()"
+      >
+        <span class="material-symbols-rounded">{{ collapsed() ? 'menu' : 'menu_open' }}</span>
+      </button>
+    </div>
+    <div class="user-info-badge">
+      @if (auth.user()?.role === 'ROLE_ADMIN') {
+        Administrator
+      } @else {
+        {{ auth.user()?.shopName }}
+      }
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-list">
+        <a
+          class="nav-link"
+          routerLink="/dashboard"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          [attr.title]="collapsed() ? ('sidebar.dashboard' | i18n) : null"
+        >
+          <span class="nav-icon material-symbols-rounded">dashboard</span>
+          <span class="nav-label">{{ 'sidebar.dashboard' | i18n }}</span>
+        </a>
+
+        <div class="nav-item nav-parent" [class.active]="isParentOpen('master')">
+          <a
+            class="nav-link nav-parent-link"
+            [attr.title]="collapsed() ? ('sidebar.master' | i18n) : null"
+            (click)="toggleParent('master')"
+          >
+            <span class="nav-icon material-symbols-rounded">database</span>
+            <span class="nav-label">{{ 'sidebar.master' | i18n }}</span>
+            <span class="nav-expand-icon material-symbols-rounded">expand_more</span>
+          </a>
+          <ul class="nav-submenu">
+            @if (auth.user()?.role === 'ROLE_CLIENT') {
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  routerLink="/flowers"
+                  [attr.title]="collapsed() ? ('sidebar.flower.master' | i18n) : null"
+                >
+                  <span class="nav-icon material-symbols-rounded">local_florist</span>
+                  <span class="nav-label">{{ 'sidebar.flower.master' | i18n }}</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  routerLink="/farmers"
+                  [attr.title]="collapsed() ? ('sidebar.farmer.master' | i18n) : null"
+                >
+                  <span class="nav-icon material-symbols-rounded">agriculture</span>
+                  <span class="nav-label">{{ 'sidebar.farmer.master' | i18n }}</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  routerLink="/buyers"
+                  [attr.title]="collapsed() ? ('sidebar.buyer.master' | i18n) : null"
+                >
+                  <span class="nav-icon material-symbols-rounded">shopping_bag</span>
+                  <span class="nav-label">{{ 'sidebar.buyer.master' | i18n }}</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  routerLink="/opening-balance"
+                  [attr.title]="collapsed() ? ('sidebar.opening.balance' | i18n) : null"
+                >
+                  <span class="nav-icon material-symbols-rounded">account_balance_wallet</span>
+                  <span class="nav-label">{{ 'sidebar.opening.balance' | i18n }}</span>
+                </a>
+              </li>
+            }
+            @if (auth.user()?.role === 'ROLE_ADMIN') {
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  routerLink="/clients"
+                  [attr.title]="collapsed() ? ('sidebar.client.master' | i18n) : null"
+                >
+                  <span class="nav-icon material-symbols-rounded">store</span>
+                  <span class="nav-label">{{ 'sidebar.client.master' | i18n }}</span>
+                </a>
+              </li>
+            }
+          </ul>
+        </div>
+
+        <div class="nav-item nav-parent" [class.active]="isParentOpen('sales')">
+          <a
+            class="nav-link nav-parent-link"
+            [attr.title]="collapsed() ? ('sidebar.sales' | i18n) : null"
+            (click)="toggleParent('sales')"
+          >
+            <span class="nav-icon material-symbols-rounded">point_of_sale</span>
+            <span class="nav-label">{{ 'sidebar.sales' | i18n }}</span>
+            <span class="nav-expand-icon material-symbols-rounded">expand_more</span>
+          </a>
+          <ul class="nav-submenu">
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/sales-entry"
+                [attr.title]="collapsed() ? ('sidebar.sales.entry' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">add_shopping_cart</span>
+                <span class="nav-label">{{ 'sidebar.sales.entry' | i18n }}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/multi-sales"
+                [attr.title]="collapsed() ? ('sidebar.multi.sales' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">playlist_add</span>
+                <span class="nav-label">{{ 'sidebar.multi.sales' | i18n }}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/sales-details-edit"
+                [attr.title]="collapsed() ? ('sidebar.sales.details.edit' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">edit_note</span>
+                <span class="nav-label">{{ 'sidebar.sales.details.edit' | i18n }}</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="nav-item nav-parent" [class.active]="isParentOpen('ledger')">
+          <a
+            class="nav-link nav-parent-link"
+            [attr.title]="collapsed() ? ('sidebar.ledger' | i18n) : null"
+            (click)="toggleParent('ledger')"
+          >
+            <span class="nav-icon material-symbols-rounded">account_balance</span>
+            <span class="nav-label">{{ 'sidebar.ledger' | i18n }}</span>
+            <span class="nav-expand-icon material-symbols-rounded">expand_more</span>
+          </a>
+          <ul class="nav-submenu">
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/farmer-account-check"
+                [attr.title]="collapsed() ? ('fac.title' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">calculate</span>
+                <span class="nav-label">{{ 'fac.title' | i18n }}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/farmer-ledger-list"
+                [attr.title]="collapsed() ? ('sidebar.updated.farmer.ledger.report' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">menu_book</span>
+                <span class="nav-label">{{ 'sidebar.updated.farmer.ledger.report' | i18n }}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/buyer-ledger-list"
+                [attr.title]="collapsed() ? ('sidebar.updated.buyer.ledger.report' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">receipt</span>
+                <span class="nav-label">{{ 'sidebar.updated.buyer.ledger.report' | i18n }}</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="nav-item nav-parent" [class.active]="isParentOpen('transaction')">
+          <a
+            class="nav-link nav-parent-link"
+            [attr.title]="collapsed() ? ('sidebar.transaction' | i18n) : null"
+            (click)="toggleParent('transaction')"
+          >
+            <span class="nav-icon material-symbols-rounded">swap_horiz</span>
+            <span class="nav-label">{{ 'sidebar.transaction' | i18n }}</span>
+            <span class="nav-expand-icon material-symbols-rounded">expand_more</span>
+          </a>
+          <ul class="nav-submenu">
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/farmer-transaction"
+                routerLinkActive="active"
+                [attr.title]="collapsed() ? ('sidebar.farmer.transaction' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">payments</span>
+                <span class="nav-label">{{ 'sidebar.farmer.transaction' | i18n }}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/buyer-transaction"
+                routerLinkActive="active"
+                [attr.title]="collapsed() ? ('sidebar.buyer.transaction' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">currency_exchange</span>
+                <span class="nav-label">{{ 'sidebar.buyer.transaction' | i18n }}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/farmer-transaction-history"
+                routerLinkActive="active"
+                [attr.title]="collapsed() ? ('sidebar.farmer.txn.history' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">history</span>
+                <span class="nav-label">{{ 'sidebar.farmer.txn.history' | i18n }}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/buyer-transaction-history"
+                routerLinkActive="active"
+                [attr.title]="collapsed() ? ('sidebar.buyer.txn.history' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">history</span>
+                <span class="nav-label">{{ 'sidebar.buyer.txn.history' | i18n }}</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="nav-item nav-parent" [class.active]="isParentOpen('report')">
+          <a
+            class="nav-link nav-parent-link"
+            [attr.title]="collapsed() ? ('sidebar.report' | i18n) : null"
+            (click)="toggleParent('report')"
+          >
+            <span class="nav-icon material-symbols-rounded">assessment</span>
+            <span class="nav-label">{{ 'sidebar.report' | i18n }}</span>
+            <span class="nav-expand-icon material-symbols-rounded">expand_more</span>
+          </a>
+          <ul class="nav-submenu">
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/farmer-ledger-report"
+                routerLinkActive="active"
+                [attr.title]="collapsed() ? ('sidebar.farmer.ledger.report' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">book</span>
+                <span class="nav-label">{{ 'sidebar.farmer.ledger.report' | i18n }}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/buyer-ledger-report"
+                routerLinkActive="active"
+                [attr.title]="collapsed() ? ('sidebar.buyer.ledger.report' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">receipt_long</span>
+                <span class="nav-label">{{ 'sidebar.buyer.ledger.report' | i18n }}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/farmer-sales-report"
+                routerLinkActive="active"
+                [attr.title]="collapsed() ? ('sidebar.farmer.sales.report' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">bar_chart</span>
+                <span class="nav-label">{{ 'sidebar.farmer.sales.report' | i18n }}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/buyer-sales-report"
+                routerLinkActive="active"
+                [attr.title]="collapsed() ? ('sidebar.buyer.sales.report' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">monitoring</span>
+                <span class="nav-label">{{ 'sidebar.buyer.sales.report' | i18n }}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/current-day-profit"
+                routerLinkActive="active"
+                [attr.title]="collapsed() ? ('sidebar.current.day.total.commission' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">calculate</span>
+                <span class="nav-label">{{ 'sidebar.current.day.total.commission' | i18n }}</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button
+          type="button"
+          class="topbar-toggler"
+          [attr.aria-label]="'sidebar.toggle' | i18n"
+          [title]="'sidebar.toggle' | i18n"
+          (click)="toggleSidebar()"
+        >
+          <span class="material-symbols-rounded">{{ collapsed() ? 'menu' : 'menu_open' }}</span>
+        </button>
+        <span class="page-title">{{ titleKey() | i18n }}</span>
+      </div>
+      <div class="topbar-right">
+        <span class="shop-name">{{ auth.user()?.shopName }}</span>
+        <div class="lang-switch">
+          <button type="button" [class.active]="i18n.lang() === 'en'" (click)="switchLang('en')">
+            EN
+          </button>
+          <button type="button" [class.active]="i18n.lang() === 'ta'" (click)="switchLang('ta')">
+            த
+          </button>
+        </div>
+        <button type="button" class="btn btn-danger btn-sm" (click)="logout()">
+          <span class="material-symbols-rounded btn-icon">logout</span>
+          {{ 'sidebar.logout' | i18n }}
+        </button>
+      </div>
+    </header>
+
+    <div class="content-area">
+      <router-outlet />
+    </div>
+  </div>
+</div>

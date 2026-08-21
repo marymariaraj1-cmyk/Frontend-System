@@ -1,0 +1,177 @@
+<div class="card">
+  <div class="card-header">
+    <h3>{{ 'opening.balance.config.title' | i18n }}</h3>
+  </div>
+  <div class="card-body">
+    <p class="ob-note">{{ 'opening.balance.config.note' | i18n }}</p>
+
+    <div class="ob-tabs">
+      <button
+        type="button"
+        class="ob-tab"
+        [class.active]="section() === 'farmer'"
+        (click)="section.set('farmer')"
+      >
+        {{ 'opening.balance.config.farmer' | i18n }}
+      </button>
+      <button
+        type="button"
+        class="ob-tab"
+        [class.active]="section() === 'buyer'"
+        (click)="section.set('buyer')"
+      >
+        {{ 'opening.balance.config.buyer' | i18n }}
+      </button>
+    </div>
+
+    @if (section() === 'farmer') {
+      <div class="ob-search">
+        <input
+          type="text"
+          class="ob-search-input"
+          [placeholder]="'opening.balance.config.farmer.placeholder' | i18n"
+          [(ngModel)]="farmerSearch"
+        />
+      </div>
+      <div class="table-container ob-table-wrap">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th style="width: 100px">{{ 'common.sno' | i18n }}</th>
+              <th class="ob-farmer-name">{{ 'farmer.name' | i18n }}</th>
+              <th class="ob-amount-col">{{ 'opening.balance.config.col.amount' | i18n }}</th>
+              <th class="ob-date-col">{{ 'opening.balance.config.col.date' | i18n }}</th>
+              <th class="ob-actions-col">{{ 'farmer.actions' | i18n }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of filteredFarmers(); track row.farmerId; let i = $index) {
+              <tr>
+                <td>{{ i + 1 }}</td>
+                <td class="ob-farmer-name">{{ row.farmerName }}</td>
+                <td class="ob-amount-col">
+                  <input
+                    type="text"
+                    class="ob-input"
+                    [(ngModel)]="farmerEdits[row.farmerId]"
+                    name="farmerOb{{ row.farmerId }}"
+                  />
+                </td>
+                <td class="ob-date-col">
+                  <input
+                    type="date"
+                    class="ob-input ob-date-input"
+                    [(ngModel)]="farmerDateEdits[row.farmerId]"
+                    name="farmerObDate{{ row.farmerId }}"
+                  />
+                </td>
+                <td class="ob-actions-col">
+                  <div class="ob-row">
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-primary btn-icon-only"
+                      [disabled]="savingFarmerId === row.farmerId"
+                      [attr.title]="'btn.save' | i18n"
+                      [attr.aria-label]="'btn.save' | i18n"
+                      (click)="saveFarmer(row)"
+                    >
+                      <span class="material-symbols-rounded">save</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-secondary btn-icon-only"
+                      [attr.title]="'opening.balance.config.reset' | i18n"
+                      [attr.aria-label]="'opening.balance.config.reset' | i18n"
+                      (click)="resetFarmer(row)"
+                    >
+                      <span class="material-symbols-rounded">restart_alt</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="no-records">{{ 'common.no.records' | i18n }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    @if (section() === 'buyer') {
+      <div class="ob-search">
+        <input
+          type="text"
+          class="ob-search-input"
+          [placeholder]="'opening.balance.config.buyer.placeholder' | i18n"
+          [(ngModel)]="buyerSearch"
+        />
+      </div>
+      <div class="table-container ob-table-wrap">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th style="width: 100px">{{ 'common.sno' | i18n }}</th>
+              <th class="ob-farmer-name">{{ 'buyer.name' | i18n }}</th>
+              <th class="ob-amount-col">{{ 'opening.balance.config.col.amount' | i18n }}</th>
+              <th class="ob-date-col">{{ 'opening.balance.config.col.date' | i18n }}</th>
+              <th class="ob-actions-col">{{ 'buyer.actions' | i18n }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of filteredBuyers(); track row.buyerId; let i = $index) {
+              <tr>
+                <td>{{ i + 1 }}</td>
+                <td class="ob-farmer-name">{{ row.buyerName }}</td>
+                <td class="ob-amount-col">
+                  <input
+                    type="text"
+                    class="ob-input"
+                    [(ngModel)]="buyerEdits[row.buyerId]"
+                    name="buyerOb{{ row.buyerId }}"
+                  />
+                </td>
+                <td class="ob-date-col">
+                  <input
+                    type="date"
+                    class="ob-input ob-date-input"
+                    [(ngModel)]="buyerDateEdits[row.buyerId]"
+                    name="buyerObDate{{ row.buyerId }}"
+                  />
+                </td>
+                <td class="ob-actions-col">
+                  <div class="ob-row">
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-primary btn-icon-only"
+                      [disabled]="savingBuyerId === row.buyerId"
+                      [attr.title]="'btn.save' | i18n"
+                      [attr.aria-label]="'btn.save' | i18n"
+                      (click)="saveBuyer(row)"
+                    >
+                      <span class="material-symbols-rounded">save</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-secondary btn-icon-only"
+                      [attr.title]="'opening.balance.config.reset' | i18n"
+                      [attr.aria-label]="'opening.balance.config.reset' | i18n"
+                      (click)="resetBuyer(row)"
+                    >
+                      <span class="material-symbols-rounded">restart_alt</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="no-records">{{ 'common.no.records' | i18n }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

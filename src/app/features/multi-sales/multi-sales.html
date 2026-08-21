@@ -1,0 +1,148 @@
+<div class="card">
+  <div class="card-header">
+    <h3>{{ 'multi.sales.title' | i18n }}</h3>
+  </div>
+  <div class="card-body">
+    <div class="table-container">
+      <table id="salesTable" class="sales-grid-table">
+        <thead>
+          <tr>
+            <th style="width: 50px">{{ 'flower.sno' | i18n }}</th>
+            <th>{{ 'farmer.name' | i18n }} <span class="required">*</span></th>
+            <th>{{ 'sales.flower' | i18n }} <span class="required">*</span></th>
+            <th>{{ 'sales.qty' | i18n }}</th>
+            <th>{{ 'sales.rate' | i18n }}</th>
+            <th>{{ 'sales.amount' | i18n }} <span class="required">*</span></th>
+            <th>{{ 'sales.customer' | i18n }} <span class="required">*</span></th>
+            <th style="width: 80px">{{ 'flower.actions' | i18n }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.saved ? row.salesId : $index; let i = $index) {
+            <tr class="sales-row" [class.saved-row]="row.saved">
+              <td class="row-index text-center">{{ i + 1 }}</td>
+              @if (row.saved) {
+                <td><div class="grid-display">{{ row.farmerName }}</div></td>
+                <td><div class="grid-display">{{ row.flowerType }}</div></td>
+                <td><div class="grid-display">{{ row.totalWeight }}</div></td>
+                <td><div class="grid-display">{{ row.price }}</div></td>
+                <td><div class="grid-display">{{ row.amount }}</div></td>
+                <td><div class="grid-display">{{ row.customerName }}</div></td>
+                <td class="text-center action-cell">
+                  <span class="action-icon saved-icon" title="Saved">&#10003;</span>
+                </td>
+              } @else {
+                <td>
+                  <app-autocomplete
+                    [items]="master().farmers"
+                    [invalid]="row.farmerInvalid"
+                    [value]="row.farmerName"
+                    (valueChange)="updateRow(i, { farmerName: $event, farmerInvalid: false })"
+                    (onSelect)="updateRow(i, { farmerName: $event, farmerInvalid: false })"
+                    (blur)="validateField(i, 'farmer')"
+                  />
+                  @if (row.farmerInvalid) {
+                    <span class="field-error">{{ 'sales.error.farmer.notfound' | i18n }}</span>
+                  }
+                </td>
+                <td>
+                  <app-autocomplete
+                    [items]="master().flowers"
+                    [invalid]="row.flowerInvalid"
+                    [value]="row.flowerType"
+                    (valueChange)="updateRow(i, { flowerType: $event, flowerInvalid: false })"
+                    (onSelect)="updateRow(i, { flowerType: $event, flowerInvalid: false })"
+                    (blur)="validateField(i, 'flower')"
+                  />
+                  @if (row.flowerInvalid) {
+                    <span class="field-error">{{ 'sales.error.flower.notfound' | i18n }}</span>
+                  }
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    class="grid-input"
+                    [ngModel]="row.totalWeight"
+                    (ngModelChange)="updateRow(i, { totalWeight: $event })"
+                    (input)="recalcRowAmount(i)"
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    class="grid-input"
+                    [ngModel]="row.price"
+                    (ngModelChange)="updateRow(i, { price: $event })"
+                    (input)="recalcRowAmount(i)"
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    class="grid-input"
+                    [ngModel]="row.amount"
+                    (ngModelChange)="updateRow(i, { amount: $event })"
+                  />
+                </td>
+                <td>
+                  <app-autocomplete
+                    [items]="master().buyers"
+                    [invalid]="row.customerInvalid"
+                    [value]="row.customerName"
+                    (valueChange)="updateRow(i, { customerName: $event, customerInvalid: false })"
+                    (onSelect)="updateRow(i, { customerName: $event, customerInvalid: false })"
+                    (blur)="validateField(i, 'customer')"
+                    (enter)="addEmptyRow()"
+                  />
+                  @if (row.customerInvalid) {
+                    <span class="field-error">{{ 'sales.error.buyer.notfound' | i18n }}</span>
+                  }
+                </td>
+                <td class="text-center action-cell">
+                  <span class="action-icon add-row-icon" title="{{ 'sales.add.row' | i18n }}" (click)="addEmptyRowBelow(i)">+</span>
+                  <span class="action-icon remove-row-icon" title="{{ 'sales.remove.row' | i18n }}" (click)="removeRow(i)">&times;</span>
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <button type="button" class="calc-toggle-btn" (click)="calcOpen.set(!calcOpen())">
+      <span class="material-symbols-rounded">{{ calcOpen() ? 'expand_less' : 'expand_more' }}</span>
+      {{ (calcOpen() ? 'sales.calc.summary' : 'sales.calc.toggle') | i18n }}
+    </button>
+    <div class="calc-summary" [class.collapsed]="!calcOpen()">
+      <div class="calc-row">
+        <span class="calc-label">{{ 'sales.total' | i18n }}:</span>
+        <span class="calc-value">{{ formatCurrency(summary().total) }}</span>
+      </div>
+      <div class="calc-row">
+        <span class="calc-label">{{ 'sales.commission' | i18n }}:</span>
+        <span class="calc-value">{{ formatCurrency(summary().commission) }}</span>
+      </div>
+      <div class="calc-row">
+        <span class="calc-label">{{ 'sales.net.amount' | i18n }}:</span>
+        <span class="calc-value">{{ formatCurrency(summary().net) }}</span>
+      </div>
+      <div class="calc-row calc-final">
+        <span class="calc-label">{{ 'sales.final.total' | i18n }}:</span>
+        <span class="calc-value">{{ formatCurrency(summary().final) }}</span>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="save()">
+        <span class="material-symbols-rounded">save</span>
+        {{ 'btn.save' | i18n }}
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="printReport()">
+        <span class="material-symbols-rounded">print</span> {{ 'sales.print' | i18n }}
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="shareReport()">
+        <span class="material-symbols-rounded">share</span> {{ 'sales.share' | i18n }}
+      </button>
+    </div>
+  </div>
+</div>

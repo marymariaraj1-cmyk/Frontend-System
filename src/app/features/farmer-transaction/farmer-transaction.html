@@ -1,0 +1,66 @@
+<div class="card">
+  <div class="card-header">
+    <h3>{{ 'farmer.txn.details' | i18n }}</h3>
+  </div>
+  <div class="card-body">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="txnFarmerName">{{ 'farmer.name' | i18n }} <span class="required">*</span></label>
+        <app-autocomplete
+          [items]="master().farmers"
+          [invalid]="farmerInvalid()"
+          [(value)]="farmer"
+          (onSelect)="farmer.set($event)"
+          (blur)="validateFarmer()"
+        />
+        @if (farmerInvalid()) {
+          <span class="field-error">{{ 'txn.error.farmer.notfound' | i18n }}</span>
+        }
+      </div>
+      <div class="form-group">
+        <label for="txnDate">{{ 'txn.date' | i18n }} <span class="required">*</span></label>
+        <input id="txnDate" name="txnDate" type="date" [(ngModel)]="txnDate" required />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="debitAmt">{{ 'farmer.txn.debit' | i18n }}</label>
+        <div class="input-with-icon">
+          <span class="input-icon">&#8377;</span>
+          <input
+            id="debitAmt"
+            name="debitAmt"
+            type="text"
+            autocomplete="off"
+            [ngModel]="debit()"
+            (ngModelChange)="sanitizeDebit($event)"
+          />
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="excessDebitAmt">{{ 'farmer.txn.excess.debit' | i18n }}</label>
+        <div class="input-with-icon">
+          <span class="input-icon">&#8377;</span>
+          <input
+            id="excessDebitAmt"
+            name="excessDebitAmt"
+            type="text"
+            autocomplete="off"
+            [ngModel]="excessDebit()"
+            (ngModelChange)="sanitizeExcessDebit($event)"
+          />
+        </div>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="save()">
+        <span class="material-symbols-rounded">save</span>
+        {{ 'btn.save' | i18n }}
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="clearForm()">
+        <span class="material-symbols-rounded">cleaning_services</span>
+        {{ 'btn.clear' | i18n }}
+      </button>
+    </div>
+  </div>
+</div>
