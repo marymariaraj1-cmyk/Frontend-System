@@ -1,19 +1,25 @@
 <div class="app-shell" [class.sidebar-collapsed]="collapsed()">
   <aside class="sidebar">
     <div class="sidebar-header">
-      <a class="header-logo" routerLink="/dashboard">
-        <span class="brand-icon material-symbols-rounded">local_florist</span>
-        <span class="brand-name">{{ 'app.brand.name' | i18n }}</span>
-      </a>
-      <button
-        type="button"
-        class="toggler"
-        [attr.aria-label]="'sidebar.toggle' | i18n"
-        [title]="'sidebar.toggle' | i18n"
-        (click)="toggleSidebar()"
-      >
-        <span class="material-symbols-rounded">{{ collapsed() ? 'menu' : 'menu_open' }}</span>
-      </button>
+      <div class="sidebar-header-top">
+        <a class="header-logo" routerLink="/dashboard">
+          <span class="brand-icon material-symbols-rounded">local_florist</span>
+          <span class="brand-name">{{ 'app.brand.name' | i18n }}</span>
+        </a>
+        <button
+          type="button"
+          class="toggler"
+          [attr.aria-label]="'sidebar.toggle' | i18n"
+          [title]="'sidebar.toggle' | i18n"
+          (click)="toggleSidebar()"
+        >
+          <span class="material-symbols-rounded">{{ collapsed() ? 'menu' : 'menu_open' }}</span>
+        </button>
+      </div>
+      <div class="sidebar-lang">
+        <button type="button" [class.active]="i18n.lang() === 'en'" (click)="switchLang('en')">EN</button>
+        <button type="button" [class.active]="i18n.lang() === 'ta'" (click)="switchLang('ta')">த</button>
+      </div>
     </div>
     <div class="user-info-badge">
       @if (auth.user()?.role === 'ROLE_ADMIN') {
@@ -52,6 +58,7 @@
                 <a
                   class="nav-link"
                   routerLink="/flowers"
+                  routerLinkActive="active"
                   [attr.title]="collapsed() ? ('sidebar.flower.master' | i18n) : null"
                 >
                   <span class="nav-icon material-symbols-rounded">local_florist</span>
@@ -62,6 +69,7 @@
                 <a
                   class="nav-link"
                   routerLink="/farmers"
+                  routerLinkActive="active"
                   [attr.title]="collapsed() ? ('sidebar.farmer.master' | i18n) : null"
                 >
                   <span class="nav-icon material-symbols-rounded">agriculture</span>
@@ -72,6 +80,7 @@
                 <a
                   class="nav-link"
                   routerLink="/buyers"
+                  routerLinkActive="active"
                   [attr.title]="collapsed() ? ('sidebar.buyer.master' | i18n) : null"
                 >
                   <span class="nav-icon material-symbols-rounded">shopping_bag</span>
@@ -82,10 +91,22 @@
                 <a
                   class="nav-link"
                   routerLink="/opening-balance"
+                  routerLinkActive="active"
                   [attr.title]="collapsed() ? ('sidebar.opening.balance' | i18n) : null"
                 >
                   <span class="nav-icon material-symbols-rounded">account_balance_wallet</span>
                   <span class="nav-label">{{ 'sidebar.opening.balance' | i18n }}</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  routerLink="/bag-count-config"
+                  routerLinkActive="active"
+                  [attr.title]="collapsed() ? ('sidebar.bag.count.config' | i18n) : null"
+                >
+                  <span class="nav-icon material-symbols-rounded">style</span>
+                  <span class="nav-label">{{ 'sidebar.bag.count.config' | i18n }}</span>
                 </a>
               </li>
             }
@@ -94,6 +115,7 @@
                 <a
                   class="nav-link"
                   routerLink="/clients"
+                  routerLinkActive="active"
                   [attr.title]="collapsed() ? ('sidebar.client.master' | i18n) : null"
                 >
                   <span class="nav-icon material-symbols-rounded">store</span>
@@ -119,6 +141,7 @@
               <a
                 class="nav-link"
                 routerLink="/sales-entry"
+                routerLinkActive="active"
                 [attr.title]="collapsed() ? ('sidebar.sales.entry' | i18n) : null"
               >
                 <span class="nav-icon material-symbols-rounded">add_shopping_cart</span>
@@ -129,6 +152,7 @@
               <a
                 class="nav-link"
                 routerLink="/multi-sales"
+                routerLinkActive="active"
                 [attr.title]="collapsed() ? ('sidebar.multi.sales' | i18n) : null"
               >
                 <span class="nav-icon material-symbols-rounded">playlist_add</span>
@@ -139,6 +163,7 @@
               <a
                 class="nav-link"
                 routerLink="/sales-details-edit"
+                routerLinkActive="active"
                 [attr.title]="collapsed() ? ('sidebar.sales.details.edit' | i18n) : null"
               >
                 <span class="nav-icon material-symbols-rounded">edit_note</span>
@@ -163,6 +188,7 @@
               <a
                 class="nav-link"
                 routerLink="/farmer-account-check"
+                routerLinkActive="active"
                 [attr.title]="collapsed() ? ('fac.title' | i18n) : null"
               >
                 <span class="nav-icon material-symbols-rounded">calculate</span>
@@ -173,6 +199,7 @@
               <a
                 class="nav-link"
                 routerLink="/farmer-ledger-list"
+                routerLinkActive="active"
                 [attr.title]="collapsed() ? ('sidebar.updated.farmer.ledger.report' | i18n) : null"
               >
                 <span class="nav-icon material-symbols-rounded">menu_book</span>
@@ -183,10 +210,22 @@
               <a
                 class="nav-link"
                 routerLink="/buyer-ledger-list"
+                routerLinkActive="active"
                 [attr.title]="collapsed() ? ('sidebar.updated.buyer.ledger.report' | i18n) : null"
               >
                 <span class="nav-icon material-symbols-rounded">receipt</span>
                 <span class="nav-label">{{ 'sidebar.updated.buyer.ledger.report' | i18n }}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/inactive-list"
+                routerLinkActive="active"
+                [attr.title]="collapsed() ? ('sidebar.inactive.list' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">event_busy</span>
+                <span class="nav-label">{{ 'sidebar.inactive.list' | i18n }}</span>
               </a>
             </li>
           </ul>
@@ -223,28 +262,6 @@
               >
                 <span class="nav-icon material-symbols-rounded">currency_exchange</span>
                 <span class="nav-label">{{ 'sidebar.buyer.transaction' | i18n }}</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a
-                class="nav-link"
-                routerLink="/farmer-transaction-history"
-                routerLinkActive="active"
-                [attr.title]="collapsed() ? ('sidebar.farmer.txn.history' | i18n) : null"
-              >
-                <span class="nav-icon material-symbols-rounded">history</span>
-                <span class="nav-label">{{ 'sidebar.farmer.txn.history' | i18n }}</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a
-                class="nav-link"
-                routerLink="/buyer-transaction-history"
-                routerLinkActive="active"
-                [attr.title]="collapsed() ? ('sidebar.buyer.txn.history' | i18n) : null"
-              >
-                <span class="nav-icon material-symbols-rounded">history</span>
-                <span class="nav-label">{{ 'sidebar.buyer.txn.history' | i18n }}</span>
               </a>
             </li>
           </ul>
@@ -319,40 +336,17 @@
           </ul>
         </div>
       </div>
+
+      <div class="sidebar-footer">
+        <button type="button" class="sidebar-footer-logout" (click)="logout()" [attr.title]="'sidebar.logout' | i18n">
+          <span class="material-symbols-rounded">logout</span>
+          <span class="sidebar-footer-logout-label">{{ 'sidebar.logout' | i18n }}</span>
+        </button>
+      </div>
     </nav>
   </aside>
 
   <div class="main-content">
-    <header class="topbar">
-      <div class="topbar-left">
-        <button
-          type="button"
-          class="topbar-toggler"
-          [attr.aria-label]="'sidebar.toggle' | i18n"
-          [title]="'sidebar.toggle' | i18n"
-          (click)="toggleSidebar()"
-        >
-          <span class="material-symbols-rounded">{{ collapsed() ? 'menu' : 'menu_open' }}</span>
-        </button>
-        <span class="page-title">{{ titleKey() | i18n }}</span>
-      </div>
-      <div class="topbar-right">
-        <span class="shop-name">{{ auth.user()?.shopName }}</span>
-        <div class="lang-switch">
-          <button type="button" [class.active]="i18n.lang() === 'en'" (click)="switchLang('en')">
-            EN
-          </button>
-          <button type="button" [class.active]="i18n.lang() === 'ta'" (click)="switchLang('ta')">
-            த
-          </button>
-        </div>
-        <button type="button" class="btn btn-danger btn-sm" (click)="logout()">
-          <span class="material-symbols-rounded btn-icon">logout</span>
-          {{ 'sidebar.logout' | i18n }}
-        </button>
-      </div>
-    </header>
-
     <div class="content-area">
       <router-outlet />
     </div>

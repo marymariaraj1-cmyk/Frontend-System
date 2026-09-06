@@ -41,6 +41,42 @@ export class FarmerLedgerListComponent implements OnInit {
     return this.entries().filter((entry) => entry.farmerName.toLowerCase().includes(q));
   }
 
+  protected summaryTotal(): number {
+    return this.entries().length;
+  }
+
+  protected summaryOutstanding(): number {
+    return this.entries().reduce((sum, entry) => sum + Math.abs(Number(entry.outstandingBalance) || 0), 0);
+  }
+
+  protected summarySettled(): number {
+    return this.entries().filter((entry) => (Number(entry.outstandingBalance) || 0) <= 0).length;
+  }
+
+  protected outstandingAbs(value: number): number {
+    return Math.abs(value);
+  }
+
+  protected initials(name: string | undefined): string {
+    if (!name) {
+      return '?';
+    }
+    const parts = name.trim().split(/\s+/);
+    const first = parts[0]?.[0] ?? '';
+    const last = parts.length > 1 ? parts[parts.length - 1][0] ?? '' : '';
+    return (first + last).toUpperCase();
+  }
+
+  protected balanceClass(value: number): string {
+    if (value > 0) {
+      return 'credit';
+    }
+    if (value < 0) {
+      return 'debit';
+    }
+    return 'settled';
+  }
+
   protected viewDetail(entry: FarmerLedgerEntry): void {
     this.router.navigate(['/farmer-ledger-detail'], {
       queryParams: {

@@ -1,28 +1,108 @@
-<div class="card">
-  <div class="card-header">
-    <h3>{{ 'multi.sales.title' | i18n }}</h3>
+<div class="ms-page">
+  <div class="ms-header">
+    <span class="ms-accent"></span>
+    <span class="ms-ring ms-ring-1"></span>
+    <span class="ms-ring ms-ring-2"></span>
+    <span class="material-symbols-rounded ms-glyph">table_view</span>
+    <div class="ms-head-main">
+      <div class="ms-header-icon">
+        <span class="material-symbols-rounded">table_view</span>
+      </div>
+      <div class="ms-header-text">
+        <h2>{{ 'multi.sales.title' | i18n }}</h2>
+        <p class="ms-subtitle">{{ 'multi.sales.subtitle' | i18n }}</p>
+      </div>
+    </div>
+    <div class="ms-stats">
+      <div class="ms-stat">
+        <span class="ms-stat-label">{{ 'sales.total' | i18n }}</span>
+        <span class="ms-stat-value">{{ formatCurrency(summary().total) }}</span>
+      </div>
+      <div class="ms-stat">
+        <span class="ms-stat-label">{{ 'sales.commission' | i18n }}</span>
+        <span class="ms-stat-value">{{ formatCurrency(summary().commission) }}</span>
+      </div>
+      <div class="ms-stat">
+        <span class="ms-stat-label">{{ 'sales.net.amount' | i18n }}</span>
+        <span class="ms-stat-value">{{ formatCurrency(summary().net) }}</span>
+      </div>
+      <div class="ms-stat ms-stat-final">
+        <span class="ms-stat-label">{{ 'sales.final.total' | i18n }}</span>
+        <span class="ms-stat-value">{{ formatCurrency(summary().final) }}</span>
+      </div>
+    </div>
   </div>
-  <div class="card-body">
-    <div class="table-container">
-      <table id="salesTable" class="sales-grid-table">
-        <thead>
-          <tr>
-            <th style="width: 50px">{{ 'flower.sno' | i18n }}</th>
-            <th>{{ 'farmer.name' | i18n }} <span class="required">*</span></th>
-            <th>{{ 'sales.flower' | i18n }} <span class="required">*</span></th>
-            <th>{{ 'sales.qty' | i18n }}</th>
-            <th>{{ 'sales.rate' | i18n }}</th>
-            <th>{{ 'sales.amount' | i18n }} <span class="required">*</span></th>
-            <th>{{ 'sales.customer' | i18n }} <span class="required">*</span></th>
-            <th style="width: 80px">{{ 'flower.actions' | i18n }}</th>
-          </tr>
-        </thead>
+
+  <div class="card">
+    <div class="ms-card-head">
+      <span class="ms-chip material-symbols-rounded">view_list</span>
+      <h3>{{ 'multi.sales.grid.title' | i18n }}</h3>
+      <span class="ms-head-count">{{ rows().length }}</span>
+      @if (bagLimitNotice()) {
+        <button
+          type="button"
+          class="ms-baglimit-toggle"
+          [class.active]="bagLimitsOpen()"
+          (click)="bagLimitsOpen.set(!bagLimitsOpen())"
+        >
+          <span class="material-symbols-rounded">shopping_basket</span>
+          {{ 'bag.limit.title' | i18n }}
+          <span class="bag-limit-count-badge">{{ bagLimits().length }}</span>
+        </button>
+      }
+    </div>
+    <div class="card-body">
+      @if (bagLimitNotice() && bagLimitsOpen()) {
+        <div class="bag-limit-panel">
+          <div class="bag-limit-panel-head">
+            <span class="bag-limit-head-left">
+              <span class="material-symbols-rounded">shopping_basket</span>
+              <span>{{ 'bag.limit.title' | i18n }}</span>
+            </span>
+            <span class="bag-limit-count-badge">{{ bagLimits().length }}</span>
+          </div>
+          <div class="bag-limit-table-wrap">
+            <table class="bag-limit-table" style="width: 100%;">
+              <thead>
+                <tr>
+                  <th class="bag-limit-flower">{{ 'sales.flower' | i18n }}</th>
+                  <th class="bag-limit-num">{{ 'sales.bag' | i18n }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (config of bagLimits(); track config.configId) {
+                  <tr>
+                    <td class="bag-limit-flower">{{ config.flowerName }}</td>
+                    <td class="bag-limit-num">{{ config.bagCount ?? 0 }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+      <div class="table-container">
+        <table id="salesTable" class="sales-grid-table">
+          <thead>
+            <tr>
+              <th style="width: 50px">{{ 'flower.sno' | i18n }}</th>
+              <th>{{ 'farmer.name' | i18n }} <span class="required">*</span></th>
+              <th style="width: 80px">{{ 'sales.bag' | i18n }}</th>
+              <th>{{ 'sales.flower' | i18n }} <span class="required">*</span></th>
+              <th>{{ 'sales.qty' | i18n }}</th>
+              <th>{{ 'sales.rate' | i18n }}</th>
+              <th>{{ 'sales.amount' | i18n }} <span class="required">*</span></th>
+              <th>{{ 'sales.customer' | i18n }} <span class="required">*</span></th>
+              <th style="width: 80px">{{ 'flower.actions' | i18n }}</th>
+            </tr>
+          </thead>
         <tbody>
           @for (row of rows(); track row.saved ? row.salesId : $index; let i = $index) {
             <tr class="sales-row" [class.saved-row]="row.saved">
               <td class="row-index text-center">{{ i + 1 }}</td>
               @if (row.saved) {
                 <td><div class="grid-display">{{ row.farmerName }}</div></td>
+                <td><div class="grid-display">{{ row.bagCount }}</div></td>
                 <td><div class="grid-display">{{ row.flowerType }}</div></td>
                 <td><div class="grid-display">{{ row.totalWeight }}</div></td>
                 <td><div class="grid-display">{{ row.price }}</div></td>
@@ -46,6 +126,16 @@
                   }
                 </td>
                 <td>
+                  <input
+                    type="text"
+                    inputmode="numeric"
+                    class="grid-input bag-input"
+                    [ngModel]="row.bagCount"
+                    (ngModelChange)="updateRow(i, { bagCount: $event })"
+                    (input)="onBagInput(i)"
+                  />
+                </td>
+                <td>
                   <app-autocomplete
                     [items]="master().flowers"
                     [invalid]="row.flowerInvalid"
@@ -63,8 +153,7 @@
                     type="text"
                     class="grid-input"
                     [ngModel]="row.totalWeight"
-                    (ngModelChange)="updateRow(i, { totalWeight: $event })"
-                    (input)="recalcRowAmount(i)"
+                    (ngModelChange)="updateRow(i, { totalWeight: $event }); onQtyChange(i)"
                   />
                 </td>
                 <td>
@@ -77,12 +166,12 @@
                   />
                 </td>
                 <td>
-                  <input
-                    type="text"
-                    class="grid-input"
-                    [ngModel]="row.amount"
-                    (ngModelChange)="updateRow(i, { amount: $event })"
-                  />
+                <input
+                  type="text"
+                  class="grid-input"
+                  [ngModel]="row.amount"
+                  (ngModelChange)="updateRow(i, { amount: $event }); recalcRowRate(i)"
+                />
                 </td>
                 <td>
                   <app-autocomplete
@@ -126,6 +215,10 @@
         <span class="calc-label">{{ 'sales.net.amount' | i18n }}:</span>
         <span class="calc-value">{{ formatCurrency(summary().net) }}</span>
       </div>
+      <div class="calc-row">
+        <span class="calc-label">{{ 'sales.debit' | i18n }}:</span>
+        <input type="text" class="calc-input" [(ngModel)]="debit" autocomplete="off" />
+      </div>
       <div class="calc-row calc-final">
         <span class="calc-label">{{ 'sales.final.total' | i18n }}:</span>
         <span class="calc-value">{{ formatCurrency(summary().final) }}</span>
@@ -145,4 +238,5 @@
       </button>
     </div>
   </div>
+</div>
 </div>

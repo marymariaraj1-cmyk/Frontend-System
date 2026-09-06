@@ -2,9 +2,11 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { AutocompleteComponent } from '../../core/components/autocomplete/autocomplete.component';
+import { BagCountConfigRow } from '../../core/models/bag-count-config';
 import { MultiSalesLine, SalesMasterData } from '../../core/models/sales';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
 import { AuthService } from '../../core/services/auth.service';
+import { BagCountConfigService } from '../../core/services/bag-count-config.service';
 import { FarmerLedgerService } from '../../core/services/farmer-ledger.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { MultiSalesEntryService } from '../../core/services/multi-sales.service';
@@ -20,6 +22,7 @@ interface MultiSalesRow {
   saved: boolean;
   farmerName: string;
   flowerType: string;
+  bagCount: string;
   totalWeight: string;
   price: string;
   amount: string;
@@ -42,6 +45,7 @@ export class MultiSalesComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly i18n = inject(I18nService);
   private readonly toast = inject(ToastService);
+  private readonly bagCountConfigService = inject(BagCountConfigService);
 
   protected readonly master = signal<SalesMasterData>({
     farmers: [],
@@ -49,10 +53,25 @@ export class MultiSalesComponent implements OnInit {
     buyers: [],
   });
   protected readonly rows = signal<MultiSalesRow[]>([]);
+  protected readonly debit = signal('0');
   protected readonly saving = signal(false);
   protected readonly calcOpen = signal(true);
+  protected readonly bagLimitsOpen = signal(false);
+  protected readonly bagConfigs = signal<BagCountConfigRow[]>([]);
 
   protected readonly formatCurrency = formatCurrency;
+
+  protected readonly bagLimits = computed(() =>
+    this.bagConfigs()
+      .filter(
+        (c) =>
+          c.salesDate === formatApiDate(new Date()) &&
+          (c.bagCheck ?? 'E').toUpperCase() === 'E',
+      )
+      .sort((a, b) => a.flowerName.localeCompare(b.flowerName)),
+  );
+
+  protected readonly bagLimitNotice = computed(() => this.bagLimits().length > 0);
 
   protected readonly summary = computed(() => {
     let total = 0;
@@ -65,12 +84,27 @@ export class MultiSalesComponent implements OnInit {
     const totalRounded = roundOff(total);
     const commission = roundOff(totalRounded * 0.1);
     const net = totalRounded - commission;
-    return { total: totalRounded, commission, net, final: net };
+    const debitValue = parseFloat(this.debit());
+    const debitAmount = Number.isNaN(debitValue) ? 0 : debitValue;
+    const finalTotal = net - debitAmount;
+    return { total: totalRounded, commission, net, debit: debitAmount, final: finalTotal };
   });
 
   ngOnInit(): void {
     this.loadMasterData();
+    this.loadBagConfigs();
     this.loadTodayEntries();
+  }
+
+  private loadBagConfigs(): void {
+    this.bagCountConfigService.getConfigs().subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.bagConfigs.set(response.data ?? []);
+        }
+      },
+      error: () => this.bagConfigs.set([]),
+    });
   }
 
   private loadMasterData(): void {
@@ -105,6 +139,7 @@ export class MultiSalesComponent implements OnInit {
     salesId: number;
     farmerName: string;
     flowerType: string;
+    bagCount?: number;
     totalWeight: number;
     price: number;
     amount: number;
@@ -115,6 +150,7 @@ export class MultiSalesComponent implements OnInit {
       saved: true,
       farmerName: entry.farmerName ?? '',
       flowerType: entry.flowerType ?? '',
+      bagCount: entry.bagCount != null ? String(entry.bagCount) : '',
       totalWeight: entry.totalWeight != null ? String(entry.totalWeight) : '',
       price: entry.price != null ? String(entry.price) : '',
       amount: entry.amount != null ? String(entry.amount) : '',
@@ -164,6 +200,7 @@ export class MultiSalesComponent implements OnInit {
       saved: false,
       farmerName: '',
       flowerType: '',
+      bagCount: '',
       totalWeight: '',
       price: '',
       amount: '',
@@ -172,6 +209,12 @@ export class MultiSalesComponent implements OnInit {
       flowerInvalid: false,
       customerInvalid: false,
     };
+  }
+
+  protected onBagInput(index: number): void {
+    const row = this.rows()[index];
+    const cleaned = row.bagCount.replace(/[^0-9]/g, '');
+    this.updateRow(index, { bagCount: cleaned });
   }
 
   protected unsavedRows(): MultiSalesRow[] {
@@ -187,6 +230,30 @@ export class MultiSalesComponent implements OnInit {
     const rate = parseFloat(row.price);
     if (!Number.isNaN(weight) && !Number.isNaN(rate)) {
       this.updateRow(index, { amount: String(roundOff(weight * rate)) });
+    }
+  }
+
+  protected recalcRowRate(index: number): void {
+    const row = this.rows()[index];
+    if (row.saved || row.totalWeight.trim() === '' || row.amount.trim() === '') {
+      return;
+    }
+    const weight = parseFloat(row.totalWeight);
+    const amount = parseFloat(row.amount);
+    if (!Number.isNaN(weight) && !Number.isNaN(amount) && weight !== 0) {
+      this.updateRow(index, { price: String(roundOff(amount / weight)) });
+    }
+  }
+
+  protected onQtyChange(index: number): void {
+    const row = this.rows()[index];
+    if (row.saved || row.totalWeight.trim() === '') {
+      return;
+    }
+    if (row.price.trim() !== '') {
+      this.recalcRowAmount(index);
+    } else if (row.amount.trim() !== '') {
+      this.recalcRowRate(index);
     }
   }
 
@@ -282,7 +349,7 @@ export class MultiSalesComponent implements OnInit {
         return;
       }
 
-      lineItems.push({ farmerName: farmer, flowerType: flower, totalWeight: weight, price, amount, customerName: customer });
+      lineItems.push({ farmerName: farmer, flowerType: flower, bagCount: row.bagCount, totalWeight: weight, price, amount, customerName: customer });
     }
 
     if (lineItems.length === 0) {
@@ -319,7 +386,15 @@ export class MultiSalesComponent implements OnInit {
   }
 
   private executeMultiSave(lineItems: MultiSalesLine[], unsaved: MultiSalesRow[]): void {
-    this.multiSalesService.save({ rows: lineItems }).subscribe({
+    const summary = this.summary();
+    this.multiSalesService.save({
+      rows: lineItems,
+      totalSalesAmt: String(summary.total),
+      commissionAmt: String(summary.commission),
+      netAmount: String(summary.net),
+      finalTotal: String(summary.final),
+      debitAmount: String(summary.debit),
+    }).subscribe({
       next: (response) => {
         this.saving.set(false);
         if (response.success) {
@@ -362,6 +437,7 @@ export class MultiSalesComponent implements OnInit {
     const shopName = this.auth.user()?.shopName ?? '';
     const today = formatApiDate(new Date());
     const t = this.i18n.translate.bind(this.i18n);
+    const bagLimits = this.bagLimits();
 
     let rowsHtml = '';
     rows.forEach((row, i) => {
@@ -376,6 +452,28 @@ export class MultiSalesComponent implements OnInit {
         '<td class="left">' + (row.customerName || '-') + '</td>' +
         '</tr>';
     });
+
+    let bagLimitHtml = '';
+    if (bagLimits.length > 0) {
+      let body = '';
+      bagLimits.forEach((config, i) => {
+        body +=
+          '<tr>' +
+          '<td class="left">' + (i + 1) + '</td>' +
+          '<td class="left">' + (config.flowerName || '-') + '</td>' +
+          '<td class="right">' + (config.bagCount ?? 0) + '</td>' +
+          '</tr>';
+      });
+      bagLimitHtml =
+        '<div class="bl-title">' + t('bag.limit.title') + '</div>' +
+        '<table>' +
+        '<colgroup><col style="width:12%"><col style="width:60%"><col style="width:28%"></colgroup>' +
+        '<thead><tr>' +
+        '<th class="left">#</th>' +
+        '<th class="left">' + t('sales.flower') + '</th>' +
+        '<th class="right">' + t('bag.limit.limit') + '</th>' +
+        '</tr></thead><tbody>' + body + '</tbody></table>';
+    }
 
     const reportHtml =
       '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + t('print.receipt.title') + '</title>' +
@@ -395,6 +493,7 @@ export class MultiSalesComponent implements OnInit {
       'th.right,td.right{text-align:right;}' +
       'tbody tr{border-bottom:0.5px dotted #ccc;}' +
       'tbody tr:last-child{border-bottom:none;}' +
+      '.bl-title{font-size:8px;font-weight:700;text-align:center;text-transform:uppercase;letter-spacing:0.4px;margin:6px 0 3px;border-top:1px dashed #000;padding-top:5px;}' +
       '.footer{text-align:center;margin-top:10px;font-size:7px;border-top:1px dashed #000;padding-top:5px;}' +
       '</style></head><body>' +
       '<div class="print-header"><h2>' + shopName + '</h2></div>' +
@@ -412,7 +511,7 @@ export class MultiSalesComponent implements OnInit {
       '<th class="right">' + t('report.col.total') + '</th>' +
       '<th class="left">' + t('report.col.customer') + '</th>' +
       '</tr></thead>' +
-      '<tbody>' + rowsHtml + '</tbody></table>' +
+      '<tbody>' + rowsHtml + '</tbody></table>' + bagLimitHtml +
       '<div class="footer">' + t('print.thankyou') + '</div>' +
       '</body></html>';
 

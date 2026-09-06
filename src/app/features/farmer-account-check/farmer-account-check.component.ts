@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { AutocompleteComponent } from '../../core/components/autocomplete/autocomplete.component';
@@ -17,9 +17,10 @@ type CalcModel = 'model1' | 'model2' | 'model3' | null;
 interface ModelResult {
   model: CalcModel;
   label: string;
-  lines: { label: string; value: number }[];
+  lines: { label: string; value: number; desc: string; sign?: boolean }[];
   finalLabel: string;
   finalAmount: number;
+  finalDesc: string;
 }
 
 @Component({
@@ -37,6 +38,10 @@ export class FarmerAccountCheckComponent {
 
   protected readonly formatCurrency = formatCurrency;
 
+  protected absAmount(value: number): number {
+    return Math.abs(value);
+  }
+
   protected readonly farmerNames = signal<string[]>([]);
   protected readonly farmer = signal('');
   protected readonly farmerInvalid = signal(false);
@@ -53,6 +58,13 @@ export class FarmerAccountCheckComponent {
 
   constructor() {
     this.loadFarmerNames();
+    effect(() => {
+      const lang = this.i18n.lang();
+      const model = this.selectedModel();
+      if (model && this.activeRows().length > 0) {
+        this.calculate(model);
+      }
+    });
   }
 
   private loadFarmerNames(): void {
@@ -157,6 +169,10 @@ export class FarmerAccountCheckComponent {
     return this.activeRows().reduce((s, r) => s + (Number(r.debitAmt) || 0), 0);
   }
 
+  protected netTotal(): number {
+    return this.totalCredit() - this.totalDebit();
+  }
+
   protected hasDebitEntries(): boolean {
     return this.activeRows().some((r) => (Number(r.debitAmt) || 0) > 0);
   }
@@ -166,15 +182,15 @@ export class FarmerAccountCheckComponent {
     if (rows.length === 0) {
       return;
     }
-    if (!this.hasDebitEntries()) {
-      this.toast.error(this.i18n.translate('fac.no.debit.found'));
-      return;
-    }
 
     const sumCredit = rows.reduce((s, r) => s + (Number(r.creditAmt) || 0), 0);
     const sumDebit = rows.reduce((s, r) => s + (Number(r.debitAmt) || 0), 0);
 
     if (model === 'model1') {
+      if (!this.hasDebitEntries()) {
+        this.toast.error(this.i18n.translate('fac.no.debit.found'));
+        return;
+      }
       const actual = sumCredit - sumDebit;
       const interest = Math.round(actual * 0.1);
       const finalAmt = actual + interest;
@@ -182,51 +198,73 @@ export class FarmerAccountCheckComponent {
         model: 'model1',
         label: this.i18n.translate('fac.model.1.label'),
         lines: [
-          { label: this.i18n.translate('fac.farmer.advance'), value: sumDebit },
-          { label: this.i18n.translate('fac.actual.amount'), value: actual },
-          { label: this.i18n.translate('fac.interest.10'), value: interest },
+          { label: this.i18n.translate('fac.farmer.advance'), value: sumDebit, desc: this.i18n.translate('fac.desc.total.farmer.advance') },
+          { label: this.i18n.translate('fac.total.sale'), value: sumCredit, desc: this.i18n.translate('fac.desc.total.credit.sale') },
+          { label: this.i18n.translate('fac.actual.amount'), value: actual, desc: this.i18n.translate('fac.desc.total.sale.minus.advance'), sign: true },
+          { label: this.i18n.translate('fac.interest.10'), value: interest, desc: this.i18n.translate('fac.desc.interest.10.100days'), sign: true },
         ],
         finalLabel: this.i18n.translate('fac.final.total'),
         finalAmount: finalAmt,
+        finalDesc: this.i18n.translate('fac.desc.actual.plus.interest'),
       });
+      this.selectedModel.set(model);
     } else if (model === 'model2') {
-      const firstDebitRow = rows.find((r) => (Number(r.debitAmt) || 0) > 0);
-      if (!firstDebitRow) {
-        this.toast.error(this.i18n.translate('fac.no.opening.debit'));
+      const farmerId = this.farmerId();
+      if (!farmerId) {
         return;
       }
-      const openingDebit = Number(firstDebitRow.debitAmt) || 0;
-      const interest = Math.round(openingDebit * 0.02);
-      const inwardIncome = sumCredit - interest;
-      const finalAmt = inwardIncome - sumDebit;
-      this.modelResult.set({
-        model: 'model2',
-        label: this.i18n.translate('fac.model.2.label'),
-        lines: [
-          { label: this.i18n.translate('fac.opening.debit'), value: openingDebit },
-          { label: this.i18n.translate('fac.interest.2'), value: interest },
-          { label: this.i18n.translate('fac.inward.income'), value: inwardIncome },
-          { label: this.i18n.translate('fac.total.farmer.advance'), value: sumDebit },
-        ],
-        finalLabel: this.i18n.translate('fac.final.amount'),
-        finalAmount: finalAmt,
+      this.loading.set(true);
+      this.accountCheckService.getClosingBalance(farmerId).subscribe({
+        next: (response) => {
+          this.loading.set(false);
+          if (!response.success || response.data.closingBalance === null || response.data.closingBalance === undefined) {
+            this.toast.error(this.i18n.translate('fac.no.opening.debit'));
+            return;
+          }
+          const openingDebit = Number(response.data.closingBalance);
+          if (openingDebit === 0) {
+            this.toast.error(this.i18n.translate('fac.no.opening.debit'));
+            return;
+          }
+          const interest = Math.round(openingDebit * 0.02);
+          const inwardIncome = sumCredit - Math.abs(interest);
+          const finalAmt = inwardIncome - sumDebit;
+          this.modelResult.set({
+            model: 'model2',
+            label: this.i18n.translate('fac.model.2.label'),
+            lines: [
+              { label: this.i18n.translate('fac.opening.debit'), value: openingDebit, desc: this.i18n.translate('fac.desc.closing.balance.of.active.entry'), sign: true },
+              { label: this.i18n.translate('fac.interest.2'), value: interest, desc: this.i18n.translate('fac.desc.interest.2.opening.debit'), sign: true },
+              { label: this.i18n.translate('fac.total.sale'), value: sumCredit, desc: this.i18n.translate('fac.desc.total.credit.sale') },
+              { label: this.i18n.translate('fac.inward.income'), value: inwardIncome, desc: this.i18n.translate('fac.desc.total.sale.minus.interest') },
+              { label: this.i18n.translate('fac.total.farmer.advance'), value: sumDebit, desc: '' },
+            ],
+            finalLabel: this.i18n.translate('fac.final.amount'),
+            finalAmount: finalAmt,
+            finalDesc: this.i18n.translate('fac.desc.inward.minus.advance'),
+          });
+          this.selectedModel.set(model);
+        },
+        error: () => {
+          this.loading.set(false);
+          this.toast.error(this.i18n.translate('fac.no.opening.debit'));
+        },
       });
     } else if (model === 'model3') {
-      const firstDebitRow = rows.find((r) => (Number(r.debitAmt) || 0) > 0);
-      const openingDebit = firstDebitRow ? (Number(firstDebitRow.debitAmt) || 0) : 0;
       const finalAmt = sumCredit - sumDebit;
       this.modelResult.set({
         model: 'model3',
         label: this.i18n.translate('fac.model.3.label'),
         lines: [
-          { label: this.i18n.translate('fac.opening.debit'), value: openingDebit },
-          { label: this.i18n.translate('fac.farmer.advance'), value: sumDebit },
+          { label: this.i18n.translate('fac.inward.income'), value: sumCredit, desc: this.i18n.translate('fac.desc.total.credit.sale') },
+          { label: this.i18n.translate('fac.farmer.advance'), value: sumDebit, desc: this.i18n.translate('fac.desc.total.farmer.advance') },
         ],
         finalLabel: this.i18n.translate('fac.final.total'),
         finalAmount: finalAmt,
+        finalDesc: this.i18n.translate('fac.desc.total.inward.minus.advance'),
       });
+      this.selectedModel.set(model);
     }
-    this.selectedModel.set(model);
   }
 
   protected updateLedger(): void {
@@ -240,35 +278,15 @@ export class FarmerAccountCheckComponent {
       return;
     }
 
-    const confirmed = confirm(
-      this.i18n.translate('fac.confirm.update', formatCurrency(result.finalAmount)),
-    );
+    const amount = this.formatCurrency(Math.abs(result.finalAmount));
+    const kind = this.i18n.translate(result.finalAmount < 0 ? 'fac.debit' : 'fac.credit');
+
+    const confirmed = confirm(this.i18n.translate('fac.confirm.update', amount, kind));
     if (!confirmed) {
       return;
     }
 
-    this.updating.set(true);
-    this.accountCheckService.preview(farmerId, farmerName, result.finalAmount).subscribe({
-      next: (previewResponse) => {
-        if (!previewResponse.success) {
-          this.updating.set(false);
-          this.toast.error(previewResponse.message);
-          return;
-        }
-        if (previewResponse.data.willCauseZeroClose) {
-          const closeConfirm = confirm(this.i18n.translate('fac.confirm.close.ledger'));
-          if (!closeConfirm) {
-            this.updating.set(false);
-            return;
-          }
-        }
-        this.commitWrite(farmerId, farmerName, result.finalAmount);
-      },
-      error: (error) => {
-        this.updating.set(false);
-        this.toast.error(extractErrorMessage(error, this.i18n.translate('common.save.failed')));
-      },
-    });
+    this.commitWrite(farmerId, farmerName, result.finalAmount);
   }
 
   private commitWrite(farmerId: string, farmerName: string, finalAmount: number): void {
@@ -322,14 +340,14 @@ export class FarmerAccountCheckComponent {
       const linesHtml = result.lines
         .map(
           (line) =>
-            `<tr><td class="lbl">${this.escapeHtml(line.label)}</td><td class="amt">${this.formatNum(line.value)}</td></tr>`,
+            `<tr><td class="lbl">${this.escapeHtml(line.label)}</td><td class="amt">${this.formatNum(line.value)}</td><td class="desc">${this.escapeHtml(line.desc)}</td></tr>`,
         )
         .join('');
       calcHtml =
         `<div class="divider"></div>` +
         `<h3 style="font-size:9px;margin:4px 0;">${this.escapeHtml(result.label)}</h3>` +
         `<table class="summary-table">${linesHtml}` +
-        `<tr class="final"><td class="lbl">${this.escapeHtml(result.finalLabel)}</td><td class="amt">${this.formatNum(result.finalAmount)}</td></tr>` +
+        `<tr class="final"><td class="lbl">${this.escapeHtml(result.finalLabel)}</td><td class="amt">${this.formatNum(result.finalAmount)}</td><td class="desc">${this.escapeHtml(result.finalDesc)}</td></tr>` +
         `</table>`;
     }
 
@@ -388,8 +406,9 @@ export class FarmerAccountCheckComponent {
       `.divider{border-top:1px dashed #000;margin:6px 0;}` +
       `.summary-table{width:100%;border-collapse:collapse;font-size:8px;margin:0 0 4px;}` +
       `.summary-table td{padding:2px 2px;border:none;}` +
-      `.summary-table td.lbl{width:40%;text-align:left;}` +
-      `.summary-table td.amt{width:60%;text-align:right;}` +
+      `.summary-table td.lbl{width:32%;text-align:left;}` +
+      `.summary-table td.amt{width:22%;text-align:right;}` +
+      `.summary-table td.desc{width:46%;text-align:left;font-size:7px;color:#555;}` +
       `.summary-table tr.final td{font-size:10px;font-weight:700;border-top:1px solid #000;padding-top:4px;}` +
       `.footer{text-align:center;margin-top:10px;font-size:7px;border-top:1px dashed #000;padding-top:5px;letter-spacing:0.5px;}` +
       `</style></head><body>`

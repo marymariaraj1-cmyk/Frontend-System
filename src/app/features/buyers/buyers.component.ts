@@ -35,6 +35,10 @@ export class BuyersComponent implements OnInit {
       return matchName && matchContact && matchAddress;
     });
   });
+  protected initials(name: string): string {
+    return (name || '').trim().split(/\s+/).slice(0, 2).map((part) => part.charAt(0)).join('').toUpperCase() || '?';
+  }
+
   protected form = emptyBuyer();
   protected editing = false;
   protected submitting = false;

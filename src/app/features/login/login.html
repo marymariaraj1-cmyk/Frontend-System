@@ -1,29 +1,63 @@
-<div class="login-body">
-  <div class="login-container">
-    <div class="login-box">
-      <div class="login-lang">
-        <button type="button" class="lang-btn" [class.active]="i18n.lang() === 'en'" (click)="switchLang('en')">EN</button>
-        <button type="button" class="lang-btn" [class.active]="i18n.lang() === 'ta'" (click)="switchLang('ta')">த</button>
+<div class="login-page">
+  <div class="login-glow login-glow-1"></div>
+  <div class="login-glow login-glow-2"></div>
+
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="login-brand-icon">
+        <span class="material-symbols-rounded">local_florist</span>
       </div>
-      <h2>{{ 'login.title' | i18n }}</h2>
-      <p class="subtitle">{{ 'login.subtitle' | i18n }}</p>
-      <form (ngSubmit)="onSubmit()">
-        <div class="form-group">
-          <label for="username">{{ 'login.username' | i18n }}</label>
-          <input id="username" name="username" type="text" [(ngModel)]="username" autocomplete="username" />
-        </div>
-        <div class="form-group">
-          <label for="password">{{ 'login.password' | i18n }}</label>
-          <input id="password" name="password" type="password" [(ngModel)]="password" autocomplete="current-password" />
-        </div>
-        @if (error) {
-          <div class="error-msg">{{ error }}</div>
-        }
-        <button type="submit" class="btn btn-primary btn-block" [disabled]="submitting">
-          <span class="material-symbols-rounded">login</span>
-          {{ 'login.submit' | i18n }}
-        </button>
-      </form>
+      <h1>{{ 'login.title' | i18n }}</h1>
+      <p class="login-subtitle">{{ 'login.subtitle' | i18n }}</p>
     </div>
+
+    <div class="login-lang">
+      <button type="button" class="login-lang-btn" [class.active]="i18n.lang() === 'en'" (click)="switchLang('en')">EN</button>
+      <button type="button" class="login-lang-btn" [class.active]="i18n.lang() === 'ta'" (click)="switchLang('ta')">த</button>
+    </div>
+
+    <form class="login-form" (ngSubmit)="onSubmit()">
+      <div class="login-field">
+        <label for="username">{{ 'login.username' | i18n }}</label>
+        <div class="login-input-wrap">
+          <span class="material-symbols-rounded login-input-icon">person</span>
+          <input
+            id="username"
+            name="username"
+            type="text"
+            placeholder="{{ 'login.username' | i18n }}"
+            [(ngModel)]="username"
+            autocomplete="username"
+          />
+        </div>
+      </div>
+
+      <div class="login-field">
+        <label for="password">{{ 'login.password' | i18n }}</label>
+        <div class="login-input-wrap">
+          <span class="material-symbols-rounded login-input-icon">lock</span>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            placeholder="{{ 'login.password' | i18n }}"
+            [(ngModel)]="password"
+            autocomplete="current-password"
+          />
+        </div>
+      </div>
+
+      @if (error()) {
+        <div class="login-error">
+          <span class="material-symbols-rounded">error</span>
+          {{ error() }}
+        </div>
+      }
+
+      <button type="submit" class="login-submit" [class.loading]="submitting()" [disabled]="submitting()">
+        <span class="material-symbols-rounded">{{ submitting() ? 'progress_activity' : 'login' }}</span>
+        {{ 'login.submit' | i18n }}
+      </button>
+    </form>
   </div>
 </div>

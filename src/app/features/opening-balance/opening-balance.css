@@ -1,49 +1,14 @@
-:host {
+﻿:host {
   display: block;
 }
 
-.ob-tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.ob-search {
-  max-width: 100%;
-  margin-bottom: 12px;
-}
-
-.ob-search-input {
-  width: 100%;
-  max-width: 320px;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: border-color 0.3s;
-}
-
-.ob-search-input:focus {
-  outline: none;
-  border-color: #667eea;
-}
-
-.ob-tab {
-  padding: 8px 18px;
-  border: 1px solid #d0d7de;
-  background: #fff;
-  color: #333;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.ob-tab.active {
-  background: #1565c0;
-  color: #fff;
-  border-color: #1565c0;
+/* ==================== HERO (indigo wallet band) ==================== */
+.mst-header {
+  background:
+    radial-gradient(circle at 92% -20%, rgba(251, 191, 36, 0.22), transparent 42%),
+    radial-gradient(circle at -8% 130%, rgba(139, 92, 246, 0.35), transparent 48%),
+    linear-gradient(135deg, #3730a3 0%, #6d28d9 50%, #8b5cf6 130%);
+  box-shadow: 0 14px 34px rgba(109, 40, 217, 0.34);
 }
 
 .ob-table-wrap {
@@ -56,7 +21,7 @@
 }
 
 .ob-actions-col {
-  width: 80px;
+  width: 110px;
   text-align: right;
 }
 
@@ -68,7 +33,7 @@
 }
 
 .ob-farmer-name {
-  width: 120px;
+  width: 220px;
   white-space: normal;
   word-break: break-word;
 }
@@ -81,13 +46,20 @@
 }
 
 .ob-input {
-  width: 90px;
-  padding: 6px 8px;
-  border: 1px solid #ced4da;
-  border-radius: 6px;
+  width: 110px;
+  padding: 8px 10px;
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius-md);
   font-size: 13px;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.ob-input:focus {
+  outline: none;
+  border-color: var(--sd-primary);
+  box-shadow: 0 0 0 3px rgba(114, 103, 239, 0.15);
 }
 
 .ob-date-input {
-  width: 120px;
+  width: 140px;
 }

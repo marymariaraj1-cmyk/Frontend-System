@@ -41,6 +41,38 @@ export class BuyerLedgerListComponent implements OnInit {
     return this.entries().filter((entry) => entry.buyerName.toLowerCase().includes(q));
   }
 
+  protected summaryTotal(): number {
+    return this.entries().length;
+  }
+
+  protected summaryOutstanding(): number {
+    return this.entries().reduce((sum, entry) => sum + (Number(entry.outstandingBalance) || 0), 0);
+  }
+
+  protected summarySettled(): number {
+    return this.entries().filter((entry) => (Number(entry.outstandingBalance) || 0) <= 0).length;
+  }
+
+  protected initials(name: string | undefined): string {
+    if (!name) {
+      return '?';
+    }
+    const parts = name.trim().split(/\s+/);
+    const first = parts[0]?.[0] ?? '';
+    const last = parts.length > 1 ? parts[parts.length - 1][0] ?? '' : '';
+    return (first + last).toUpperCase();
+  }
+
+  protected balanceClass(value: number): string {
+    if (value > 0) {
+      return 'debit';
+    }
+    if (value < 0) {
+      return 'credit';
+    }
+    return 'settled';
+  }
+
   protected viewDetail(entry: BuyerLedgerEntry): void {
     this.router.navigate(['/buyer-ledger-detail'], {
       queryParams: {

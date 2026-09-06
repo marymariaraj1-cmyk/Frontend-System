@@ -2,98 +2,107 @@
   min-height: 100vh;
 }
 
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-  padding: 14px 20px;
-  margin-bottom: 24px;
-  position: sticky;
-  top: 0;
-  z-index: 50;
-}
-
-.topbar-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.page-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #2c3e50;
-}
-
-.shop-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1565c0;
-}
-
-.lang-switch {
-  display: flex;
-  gap: 4px;
-}
-
-.lang-switch button {
-  border: 1px solid #d0d7de;
-  background: #fff;
-  color: #333;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.lang-switch button.active {
-  background: #1565c0;
-  color: #fff;
-  border-color: #1565c0;
-}
-
 .brand-name {
   font-size: 18px;
   font-weight: 600;
   color: #ffffff;
 }
 
-@media (max-width: 1024px) {
-  .topbar-toggler {
-    display: inline-flex;
-  }
-
-  .page-title {
-    font-size: 15px;
-  }
-
-  .shop-name {
-    font-size: 13px;
-  }
+/* ==================== SIDEBAR HEADER (BRAND + TOGGLER + LANG BELOW) ==================== */
+.sidebar-header {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
 }
 
-@media (max-width: 600px) {
-  .topbar {
-    padding: 12px;
-    gap: 8px;
-    border-radius: 8px;
-  }
+.sidebar-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
 
-  .page-title {
-    font-size: 14px;
-  }
+.sidebar-lang {
+  align-self: flex-start;
+  display: inline-flex;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.sidebar-lang button {
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sidebar-lang button:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.sidebar-lang button.active {
+  background: var(--sd-primary);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(114, 103, 239, 0.35);
+}
+
+.sidebar-collapsed .sidebar-lang {
+  display: none;
+}
+
+/* ==================== SIDEBAR FOOTER (LOGOUT) ==================== */
+.sidebar-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 15px 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-footer-logout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 14px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.sidebar-footer-logout:hover {
+  background: #d32f2f;
+}
+
+.sidebar-footer-logout .material-symbols-rounded {
+  font-size: 18px;
+}
+
+/* ==================== SIDEBAR FOOTER — COLLAPSED ==================== */
+.sidebar-collapsed .sidebar-footer {
+  padding: 12px 8px 14px;
+  align-items: center;
+}
+
+.sidebar-collapsed .sidebar-footer-logout-label {
+  display: none;
+}
+
+.sidebar-collapsed .sidebar-footer-logout {
+  padding: 9px;
 }

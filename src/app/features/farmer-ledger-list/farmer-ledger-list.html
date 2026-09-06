@@ -1,20 +1,70 @@
-<div class="card">
-  <div class="card-header">
-    <h3>{{ 'farmer.ledger.list.title' | i18n }}</h3>
-  </div>
-  <div class="card-body">
-    <div class="list-toolbar">
-      <input
-        type="text"
-        [(ngModel)]="search"
-        [placeholder]="'farmer.ledger.list.search.placeholder' | i18n"
-      />
+<div class="lgr-hero">
+  <span class="lgr-hero-accent"></span>
+  <span class="lgr-hero-ring lgr-hero-ring-1"></span>
+  <span class="lgr-hero-ring lgr-hero-ring-2"></span>
+  <span class="lgr-hero-glyph material-symbols-rounded">menu_book</span>
+  <div class="lgr-hero-main">
+    <div class="lgr-hero-icon">
+      <span class="material-symbols-rounded">menu_book</span>
     </div>
+    <div class="lgr-hero-text">
+      <h2>{{ 'farmer.ledger.list.title' | i18n }}</h2>
+      <p>{{ 'farmer.ledger.list.sub' | i18n }}</p>
+    </div>
+  </div>
+  <div class="lgr-hero-stats">
+    <div class="lgr-stat-chip">
+      <span class="lgr-stat-icon material-symbols-rounded">groups</span>
+      <div class="lgr-stat-meta">
+        <span class="lgr-stat-label">{{ 'ledger.list.summary.total' | i18n }}</span>
+        <span class="lgr-stat-value">{{ summaryTotal() }}</span>
+      </div>
+    </div>
+    <div class="lgr-stat-chip">
+      <span class="lgr-stat-icon material-symbols-rounded">payments</span>
+      <div class="lgr-stat-meta">
+        <span class="lgr-stat-label">{{ 'ledger.list.summary.outstanding' | i18n }}</span>
+        <span class="lgr-stat-value">{{ formatCurrency(summaryOutstanding()) }}</span>
+      </div>
+    </div>
+    <div class="lgr-stat-chip">
+      <span class="lgr-stat-icon material-symbols-rounded">check_circle</span>
+      <div class="lgr-stat-meta">
+        <span class="lgr-stat-label">{{ 'ledger.list.summary.settled' | i18n }}</span>
+        <span class="lgr-stat-value">{{ summarySettled() }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card lgr-card">
+  <div class="card-body">
+    <div class="lgr-card-top">
+      <div class="lgr-card-title">
+        <h3>{{ 'farmer.ledger.list.title' | i18n }}</h3>
+        <span class="lgr-count-badge">{{ filteredEntries().length }}</span>
+      </div>
+      <div class="lgr-search">
+        <span class="material-symbols-rounded">search</span>
+        <input
+          type="text"
+          [(ngModel)]="search"
+          [placeholder]="'farmer.ledger.list.search.placeholder' | i18n"
+        />
+      </div>
+    </div>
+
+    @if (loading()) {
+      <div class="lgr-loader">
+        <div class="lgr-spinner"></div>
+      </div>
+    }
+
     <div class="table-container">
-      <table class="report-table">
+      <table class="report-table lgr-table">
         <thead>
           <tr>
-            <th style="width: 50px">{{ 'txn.sno' | i18n }}</th>
+            <th style="width: 60px">{{ 'txn.sno' | i18n }}</th>
             <th>{{ 'ledger.list.col.farmer.name' | i18n }}</th>
             <th class="amount-col">{{ 'ledger.list.col.outstanding.balance' | i18n }}</th>
             <th style="width: 110px">{{ 'ledger.list.col.action' | i18n }}</th>
@@ -23,9 +73,18 @@
         <tbody>
           @for (entry of filteredEntries(); track entry.farmerId; let i = $index) {
             <tr>
-              <td>{{ i + 1 }}</td>
-              <td>{{ entry.farmerName }}</td>
-              <td class="amount-col">{{ formatCurrency(entry.outstandingBalance) }}</td>
+              <td class="lgr-sno">{{ i + 1 }}</td>
+              <td>
+                <div class="lgr-name-cell">
+                  <span class="lgr-avatar">{{ initials(entry.farmerName) }}</span>
+                  <span class="lgr-name">{{ entry.farmerName }}</span>
+                </div>
+              </td>
+              <td class="amount-col">
+                <span class="lgr-balance" [class]="balanceClass(entry.outstandingBalance)">
+                  {{ formatCurrency(outstandingAbs(entry.outstandingBalance)) }}
+                </span>
+              </td>
               <td>
                 <button type="button" class="btn btn-primary btn-sm btn-icon-only" [attr.title]="'btn.view' | i18n" [attr.aria-label]="'btn.view' | i18n" (click)="viewDetail(entry)">
                   <span class="material-symbols-rounded">visibility</span>
@@ -35,7 +94,9 @@
           } @empty {
             <tr>
               <td colspan="4" class="no-records">
-                {{ loaded() ? ('msg.no.records' | i18n) : '' }}
+                @if (loaded() && !loading()) {
+                  {{ 'msg.no.records' | i18n }}
+                }
               </td>
             </tr>
           }

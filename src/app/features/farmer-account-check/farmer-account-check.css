@@ -2,12 +2,183 @@
   display: block;
 }
 
+.fac-page {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ==================== HERO ("settlement check" band, gold/indigo) ==================== */
+.fac-hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  overflow: hidden;
+  padding: 26px 28px;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 92% -20%, rgba(245, 158, 11, 0.32), transparent 42%),
+    radial-gradient(circle at -8% 130%, rgba(168, 85, 247, 0.42), transparent 48%),
+    linear-gradient(135deg, #1e1b4b 0%, #4c1d95 52%, #7c3aed 130%);
+  box-shadow: 0 14px 34px rgba(76, 29, 149, 0.32);
+}
+
+.fac-hero-accent {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 34%;
+  height: 100%;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.09) 60%, rgba(245, 158, 11, 0.22));
+  clip-path: polygon(30% 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.fac-hero-ring {
+  position: absolute;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 50%;
+}
+
+.fac-hero-ring-1 {
+  width: 190px;
+  height: 190px;
+  top: -70px;
+  right: 34%;
+}
+
+.fac-hero-ring-2 {
+  width: 120px;
+  height: 120px;
+  bottom: -50px;
+  left: 16%;
+}
+
+.fac-hero-glyph {
+  position: absolute;
+  right: 24px;
+  bottom: -18px;
+  font-size: 130px;
+  color: rgba(255, 255, 255, 0.07);
+}
+
+.fac-hero-main {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.fac-hero-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
+  color: #fff;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.fac-hero-icon .material-symbols-rounded {
+  font-size: 30px;
+}
+
+.fac-hero-text h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.fac-hero-text p {
+  margin: 4px 0 0;
+  max-width: 620px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.fac-hero-stats {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.fac-stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.fac-stat-icon {
+  font-size: 22px;
+  color: #fbbf24;
+}
+
+.fac-stat-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.fac-stat-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.fac-stat-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* ==================== SELECT CARD ==================== */
+.fac-card-icon {
+  font-size: 20px;
+  vertical-align: -4px;
+  margin-right: 6px;
+  color: var(--sd-primary);
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.form-group {
+  flex: 1;
+  min-width: 220px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 6px;
+}
+
 .form-actions-inline {
   display: flex;
   align-items: flex-end;
   padding-bottom: 5px;
 }
 
+.required {
+  color: #e74c3c;
+}
+
+/* ==================== TABLE ==================== */
 .table-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -21,16 +192,18 @@
 
 .data-table th,
 .data-table td {
-  padding: 8px 12px;
-  border-bottom: 1px solid #eee;
+  padding: 9px 12px;
+  border-bottom: 1px solid #eef0f6;
 }
 
 .data-table th {
-  background: #f8f9fa;
-  font-weight: 600;
-  color: #555;
+  background: #f6f7fb;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #5f677a;
   white-space: nowrap;
-  border-bottom: 2px solid #dee2e6;
 }
 
 .data-table th.left,
@@ -43,13 +216,18 @@
   text-align: right;
 }
 
+.data-table tbody tr {
+  transition: background 0.15s;
+}
+
 .data-table tbody tr:hover {
-  background: #f8f9fa;
+  background: #f4f4ff;
 }
 
 .data-table .total-row td {
-  border-top: 2px solid #dee2e6;
-  background: #e8f0fe;
+  border-top: 2px solid var(--sd-primary);
+  background: #eef2ff;
+  color: #4338ca;
 }
 
 .no-data {
@@ -59,68 +237,254 @@
   font-size: 14px;
 }
 
+/* ==================== MODEL BUTTONS (hero band) ==================== */
 .model-buttons {
+  position: relative;
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
   margin-top: 16px;
+  padding: 14px;
+  overflow: hidden;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 8% -70%, rgba(245, 158, 11, 0.28), transparent 45%),
+    radial-gradient(circle at 95% 140%, rgba(190, 24, 93, 0.28), transparent 48%),
+    linear-gradient(135deg, #1e1b4b 0%, #4c1d95 52%, #312e81 120%);
+  box-shadow: 0 12px 26px rgba(76, 29, 149, 0.22);
 }
 
+.fac-model-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all 0.2s;
+  backdrop-filter: blur(6px);
+}
+
+.fac-model-btn .material-symbols-rounded {
+  font-size: 17px;
+}
+
+.fac-model-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+.fac-model-btn.active {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  border-color: transparent;
+  color: #7c2d12;
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.45);
+}
+
+/* ==================== CALC RESULT (hero band) ==================== */
 .calc-result {
+  position: relative;
   margin-top: 20px;
-  padding: 16px;
-  background: #f8f9fa;
-  border: 1px solid #e4e7ec;
-  border-radius: 8px;
+  padding: 24px 24px 20px;
+  overflow: hidden;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 94% -25%, rgba(245, 158, 11, 0.32), transparent 42%),
+    radial-gradient(circle at -6% 130%, rgba(190, 24, 93, 0.4), transparent 52%),
+    linear-gradient(135deg, #1e1b4b 0%, #4c1d95 55%, #7c3aed 130%);
+  box-shadow: 0 16px 38px rgba(76, 29, 149, 0.35);
+}
+
+.calc-result::before,
+.calc-result::after {
+  content: '';
+  position: absolute;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.calc-result::before {
+  width: 210px;
+  height: 210px;
+  top: -90px;
+  right: 8%;
+}
+
+.calc-result::after {
+  width: 130px;
+  height: 130px;
+  bottom: -56px;
+  left: 6%;
+}
+
+.calc-result-chip {
+  position: absolute;
+  top: 8px;
+  right: 18px;
+  font-size: 130px;
+  color: rgba(255, 255, 255, 0.07);
+  pointer-events: none;
 }
 
 .calc-result h3 {
-  font-size: 15px;
-  color: #2c3e50;
-  margin-bottom: 10px;
+  position: relative;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #fff;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.25);
+  margin-bottom: 14px;
 }
 
 .calc-table {
+  position: relative;
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
 }
 
 .calc-table td {
-  padding: 6px 4px;
+  padding: 7px 6px;
   border: none;
 }
 
-.calc-table td.lbl {
-  width: 60%;
+.calc-table td.lbl,
+.calc-table th.lbl {
+  width: 32%;
   text-align: left;
-  color: #555;
-  font-weight: 500;
+  color: rgba(255, 255, 255, 0.82);
+  font-weight: 600;
 }
 
-.calc-table td.amt {
-  width: 40%;
+.calc-table td.amt,
+.calc-table th.amt {
+  width: 20%;
+  padding-right: 16px;
   text-align: right;
-  color: #333;
+  color: #fff;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.calc-table td.desc,
+.calc-table th.desc {
+  width: 44%;
+  text-align: left;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  font-style: italic;
+}
+
+.calc-table thead th {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: rgba(255, 255, 255, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  padding-bottom: 6px;
+}
+
+.calc-table tbody tr {
+  transition: background 0.15s;
+}
+
+.calc-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .calc-table tr.final td {
-  font-size: 16px;
-  font-weight: 700;
-  border-top: 2px solid #1565C0;
-  padding-top: 8px;
-  color: #1565C0;
+  font-size: 17px;
+  font-weight: 800;
+  border-top: 2px solid rgba(245, 158, 11, 0.85);
+  padding-top: 10px;
+  color: #fbbf24;
+  letter-spacing: 0.3px;
+  text-shadow: 0 1px 10px rgba(245, 158, 11, 0.35);
 }
 
+.fac-tag {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  vertical-align: 1px;
+}
+
+.fac-tag-debit {
+  color: #fca5a5;
+  background: rgba(220, 38, 38, 0.24);
+  border: 1px solid rgba(248, 113, 113, 0.4);
+}
+
+.fac-tag-credit {
+  color: #86efac;
+  background: rgba(22, 163, 74, 0.24);
+  border: 1px solid rgba(134, 239, 172, 0.4);
+}
+
+/* ==================== LOADER ==================== */
+.fac-loader {
+  display: flex;
+  justify-content: center;
+  padding: 28px 0;
+}
+
+.fac-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(114, 103, 239, 0.2);
+  border-top-color: var(--sd-primary);
+  border-radius: 50%;
+  animation: fac-spin 0.8s linear infinite;
+}
+
+@keyframes fac-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==================== RESPONSIVE ==================== */
 @media (max-width: 600px) {
-  .model-buttons {
-    flex-direction: column;
+  .fac-hero {
+    padding: 20px;
   }
 
-  .model-buttons .btn {
+  .fac-hero-text h2 {
+    font-size: 18px;
+  }
+
+  .fac-hero-glyph {
+    font-size: 90px;
+  }
+
+  .fac-stat-chip {
+    flex: 1;
+    min-width: 140px;
+  }
+
+  .model-buttons {
+    flex-direction: column;
+    padding: 12px;
+  }
+
+  .fac-model-btn {
     width: 100%;
+    justify-content: center;
   }
 
   .data-table th,
@@ -129,8 +493,24 @@
     font-size: 12px;
   }
 
+  .calc-result {
+    padding: 18px 16px 16px;
+  }
+
+  .calc-result-chip {
+    font-size: 90px;
+  }
+
+  .calc-result h3 {
+    font-size: 15px;
+  }
+
   .calc-table {
     font-size: 13px;
+  }
+
+  .calc-table td.amt {
+    white-space: normal;
   }
 
   .calc-table tr.final td {

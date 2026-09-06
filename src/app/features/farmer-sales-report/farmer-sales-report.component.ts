@@ -145,6 +145,16 @@ export class FarmerSalesReportComponent {
     return this.rows().reduce((sum, row) => sum + (Number(row.totalNetAmt) || 0), 0);
   }
 
+  protected initials(name: string | undefined): string {
+    if (!name) {
+      return '?';
+    }
+    const parts = name.trim().split(/\s+/);
+    const first = parts[0]?.[0] ?? '';
+    const last = parts.length > 1 ? parts[parts.length - 1][0] ?? '' : '';
+    return (first + last).toUpperCase();
+  }
+
   protected openPopup(farmerId: string): void {
     const farmer = this.rows().find((row) => row.farmerId === farmerId);
     if (!farmer) {
@@ -186,6 +196,10 @@ export class FarmerSalesReportComponent {
     return this.popupFarmer()?.debit ?? 0;
   }
 
+  protected popupDebitBreakdown(): string {
+    return (this.popupFarmer() as any)?.debitBreakdown ?? '';
+  }
+
   protected popupFinalTotal(): number {
     return this.popupFarmer()?.finalTotal ?? 0;
   }
@@ -211,6 +225,7 @@ export class FarmerSalesReportComponent {
       )
       .join('');
 
+    const debitBreakdown = (farmer as any)?.debitBreakdown ?? '';
     const reportHtml =
       this.printStyle('80mm auto', '76mm') +
       `<div class="print-header">` +
@@ -234,7 +249,7 @@ export class FarmerSalesReportComponent {
       `<tr><td class="lbl">${this.escapeHtml(this.i18n.translate('farmer.sales.daily.report.detail.total'))}</td><td class="wgt"></td><td class="amt">${this.formatNum(this.popupTotal())}</td></tr>` +
       `<tr><td class="lbl">${this.escapeHtml(this.i18n.translate('farmer.sales.daily.report.detail.commission'))}</td><td class="wgt"></td><td class="amt">${this.formatNum(this.popupCommission())}</td></tr>` +
       `<tr><td class="lbl">${this.escapeHtml(this.i18n.translate('farmer.sales.daily.report.detail.net.amount'))}</td><td class="wgt"></td><td class="amt">${this.formatNum(this.popupNetAmount())}</td></tr>` +
-      `<tr><td class="lbl">${this.escapeHtml(this.i18n.translate('farmer.sales.daily.report.detail.debit.amount'))}</td><td class="wgt"></td><td class="amt">${this.formatNum(this.popupDebit())}</td></tr>` +
+      `<tr><td class="lbl">${this.escapeHtml(this.i18n.translate('farmer.sales.daily.report.detail.debit.amount'))}${debitBreakdown ? ' (' + this.escapeHtml(debitBreakdown) + ')' : ''}</td><td class="wgt"></td><td class="amt">${this.formatNum(this.popupDebit())}</td></tr>` +
       `<tr class="final"><td class="lbl">${this.escapeHtml(this.i18n.translate('farmer.sales.daily.report.detail.final.total'))}</td><td class="wgt"></td><td class="amt">${this.formatNum(this.popupFinalTotal())}</td></tr>` +
       `</table>` +
       `<div class="footer">${this.escapeHtml(this.i18n.translate('print.thankyou'))}</div>` +

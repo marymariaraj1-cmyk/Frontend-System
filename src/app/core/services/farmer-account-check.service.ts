@@ -13,6 +13,10 @@ export class FarmerAccountCheckService {
     return this.api.get<ActiveLedgerRow[]>(`/farmer-account-check/active-ledger?farmerId=${encodeURIComponent(farmerId)}`);
   }
 
+  getClosingBalance(farmerId: string): Observable<ApiResponse<{ closingBalance: number | null }>> {
+    return this.api.get<{ closingBalance: number | null }>(`/farmer-account-check/closing-balance?farmerId=${encodeURIComponent(farmerId)}`);
+  }
+
   preview(farmerId: string, farmerName: string, finalAmount: number): Observable<ApiResponse<PreviewResponse>> {
     return this.api.post<PreviewResponse>('/farmer-account-check/preview', {
       farmerId,

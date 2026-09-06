@@ -1,78 +1,102 @@
-<div class="card">
-  <div class="card-header">
-    <h3>{{ 'flower.master.title' | i18n }}</h3>
-    <div class="card-header-actions">
-      <button type="button" class="btn btn-primary btn-sm" (click)="startAdd()">
-        <span class="material-symbols-rounded">add</span>
-        {{ 'btn.add.new' | i18n }}
-      </button>
+<div class="mst-page">
+  <div class="mst-header">
+    <span class="mst-accent"></span>
+    <span class="mst-ring mst-ring-1"></span>
+    <span class="mst-ring mst-ring-2"></span>
+    <span class="material-symbols-rounded mst-glyph">local_florist</span>
+    <div class="mst-header-icon">
+      <span class="material-symbols-rounded">local_florist</span>
     </div>
+    <div class="mst-header-text">
+      <h2>{{ 'flower.master.title' | i18n }}</h2>
+      <p class="mst-subtitle">{{ 'flower.master.subtitle' | i18n }}</p>
+    </div>
+    <button type="button" class="fab-btn" [attr.title]="'btn.add.new' | i18n" [attr.aria-label]="'btn.add.new' | i18n" (click)="startAdd()">
+      <span class="material-symbols-rounded">add</span>
+    </button>
   </div>
-  <div class="card-body">
-    @if (showForm()) {
-      <form class="master-form" (ngSubmit)="submit()">
-        <h4 class="form-title">
-          {{ editing ? ('flower.details' | i18n) : ('flower.add.title' | i18n) }}
-        </h4>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="flowerName">{{ 'flower.name' | i18n }}</label>
-            <input id="flowerName" name="flowerName" type="text" [(ngModel)]="form.flowerName" />
-          </div>
-        </div>
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary" [disabled]="submitting">
-            <span class="material-symbols-rounded">{{ editing ? 'update' : 'save' }}</span>
-            {{ editing ? ('btn.update' | i18n) : ('btn.save' | i18n) }}
-          </button>
-          <button type="button" class="btn btn-secondary" (click)="cancel()">
-            <span class="material-symbols-rounded">close</span>
-            {{ 'btn.cancel' | i18n }}
-          </button>
-        </div>
-      </form>
-    }
 
-    <div class="table-container">
-      <table class="report-table">
-        <thead>
-          <tr>
-            <th style="width: 50px">{{ 'flower.sno' | i18n }}</th>
-            <th>{{ 'flower.name' | i18n }}</th>
-            <th style="width: 100px">{{ 'flower.actions' | i18n }}</th>
-          </tr>
-          <tr class="filter-row">
-            <td></td>
-            <td>
-              <input
-                type="text"
-                [placeholder]="'search.placeholder' | i18n"
-                [(ngModel)]="nameFilter"
-              />
-            </td>
-            <td></td>
-          </tr>
-        </thead>
-        <tbody>
-          @for (row of filteredRows(); track row.flowerId; let i = $index) {
+  @if (showForm()) {
+    <div class="card">
+      <div class="card-body">
+        <form class="master-form" (ngSubmit)="submit()">
+          <h4 class="form-title">
+            <span class="material-symbols-rounded mst-card-icon">local_florist</span>
+            {{ editing ? ('flower.details' | i18n) : ('flower.add.title' | i18n) }}
+          </h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="flowerName">{{ 'flower.name' | i18n }}</label>
+              <input id="flowerName" name="flowerName" type="text" [(ngModel)]="form.flowerName" />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="icon-btn icon-btn-primary" [disabled]="submitting" [attr.title]="editing ? ('btn.update' | i18n) : ('btn.save' | i18n)" [attr.aria-label]="editing ? ('btn.update' | i18n) : ('btn.save' | i18n)">
+              <span class="material-symbols-rounded">{{ editing ? 'update' : 'save' }}</span>
+            </button>
+            <button type="button" class="icon-btn icon-btn-secondary" (click)="cancel()" [attr.title]="'btn.cancel' | i18n" [attr.aria-label]="'btn.cancel' | i18n">
+              <span class="material-symbols-rounded">close</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <div class="card">
+    <div class="card-header">
+      <h3>
+        <span class="material-symbols-rounded mst-card-icon">local_florist</span>
+        {{ 'flower.list' | i18n }}
+      </h3>
+    </div>
+    <div class="card-body">
+      <div class="table-container mst-table-wrap">
+        <table class="report-table mst-table">
+          <thead>
             <tr>
-              <td>{{ i + 1 }}</td>
-              <td>{{ row.flowerName }}</td>
+              <th style="width: 50px">{{ 'flower.sno' | i18n }}</th>
+              <th>{{ 'flower.name' | i18n }}</th>
+              <th style="width: 100px">{{ 'flower.actions' | i18n }}</th>
+            </tr>
+            <tr class="filter-row">
+              <td></td>
               <td>
-                <div class="action-btns">
-                  <button type="button" class="btn btn-sm btn-secondary btn-icon-only" [attr.title]="'btn.edit' | i18n" [attr.aria-label]="'btn.edit' | i18n" (click)="startEdit(row)">
-                    <span class="material-symbols-rounded">edit</span>
-                  </button>
-                </div>
+                <input
+                  type="text"
+                  [placeholder]="'search.placeholder' | i18n"
+                  [(ngModel)]="nameFilter"
+                />
               </td>
+              <td></td>
             </tr>
-          } @empty {
-            <tr>
-              <td colspan="3" class="no-records">{{ 'common.no.records' | i18n }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            @for (row of filteredRows(); track row.flowerId; let i = $index) {
+              <tr>
+                <td>{{ i + 1 }}</td>
+                <td>
+                  <div class="mst-name-cell">
+                    <span class="row-avatar">{{ initials(row.flowerName) }}</span>
+                    <span>{{ row.flowerName }}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="action-btns">
+                    <button type="button" class="icon-btn icon-btn-secondary icon-btn-sm" [attr.title]="'btn.edit' | i18n" [attr.aria-label]="'btn.edit' | i18n" (click)="startEdit(row)">
+                      <span class="material-symbols-rounded">edit</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="3" class="no-records">{{ 'common.no.records' | i18n }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>

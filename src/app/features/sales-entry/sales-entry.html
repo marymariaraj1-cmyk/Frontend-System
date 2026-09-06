@@ -1,52 +1,142 @@
-<div class="card">
-  <div class="card-header">
-    <h3>{{ 'sales.title' | i18n }}</h3>
-  </div>
-  <div class="card-body">
-    <div class="form-row">
-      <div class="form-group">
-        <label for="farmerName">{{ 'farmer.name' | i18n }} <span class="required">*</span></label>
-        <app-autocomplete
-          [items]="master().farmers"
-          [invalid]="farmerInvalid()"
-          [(value)]="farmer"
-          (onSelect)="farmer.set($event)"
-          (blur)="validateFarmer()"
-        />
-        @if (farmerInvalid()) {
-          <span class="field-error">{{ 'sales.error.farmer.notfound' | i18n }}</span>
-        }
+<div class="se-page">
+  <div class="se-header">
+    <span class="se-accent"></span>
+    <span class="se-ring se-ring-1"></span>
+    <span class="se-ring se-ring-2"></span>
+    <span class="material-symbols-rounded se-glyph">sell</span>
+    <div class="se-head-main">
+      <div class="se-header-icon">
+        <span class="material-symbols-rounded">receipt_long</span>
       </div>
-      <div class="form-group">
-        <label for="salesDate">{{ 'sales.date' | i18n }} <span class="required">*</span></label>
-        <input id="salesDate" name="salesDate" type="date" [(ngModel)]="salesDate" required />
+      <div class="se-header-text">
+        <h2>{{ 'sales.title' | i18n }}</h2>
+        <p class="se-subtitle">{{ 'sales.entry.subtitle' | i18n }}</p>
+      </div>
+    </div>
+    <div class="se-stats">
+      <div class="se-stat">
+        <span class="se-stat-label">{{ 'sales.total' | i18n }}</span>
+        <span class="se-stat-value">{{ formatCurrency(summary().total) }}</span>
+      </div>
+      <div class="se-stat">
+        <span class="se-stat-label">{{ 'sales.commission' | i18n }}</span>
+        <span class="se-stat-value">{{ formatCurrency(summary().commission) }}</span>
+      </div>
+      <div class="se-stat">
+        <span class="se-stat-label">{{ 'sales.net.amount' | i18n }}</span>
+        <span class="se-stat-value">{{ formatCurrency(summary().net) }}</span>
+      </div>
+      <div class="se-stat se-stat-final">
+        <span class="se-stat-label">{{ 'sales.final.total' | i18n }}</span>
+        <span class="se-stat-value">{{ formatCurrency(summary().final) }}</span>
       </div>
     </div>
   </div>
-</div>
 
-<div class="card">
-  <div class="card-header">
-    <h3>{{ 'sales.list' | i18n }}</h3>
+  <div class="card">
+    <div class="se-card-head">
+      <span class="se-chip material-symbols-rounded">person</span>
+      <h3>{{ 'sales.customer.details' | i18n }}</h3>
+    </div>
+    <div class="card-body se-farmer-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="farmerName">{{ 'farmer.name' | i18n }} <span class="required">*</span></label>
+          <app-autocomplete
+            [items]="master().farmers"
+            [invalid]="farmerInvalid()"
+            [(value)]="farmer"
+            (onSelect)="farmer.set($event)"
+            (blur)="validateFarmer()"
+          />
+          @if (farmerInvalid()) {
+            <span class="field-error">{{ 'sales.error.farmer.notfound' | i18n }}</span>
+          }
+        </div>
+        <div class="form-group">
+          <label for="salesDate">{{ 'sales.date' | i18n }} <span class="required">*</span></label>
+          <input id="salesDate" name="salesDate" type="date" [(ngModel)]="salesDate" required />
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="card-body">
-    <div class="table-container">
-      <table id="salesTable" class="sales-grid-table">
-        <thead>
-          <tr>
-            <th style="width: 50px">{{ 'flower.sno' | i18n }}</th>
-            <th>{{ 'sales.flower' | i18n }} <span class="required">*</span></th>
-            <th>{{ 'sales.qty' | i18n }}</th>
-            <th>{{ 'sales.rate' | i18n }}</th>
-            <th>{{ 'sales.amount' | i18n }} <span class="required">*</span></th>
-            <th>{{ 'sales.customer' | i18n }} <span class="required">*</span></th>
-            <th style="width: 80px">{{ 'flower.actions' | i18n }}</th>
-          </tr>
-        </thead>
+
+  <div class="card">
+    <div class="se-card-head">
+      <span class="se-chip material-symbols-rounded">local_florist</span>
+      <h3>{{ 'sales.list' | i18n }}</h3>
+      <span class="se-head-count">{{ rows().length }}</span>
+      @if (bagLimitNotice()) {
+        <button
+          type="button"
+          class="se-baglimit-toggle"
+          [class.active]="bagLimitsOpen()"
+          (click)="bagLimitsOpen.set(!bagLimitsOpen())"
+        >
+          <span class="material-symbols-rounded">shopping_basket</span>
+          {{ 'bag.limit.title' | i18n }}
+          <span class="bag-limit-count-badge">{{ bagLimits().length }}</span>
+        </button>
+      }
+    </div>
+    <div class="card-body">
+      @if (bagLimitNotice() && bagLimitsOpen()) {
+        <div class="bag-limit-panel">
+          <div class="bag-limit-panel-head">
+            <span class="bag-limit-head-left">
+              <span class="material-symbols-rounded">shopping_basket</span>
+              <span>{{ 'bag.limit.title' | i18n }} &middot; {{ salesDate() }}</span>
+            </span>
+            <span class="bag-limit-count-badge">{{ bagLimits().length }}</span>
+          </div>
+          <div class="bag-limit-table-wrap">
+            <table class="bag-limit-table" style="width: 100%;">
+              <thead>
+                <tr>
+                  <th class="bag-limit-flower">{{ 'sales.flower' | i18n }}</th>
+                  <th class="bag-limit-num">{{ 'sales.bag' | i18n }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (config of bagLimits(); track config.configId) {
+                  <tr>
+                    <td class="bag-limit-flower">{{ config.flowerName }}</td>
+                    <td class="bag-limit-num">{{ config.bagCount ?? 0 }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+      <div class="table-container">
+        <table id="salesTable" class="sales-grid-table">
+          <thead>
+            <tr>
+              <th style="width: 50px">{{ 'flower.sno' | i18n }}</th>
+              <th style="width: 80px">{{ 'sales.bag' | i18n }}</th>
+              <th>{{ 'sales.flower' | i18n }} <span class="required">*</span></th>
+              <th>{{ 'sales.qty' | i18n }}</th>
+              <th>{{ 'sales.rate' | i18n }}</th>
+              <th>{{ 'sales.amount' | i18n }} <span class="required">*</span></th>
+              <th>{{ 'sales.customer' | i18n }} <span class="required">*</span></th>
+              <th style="width: 80px">{{ 'flower.actions' | i18n }}</th>
+            </tr>
+          </thead>
         <tbody>
           @for (row of rows(); track $index; let i = $index) {
             <tr>
               <td class="row-index text-center">{{ i + 1 }}</td>
+              <td>
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  class="grid-input bag-input"
+                  [ngModel]="row.bagCount"
+                  (ngModelChange)="updateRow(i, { bagCount: $event })"
+                  (input)="onBagInput(i)"
+                />
+              </td>
               <td>
                 <app-autocomplete
                   [items]="master().flowers"
@@ -65,8 +155,7 @@
                   type="text"
                   class="grid-input"
                   [ngModel]="row.totalWeight"
-                  (ngModelChange)="updateRow(i, { totalWeight: $event })"
-                  (input)="recalcRowAmount(i)"
+                  (ngModelChange)="updateRow(i, { totalWeight: $event }); onQtyChange(i)"
                 />
               </td>
               <td>
@@ -83,7 +172,7 @@
                   type="text"
                   class="grid-input"
                   [ngModel]="row.amount"
-                  (ngModelChange)="updateRow(i, { amount: $event })"
+                  (ngModelChange)="updateRow(i, { amount: $event }); recalcRowRate(i)"
                 />
               </td>
               <td>
@@ -156,4 +245,5 @@
       </button>
     </div>
   </div>
+</div>
 </div>

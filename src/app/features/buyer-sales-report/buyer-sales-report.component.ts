@@ -141,6 +141,16 @@ export class BuyerSalesReportComponent {
     return this.rows().reduce((sum, row) => sum + (Number(row.totalAmount) || 0), 0);
   }
 
+  protected initials(name: string | undefined): string {
+    if (!name) {
+      return '?';
+    }
+    const parts = name.trim().split(/\s+/);
+    const first = parts[0]?.[0] ?? '';
+    const last = parts.length > 1 ? parts[parts.length - 1][0] ?? '' : '';
+    return (first + last).toUpperCase();
+  }
+
   protected openPopup(buyerId: string): void {
     const buyer = this.rows().find((row) => row.buyerId === buyerId);
     if (!buyer) {

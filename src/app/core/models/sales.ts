@@ -23,6 +23,7 @@ export interface SalesRecord {
 
 export interface SalesLineInput {
   flowerType: string;
+  bagCount?: string;
   totalWeight: string;
   price: string;
   amount: string;
@@ -45,6 +46,7 @@ export interface SalesRequest {
 export interface SalesEditRow {
   salesId: number;
   flowerType: string;
+  bagCount?: number;
   totalWeight: number;
   perKgRate: number;
   price: number;
@@ -71,6 +73,7 @@ export interface SalesEditFetchData {
 export interface SalesEditRowRequest {
   salesId: number;
   flowerType: string;
+  bagCount?: string;
   totalWeight: string;
   price: string;
   amount: string;
@@ -89,6 +92,7 @@ export interface SalesEditRequest {
 export interface MultiSalesLine {
   farmerName: string;
   flowerType: string;
+  bagCount?: string;
   totalWeight: string;
   price: string;
   amount: string;
@@ -99,6 +103,11 @@ export interface MultiSalesLine {
 
 export interface MultiSalesRequest {
   rows: MultiSalesLine[];
+  totalSalesAmt?: string;
+  commissionAmt?: string;
+  netAmount?: string;
+  finalTotal?: string;
+  debitAmount?: string;
 }
 
 export interface TodayEntry {

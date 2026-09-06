@@ -17,6 +17,7 @@ export interface FarmerLedgerDetailRow {
   creditAmount: number;
   closingBalance: number;
   ledgerActive?: string;
+  salesIds?: string;
 }
 
 export interface BuyerLedgerDetailRow {
@@ -55,6 +56,9 @@ export interface FarmerSalesSummary {
   netAmount: number;
   debit: number;
   finalTotal: number;
+  adjustmentAmt?: number;
+  debitBreakdown?: string;
+  debitDetails?: number[];
 }
 
 export interface FarmerSalesByDateData {

@@ -228,11 +228,11 @@ export class BuyerLedgerDetailComponent implements OnInit {
           `<td class="left">${idx + 1}</td>` +
           `<td class="left">${this.escapeHtml(row.salesDate)}</td>`;
         const body = report
-          ? `<td class="right">${this.formatNum(row.purchase)}</td>` +
-            `<td class="right">${this.formatNum(row.cash)}</td>`
+          ? `<td class="right"><span style="color:#b91c1c;">${this.formatNum(row.purchase)}</span></td>` +
+            `<td class="right"><span style="color:#15803d;">${this.formatNum(row.cash)}</span></td>`
           : `<td class="right">${this.formatNum(row.openingBalance)}</td>` +
-            `<td class="right">${this.formatNum(row.purchase)}</td>` +
-            `<td class="right">${this.formatNum(row.cash)}</td>` +
+            `<td class="right"><span style="color:#b91c1c;">${this.formatNum(row.purchase)}</span></td>` +
+            `<td class="right"><span style="color:#15803d;">${this.formatNum(row.cash)}</span></td>` +
             `<td class="right">${this.formatNum(row.closingBalance)}</td>`;
         return base + body + `</tr>`;
       })
@@ -250,6 +250,26 @@ export class BuyerLedgerDetailComponent implements OnInit {
         `<th class="right">${this.escapeHtml(this.i18n.translate('buyer.ledger.detail.col.cash'))}</th>` +
         `<th class="right">${this.escapeHtml(this.i18n.translate('ledger.detail.col.closing.balance'))}</th>`;
 
+    const totalPurchasePrint = printRows.reduce((sum, r) => sum + (Number(r.purchase) || 0), 0);
+    const totalCashPrint = printRows.reduce((sum, r) => sum + (Number(r.cash) || 0), 0);
+    const balancePrint = totalCashPrint - totalPurchasePrint;
+    const balancePrintAbs = Math.abs(balancePrint);
+    const balancePrintLabel =
+      balancePrint < 0
+        ? this.i18n.translate('ledger.summary.balance.debit')
+        : balancePrint > 0
+          ? this.i18n.translate('ledger.summary.balance.credit')
+          : this.i18n.translate('ledger.summary.balance');
+    const balancePrintColor = balancePrint < 0 ? '#b91c1c' : balancePrint > 0 ? '#15803d' : '#4338ca';
+
+    const summaryHtml =
+      `<div style="max-width:420px;margin:10px auto 0;background:#f8fafc;border:1px solid #e0e7ff;border-radius:8px;padding:8px 10px;">` +
+      `<div style="text-align:center;font-weight:700;font-size:8px;color:#4338ca;letter-spacing:0.6px;text-transform:uppercase;padding-bottom:6px;margin-bottom:6px;border-bottom:1px solid #e0e7ff;">&#9998; ${this.escapeHtml(this.i18n.translate('ledger.summary.title'))}</div>` +
+      `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px dashed #e0e7ff;font-size:8px;"><span style="color:#475569;">&#10022; ${this.escapeHtml(this.i18n.translate('ledger.summary.flower.purchase'))}</span><strong style="color:#15803d;">${this.formatNum(totalPurchasePrint)}</strong></div>` +
+      `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px dashed #e0e7ff;font-size:8px;"><span style="color:#475569;">&#9673; ${this.escapeHtml(this.i18n.translate('ledger.summary.cash.received'))}</span><strong style="color:#b91c1c;">${this.formatNum(totalCashPrint)}</strong></div>` +
+      `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 8px;margin-top:6px;background:#fff;border:1px solid #c7d2fe;border-radius:6px;font-size:9px;font-weight:700;"><span style="color:${balancePrintColor};">&#9670; ${this.escapeHtml(balancePrintLabel)}</span><span style="color:${balancePrintColor};">${this.formatNum(balancePrintAbs)}</span></div>` +
+      `</div>`;
+
     const reportHtml =
       this.printStyle('80mm auto', '76mm') +
       `<div class="print-header">` +
@@ -258,6 +278,7 @@ export class BuyerLedgerDetailComponent implements OnInit {
       `</div>` +
       `<table>` +
       `<thead><tr>${headers}</tr></thead><tbody>${rowsHtml}</tbody></table>` +
+      summaryHtml +
       (report
         ? ``
         : `<div class="summary-line"><strong>${this.escapeHtml(this.i18n.translate('ledger.detail.col.closing.balance'))}</strong> ${this.formatNum(lastRow.closingBalance)}</div>`) +
@@ -376,6 +397,42 @@ export class BuyerLedgerDetailComponent implements OnInit {
 
   protected totalClosing(): number {
     return this.totalBase().reduce((sum, row) => sum + (Number(row.closingBalance) || 0), 0);
+  }
+
+  protected balance(): number {
+    return this.totalCash() - this.totalPurchase();
+  }
+
+  protected balanceAbs(): number {
+    return Math.abs(this.balance());
+  }
+
+  protected balanceIsDebit(): boolean {
+    return this.balance() < 0;
+  }
+
+  protected balanceIsCredit(): boolean {
+    return this.balance() > 0;
+  }
+
+  protected balanceLabel(): string {
+    if (this.balance() < 0) {
+      return this.i18n.translate('ledger.summary.balance.debit');
+    }
+    if (this.balance() > 0) {
+      return this.i18n.translate('ledger.summary.balance.credit');
+    }
+    return this.i18n.translate('ledger.summary.balance');
+  }
+
+  protected initials(name: string | undefined): string {
+    if (!name) {
+      return '?';
+    }
+    const parts = name.trim().split(/\s+/);
+    const first = parts[0]?.[0] ?? '';
+    const last = parts.length > 1 ? parts[parts.length - 1][0] ?? '' : '';
+    return (first + last).toUpperCase();
   }
 
   private isActive(row: BuyerLedgerDetailRow): boolean {

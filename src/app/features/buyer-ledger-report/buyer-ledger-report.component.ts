@@ -47,6 +47,16 @@ export class BuyerLedgerReportComponent implements OnInit {
     this.router.navigate(['/buyer-ledger-detail'], { queryParams: { source: 'report' } });
   }
 
+  protected initials(name: string | undefined): string {
+    if (!name) {
+      return '?';
+    }
+    const parts = name.trim().split(/\s+/);
+    const first = parts[0]?.[0] ?? '';
+    const last = parts.length > 1 ? parts[parts.length - 1][0] ?? '' : '';
+    return (first + last).toUpperCase();
+  }
+
   private loadList(): void {
     this.loading.set(true);
     this.service.getBuyerList().subscribe({

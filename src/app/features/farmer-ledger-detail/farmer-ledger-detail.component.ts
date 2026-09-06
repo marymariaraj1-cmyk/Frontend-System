@@ -45,7 +45,10 @@ export class FarmerLedgerDetailComponent implements OnInit {
   protected readonly popupTitle = signal('');
   protected readonly popupItems = signal<FarmerSalesItem[]>([]);
   protected readonly popupSummary = signal<FarmerSalesSummary | null>(null);
+  protected readonly popupAdjustment = signal(0);
   protected readonly currentSalesDate = signal('');
+  protected readonly popupLedgerActive = signal<string | undefined>(undefined);
+  protected readonly popupCreditAmt = signal<number | undefined>(undefined);
   protected readonly source = signal<'ledger' | 'report'>('ledger');
   protected readonly showClosed = signal(false);
 
@@ -164,6 +167,8 @@ export class FarmerLedgerDetailComponent implements OnInit {
       return;
     }
     this.currentSalesDate.set(salesDate);
+    this.popupLedgerActive.set(ledgerActive);
+    this.popupCreditAmt.set(creditAmt);
     this.popupLoading.set(true);
     this.popupOpen.set(true);
     this.popupTitle.set(`${this.i18n.translate('farmer.ledger.detail.title')} - ${this.formatDateStr(salesDate)}`);
@@ -174,9 +179,11 @@ export class FarmerLedgerDetailComponent implements OnInit {
           const data = response.data as FarmerSalesByDateData;
           this.popupItems.set(data.data ?? []);
           this.popupSummary.set(data.summary ?? null);
+          this.popupAdjustment.set(Number(data.summary?.adjustmentAmt) || 0);
         } else {
           this.popupItems.set([]);
           this.popupSummary.set(null);
+          this.popupAdjustment.set(0);
           this.toast.error(response.message);
         }
       },
@@ -184,6 +191,7 @@ export class FarmerLedgerDetailComponent implements OnInit {
         this.popupLoading.set(false);
         this.popupItems.set([]);
         this.popupSummary.set(null);
+        this.popupAdjustment.set(0);
         this.toast.error(extractErrorMessage(error, this.i18n.translate('common.load.failed')));
       },
     });
@@ -193,7 +201,10 @@ export class FarmerLedgerDetailComponent implements OnInit {
     this.popupOpen.set(false);
     this.popupItems.set([]);
     this.popupSummary.set(null);
+    this.popupAdjustment.set(0);
     this.currentSalesDate.set('');
+    this.popupLedgerActive.set(undefined);
+    this.popupCreditAmt.set(undefined);
   }
 
   protected onOverlayClick(event: Event): void {
@@ -204,7 +215,8 @@ export class FarmerLedgerDetailComponent implements OnInit {
 
   protected popupTotal(): number {
     const sTotal = this.popupItems().reduce((sum, item) => sum + (Number(item.price) || 0), 0);
-    return this.popupSummary()?.total != null ? Number(this.popupSummary()!.total) : sTotal;
+    const base = this.popupSummary()?.total != null ? Number(this.popupSummary()!.total) : sTotal;
+    return base + this.popupAdjustment();
   }
 
   protected popupCommission(): number {
@@ -216,13 +228,18 @@ export class FarmerLedgerDetailComponent implements OnInit {
 
   protected popupNetAmount(): number {
     const sTotal = this.popupItems().reduce((sum, item) => sum + (Number(item.price) || 0), 0);
-    return this.popupSummary()?.netAmount != null
+    const base = this.popupSummary()?.netAmount != null
       ? Number(this.popupSummary()!.netAmount)
       : sTotal - this.popupCommission();
+    return base + this.popupAdjustment();
   }
 
   protected popupDebit(): number {
     return this.popupSummary()?.debit ?? 0;
+  }
+
+  protected popupDebitBreakdown(): string {
+    return this.popupSummary()?.debitBreakdown ?? '';
   }
 
   protected popupFinalTotal(): number {
@@ -252,11 +269,11 @@ export class FarmerLedgerDetailComponent implements OnInit {
           `<td class="left">${idx + 1}</td>` +
           `<td class="left">${this.escapeHtml(row.salesDate)}</td>`;
         const body = report
-          ? `<td class="right">${this.formatNum(row.sales)}</td>` +
-            `<td class="right">${this.formatNum(row.creditAmount)}</td>`
+          ? `<td class="right"><span style="color:#b91c1c;">${this.formatNum(row.creditAmount)}</span></td>` +
+            `<td class="right"><span style="color:#15803d;">${this.formatNum(row.sales)}</span></td>`
           : `<td class="right">${this.formatNum(row.openingBalance)}</td>` +
-            `<td class="right">${this.formatNum(row.sales)}</td>` +
-            `<td class="right">${this.formatNum(row.creditAmount)}</td>` +
+            `<td class="right"><span style="color:#15803d;">${this.formatNum(row.sales)}</span></td>` +
+            `<td class="right"><span style="color:#b91c1c;">${this.formatNum(row.creditAmount)}</span></td>` +
             `<td class="right">${this.formatNum(row.closingBalance)}</td>`;
         return base + body + `</tr>`;
       })
@@ -274,6 +291,26 @@ export class FarmerLedgerDetailComponent implements OnInit {
         `<th class="right">${this.escapeHtml(this.i18n.translate('farmer.ledger.detail.col.received'))}</th>` +
         `<th class="right">${this.escapeHtml(this.i18n.translate('ledger.detail.col.closing.balance'))}</th>`;
 
+    const totalSalesPrint = printRows.reduce((sum, r) => sum + (Number(r.sales) || 0), 0);
+    const totalDebitPrint = printRows.reduce((sum, r) => sum + (Number(r.creditAmount) || 0), 0);
+    const balancePrint = totalSalesPrint - totalDebitPrint;
+    const balancePrintAbs = Math.abs(balancePrint);
+    const balancePrintLabel =
+      balancePrint < 0
+        ? this.i18n.translate('ledger.summary.balance.debit')
+        : balancePrint > 0
+          ? this.i18n.translate('ledger.summary.balance.credit')
+          : this.i18n.translate('ledger.summary.balance');
+    const balancePrintColor = balancePrint < 0 ? '#b91c1c' : balancePrint > 0 ? '#15803d' : '#4338ca';
+
+    const summaryHtml =
+      `<div style="max-width:420px;margin:10px auto 0;background:#f8fafc;border:1px solid #e0e7ff;border-radius:8px;padding:8px 10px;">` +
+      `<div style="text-align:center;font-weight:700;font-size:8px;color:#4338ca;letter-spacing:0.6px;text-transform:uppercase;padding-bottom:6px;margin-bottom:6px;border-bottom:1px solid #e0e7ff;">&#9998; ${this.escapeHtml(this.i18n.translate('ledger.summary.title'))}</div>` +
+      `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px dashed #e0e7ff;font-size:8px;"><span style="color:#475569;">&#10022; ${this.escapeHtml(this.i18n.translate('ledger.summary.flower.credit.sale'))}</span><strong style="color:#15803d;">${this.formatNum(totalSalesPrint)}</strong></div>` +
+      `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px dashed #e0e7ff;font-size:8px;"><span style="color:#475569;">&#9673; ${this.escapeHtml(this.i18n.translate('ledger.summary.debit'))}</span><strong style="color:#b91c1c;">${this.formatNum(totalDebitPrint)}</strong></div>` +
+      `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 8px;margin-top:6px;background:#fff;border:1px solid #c7d2fe;border-radius:6px;font-size:9px;font-weight:700;"><span style="color:${balancePrintColor};">&#9670; ${this.escapeHtml(balancePrintLabel)}</span><span style="color:${balancePrintColor};">${this.formatNum(balancePrintAbs)}</span></div>` +
+      `</div>`;
+
     const reportHtml =
       this.printStyle('80mm auto', '76mm') +
       `<div class="print-header">` +
@@ -282,6 +319,7 @@ export class FarmerLedgerDetailComponent implements OnInit {
       `</div>` +
       `<table>` +
       `<thead><tr>${headers}</tr></thead><tbody>${rowsHtml}</tbody></table>` +
+      summaryHtml +
       `<div class="footer">${this.escapeHtml(this.i18n.translate('print.thankyou'))}</div>` +
       `<script>window.onload=function(){window.print();}<\/script></body></html>`;
 
@@ -294,7 +332,7 @@ export class FarmerLedgerDetailComponent implements OnInit {
       return;
     }
     this.popupLoading.set(true);
-    this.service.getFarmerSalesByDate(this.farmerId(), salesDate).subscribe({
+    this.service.getFarmerSalesByDate(this.farmerId(), salesDate, this.popupLedgerActive(), this.popupCreditAmt()).subscribe({
       next: (response) => {
         this.popupLoading.set(false);
         if (response.success) {
@@ -314,11 +352,25 @@ export class FarmerLedgerDetailComponent implements OnInit {
 
   private printSales(items: FarmerSalesItem[], summary: FarmerSalesSummary | null): void {
     const sTotal = items.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
-    const fTotal = summary?.total != null ? Number(summary.total) : sTotal;
+    const fAdjust = Number(summary?.adjustmentAmt) || 0;
+    const fTotal = (summary?.total != null ? Number(summary.total) : sTotal) + fAdjust;
     const fCommission = summary?.commission != null ? Number(summary.commission) : Math.round(sTotal * 0.1);
-    const fNet = summary?.netAmount != null ? Number(summary.netAmount) : sTotal - fCommission;
+    const fNet = (summary?.netAmount != null ? Number(summary.netAmount) : sTotal - fCommission) + fAdjust;
     const fDebit = summary?.debit != null ? Number(summary.debit) : 0;
+    const fDebitBreakdown = (summary as any)?.debitBreakdown ?? '';
     const fFinal = summary?.finalTotal != null ? Number(summary.finalTotal) : fNet - fDebit;
+
+    const adjRow =
+      fAdjust > 0
+        ? `<tr>` +
+          `<td class="left">${items.length + 1}</td>` +
+          `<td class="left">${this.escapeHtml(this.currentSalesDate())}</td>` +
+          `<td class="left">${this.escapeHtml(this.i18n.translate('fac.adjustment.label'))}</td>` +
+          `<td class="right">-</td>` +
+          `<td class="right">-</td>` +
+          `<td class="right">${this.formatNum(fAdjust)}</td>` +
+          `</tr>`
+        : '';
 
     const rowsHtml = items
       .map(
@@ -332,7 +384,7 @@ export class FarmerLedgerDetailComponent implements OnInit {
           `<td class="right">${this.formatNum(item.price)}</td>` +
           `</tr>`,
       )
-      .join('');
+      .join('') + adjRow;
 
     const reportHtml =
       this.printStyle('3in auto', '3in') +
@@ -354,7 +406,7 @@ export class FarmerLedgerDetailComponent implements OnInit {
       `<tr><td class="lbl">${this.escapeHtml(this.i18n.translate('farmer.sales.daily.report.detail.total'))}</td><td class="amt">${this.formatNum(fTotal)}</td></tr>` +
       `<tr><td class="lbl">${this.escapeHtml(this.i18n.translate('farmer.sales.daily.report.detail.commission'))}</td><td class="amt">${this.formatNum(fCommission)}</td></tr>` +
       `<tr><td class="lbl">${this.escapeHtml(this.i18n.translate('farmer.sales.daily.report.detail.net.amount'))}</td><td class="amt">${this.formatNum(fNet)}</td></tr>` +
-      `<tr><td class="lbl">${this.escapeHtml(this.i18n.translate('farmer.sales.daily.report.detail.debit.amount'))}</td><td class="amt">${this.formatNum(fDebit)}</td></tr>` +
+      `<tr><td class="lbl">${this.escapeHtml(this.i18n.translate('farmer.sales.daily.report.detail.debit.amount'))}${fDebitBreakdown ? ' (' + this.escapeHtml(fDebitBreakdown) + ')' : ''}</td><td class="amt">${this.formatNum(fDebit)}</td></tr>` +
       `<tr class="final"><td class="lbl">${this.escapeHtml(this.i18n.translate('farmer.sales.daily.report.detail.final.total'))}</td><td class="amt">${this.formatNum(fFinal)}</td></tr>` +
       `</table>` +
       `<div class="footer">${this.escapeHtml(this.i18n.translate('print.thankyou'))}</div>` +
@@ -419,8 +471,48 @@ export class FarmerLedgerDetailComponent implements OnInit {
     return this.totalBase().reduce((sum, row) => sum + (Number(row.closingBalance) || 0), 0);
   }
 
+  protected balance(): number {
+    return this.totalSales() - this.totalReceived();
+  }
+
+  protected balanceAbs(): number {
+    return Math.abs(this.balance());
+  }
+
+  protected balanceIsDebit(): boolean {
+    return this.balance() < 0;
+  }
+
+  protected balanceIsCredit(): boolean {
+    return this.balance() > 0;
+  }
+
+  protected balanceLabel(): string {
+    if (this.balance() < 0) {
+      return this.i18n.translate('ledger.summary.balance.debit');
+    }
+    if (this.balance() > 0) {
+      return this.i18n.translate('ledger.summary.balance.credit');
+    }
+    return this.i18n.translate('ledger.summary.balance');
+  }
+
+  protected initials(name: string | undefined): string {
+    if (!name) {
+      return '?';
+    }
+    const parts = name.trim().split(/\s+/);
+    const first = parts[0]?.[0] ?? '';
+    const last = parts.length > 1 ? parts[parts.length - 1][0] ?? '' : '';
+    return (first + last).toUpperCase();
+  }
+
   private isActive(row: FarmerLedgerDetailRow): boolean {
     return row.ledgerActive === undefined || row.ledgerActive === null || row.ledgerActive === 'Y';
+  }
+
+  protected isAccountAdjustment(row: FarmerLedgerDetailRow): boolean {
+    return row.salesIds === '0';
   }
 
   private formatNum(value: number | null | undefined | string): string {

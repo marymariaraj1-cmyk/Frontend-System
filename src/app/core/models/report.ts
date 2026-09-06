@@ -19,6 +19,8 @@ export interface FarmerSalesReportRow {
   totalNetAmt: number;
   finalTotal: number;
   items: FarmerSalesReportItem[];
+  debitBreakdown?: string;
+  debitDetails?: number[];
 }
 
 export interface BuyerSalesReportItem {

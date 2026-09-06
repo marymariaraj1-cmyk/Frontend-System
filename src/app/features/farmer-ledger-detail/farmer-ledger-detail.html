@@ -1,23 +1,70 @@
-<div class="card">
-  <div class="card-header">
-    <h3>{{ farmerName() }}</h3>
-    <div class="card-header-actions">
+<div class="ldg-hero">
+  <span class="ldg-accent"></span>
+  <span class="ldg-ring ldg-ring-1"></span>
+  <span class="ldg-ring ldg-ring-2"></span>
+  <span class="ldg-glyph material-symbols-rounded">menu_book</span>
+
+  <div class="ldg-hero-top">
+    <div class="ldg-hero-id">
+      <span class="ldg-avatar">{{ initials(farmerName()) }}</span>
+      <div class="ldg-hero-text">
+        <h2>{{ farmerName() }}</h2>
+        <p>{{ (isReport() ? 'farmer.ledger.detail.sub.report' : 'farmer.ledger.detail.sub.detail') | i18n }}</p>
+      </div>
+    </div>
+    <div class="ldg-actions">
       @if (!isReport() && hasInactiveRows()) {
-        <button type="button" class="btn btn-secondary" (click)="toggleClosed()">
+        <button type="button" class="btn btn-sm ldg-action" (click)="toggleClosed()">
           <span class="material-symbols-rounded">{{ showClosed() ? 'visibility' : 'archive' }}</span>
           {{ showClosed() ? ('btn.view.active.ledger' | i18n) : ('btn.view.closed.ledger' | i18n) }}
         </button>
       }
-      <button type="button" class="btn btn-secondary" (click)="goBack()">
+      <button type="button" class="btn btn-sm ldg-action" (click)="goBack()">
         <span class="material-symbols-rounded">arrow_back</span>
         {{ 'btn.back.to.farmers' | i18n }}
       </button>
-      <button type="button" class="btn btn-primary" (click)="printDetail()">
+      <button type="button" class="btn btn-sm ldg-action ldg-action--primary" (click)="printDetail()">
         <span class="material-symbols-rounded">print</span>
         {{ 'btn.print' | i18n }}
       </button>
     </div>
   </div>
+
+  @if (loaded()) {
+    <div class="ldg-hero-stats">
+      <div class="ldg-stat-chip">
+        <span class="ldg-stat-icon material-symbols-rounded">flag</span>
+        <div class="ldg-stat-meta">
+          <span class="ldg-stat-label">{{ 'ledger.detail.col.opening.balance' | i18n }}</span>
+          <span class="ldg-stat-value">{{ formatCurrency(totalOpening()) }}</span>
+        </div>
+      </div>
+      <div class="ldg-stat-chip">
+        <span class="ldg-stat-icon material-symbols-rounded">local_florist</span>
+        <div class="ldg-stat-meta">
+          <span class="ldg-stat-label">{{ 'farmer.ledger.detail.col.sales' | i18n }}</span>
+          <span class="ldg-stat-value">{{ formatCurrency(totalSales()) }}</span>
+        </div>
+      </div>
+      <div class="ldg-stat-chip">
+        <span class="ldg-stat-icon material-symbols-rounded">payments</span>
+        <div class="ldg-stat-meta">
+          <span class="ldg-stat-label">{{ 'farmer.ledger.detail.col.received' | i18n }}</span>
+          <span class="ldg-stat-value">{{ formatCurrency(totalReceived()) }}</span>
+        </div>
+      </div>
+      <div class="ldg-stat-chip ldg-stat-balance">
+        <span class="ldg-stat-icon material-symbols-rounded">account_balance_wallet</span>
+        <div class="ldg-stat-meta">
+          <span class="ldg-stat-label">{{ balanceLabel() }}</span>
+          <span class="ldg-stat-value" [class.ldg-bal-debit]="balanceIsDebit()" [class.ldg-bal-credit]="balanceIsCredit()">{{ formatCurrency(balanceAbs()) }}</span>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+<div class="card ldg-card">
   <div class="card-body">
     @if (isReport()) {
       <div class="period-selector">
@@ -90,30 +137,54 @@
         </thead>
         <tbody>
           @for (row of displayRows(); track $index; let i = $index) {
-            <tr [class.inactive-row]="row.ledgerActive === 'N'">
+            <tr [class.inactive-row]="row.ledgerActive === 'N'" [class.adj-row]="isAccountAdjustment(row)">
               <td>{{ i + 1 }}</td>
               <td>{{ row.salesDate }}</td>
               @if (isReport()) {
                 <td class="amount-col">
-                  {{ formatCurrency(row.sales) }}
-                  @if (row.sales > 0) {
-                    <a class="view-link" (click)="openPopup(row.salesDate, row.ledgerActive, row.sales)" title="View">
-                      <span class="material-symbols-rounded view-icon">visibility</span>
-                    </a>
-                  }
+                  <span class="amt-debit">
+                    {{ formatCurrency(row.creditAmount) }}
+                    @if (isAccountAdjustment(row) && row.creditAmount > 0) {
+                      <span class="adj-pill">{{ 'fac.adjustment.label' | i18n }}</span>
+                    }
+                  </span>
                 </td>
-                <td class="amount-col">{{ formatCurrency(row.creditAmount) }}</td>
+                <td class="amount-col">
+                  <span class="amt-credit">
+                    {{ formatCurrency(row.sales) }}
+                    @if (row.sales > 0) {
+                      <a class="view-link" (click)="openPopup(row.salesDate, row.ledgerActive, row.sales)" title="View">
+                        <span class="material-symbols-rounded view-icon">visibility</span>
+                      </a>
+                    }
+                    @if (isAccountAdjustment(row) && row.sales > 0) {
+                      <span class="adj-pill">{{ 'fac.adjustment.label' | i18n }}</span>
+                    }
+                  </span>
+                </td>
               } @else {
                 <td class="amount-col">{{ formatCurrency(row.openingBalance) }}</td>
                 <td class="amount-col">
-                  {{ formatCurrency(row.sales) }}
-                  @if (row.sales > 0) {
-                    <a class="view-link" (click)="openPopup(row.salesDate, row.ledgerActive, row.sales)" title="View">
-                      <span class="material-symbols-rounded view-icon">visibility</span>
-                    </a>
-                  }
+                  <span class="amt-credit">
+                    {{ formatCurrency(row.sales) }}
+                    @if (row.sales > 0) {
+                      <a class="view-link" (click)="openPopup(row.salesDate, row.ledgerActive, row.sales)" title="View">
+                        <span class="material-symbols-rounded view-icon">visibility</span>
+                      </a>
+                    }
+                    @if (isAccountAdjustment(row) && row.sales > 0) {
+                      <span class="adj-pill">{{ 'fac.adjustment.label' | i18n }}</span>
+                    }
+                  </span>
                 </td>
-                <td class="amount-col">{{ formatCurrency(row.creditAmount) }}</td>
+                <td class="amount-col">
+                  <span class="amt-debit">
+                    {{ formatCurrency(row.creditAmount) }}
+                    @if (isAccountAdjustment(row) && row.creditAmount > 0) {
+                      <span class="adj-pill">{{ 'fac.adjustment.label' | i18n }}</span>
+                    }
+                  </span>
+                </td>
                 <td class="amount-col">{{ formatCurrency(row.closingBalance) }}</td>
               }
             </tr>
@@ -141,22 +212,44 @@
             @if (isReport()) {
               <tr class="report-total-row">
                 <td colspan="2" class="amount-col">{{ 'report.total' | i18n }}</td>
-                <td class="amount-col">{{ formatCurrency(totalSales()) }}</td>
-                <td class="amount-col">{{ formatCurrency(totalReceived()) }}</td>
+                <td class="amount-col"><span class="amt-debit">{{ formatCurrency(totalReceived()) }}</span></td>
+                <td class="amount-col"><span class="amt-credit">{{ formatCurrency(totalSales()) }}</span></td>
               </tr>
             } @else {
               <tr class="report-total-row">
                 <td colspan="2" class="amount-col">{{ 'report.total' | i18n }}</td>
-                <td class="amount-col">{{ formatCurrency(totalOpening()) }}</td>
-                <td class="amount-col">{{ formatCurrency(totalSales()) }}</td>
-                <td class="amount-col">{{ formatCurrency(totalReceived()) }}</td>
-                <td class="amount-col">{{ formatCurrency(totalClosing()) }}</td>
+                <td class="amount-col"></td>
+                <td class="amount-col"><span class="amt-credit">{{ formatCurrency(totalSales()) }}</span></td>
+                <td class="amount-col"><span class="amt-debit">{{ formatCurrency(totalReceived()) }}</span></td>
+                <td class="amount-col"></td>
               </tr>
             }
           </tfoot>
         }
       </table>
     </div>
+    @if (displayRows().length > 0) {
+      <div class="ledger-summary">
+        <div class="ledger-summary-title">
+          <span class="material-symbols-rounded">receipt_long</span> {{ 'ledger.summary.title' | i18n }}
+        </div>
+        <div class="ledger-summary-row credit-row">
+          <span class="ledger-summary-icon credit"><span class="material-symbols-rounded">local_florist</span></span>
+          <span class="ledger-summary-label">{{ 'ledger.summary.flower.credit.sale' | i18n }}</span>
+          <span class="ledger-summary-value">{{ formatCurrency(totalSales()) }}</span>
+        </div>
+        <div class="ledger-summary-row debit-row">
+          <span class="ledger-summary-icon debit"><span class="material-symbols-rounded">payments</span></span>
+          <span class="ledger-summary-label">{{ 'ledger.summary.debit' | i18n }}</span>
+          <span class="ledger-summary-value">{{ formatCurrency(totalReceived()) }}</span>
+        </div>
+        <div class="ledger-summary-row balance" [class.balance-debit]="balanceIsDebit()" [class.balance-credit]="balanceIsCredit()">
+          <span class="ledger-summary-icon balance-icon"><span class="material-symbols-rounded">account_balance_wallet</span></span>
+          <span class="ledger-summary-label">{{ balanceLabel() }}</span>
+          <span class="ledger-summary-value">{{ formatCurrency(balanceAbs()) }}</span>
+        </div>
+      </div>
+    }
   </div>
 </div>
 
@@ -195,6 +288,15 @@
                   </td>
                 </tr>
               }
+              @if (popupAdjustment() > 0) {
+                <tr class="adj-row">
+                  <td>{{ currentSalesDate() }}</td>
+                  <td>{{ 'fac.adjustment.label' | i18n }}</td>
+                  <td class="amount-col">-</td>
+                  <td class="amount-col">-</td>
+                  <td class="amount-col">{{ formatCurrency(popupAdjustment()) }}</td>
+                </tr>
+              }
             </tbody>
             <tfoot>
               <tr class="report-footer-row">
@@ -218,6 +320,9 @@
               <tr class="report-footer-row">
                 <td colspan="4" class="amount-col">
                   {{ 'farmer.sales.daily.report.detail.debit.amount' | i18n }}
+                  @if (popupDebitBreakdown()) {
+                    <span class="debit-breakdown"> ({{ popupDebitBreakdown() }})</span>
+                  }
                 </td>
                 <td class="amount-col">{{ formatCurrency(popupDebit()) }}</td>
               </tr>
