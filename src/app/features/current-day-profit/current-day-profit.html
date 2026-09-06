@@ -1,10 +1,21 @@
-<div class="card">
-  <div class="card-header">
-    <h3>{{ 'current.day.total.commission.title' | i18n }}</h3>
-  </div>
-  <div class="card-body">
-    <div class="form-actions">
-      <button type="button" class="btn btn-primary" [disabled]="loading()" (click)="search()">
+<div class="cdp-hero">
+  <span class="cdp-accent"></span>
+  <span class="cdp-ring cdp-ring-1"></span>
+  <span class="cdp-ring cdp-ring-2"></span>
+  <span class="cdp-glyph material-symbols-rounded">monitoring</span>
+
+  <div class="cdp-hero-head">
+    <div class="cdp-hero-id">
+      <div class="cdp-hero-icon">
+        <span class="material-symbols-rounded">paid</span>
+      </div>
+      <div class="cdp-hero-text">
+        <h2>{{ 'current.day.total.commission.title' | i18n }}</h2>
+        <p>{{ 'current.day.total.commission.sub' | i18n }}</p>
+      </div>
+    </div>
+    <div class="cdp-hero-action">
+      <button type="button" class="cdp-generate-btn" [disabled]="loading()" (click)="search()">
         <span class="material-symbols-rounded">calculate</span>
         {{ 'current.day.total.commission.generate.btn' | i18n }}
       </button>
@@ -12,16 +23,27 @@
   </div>
 </div>
 
+@if (loading()) {
+  <div class="rpt-loader">
+    <div class="rpt-spinner"></div>
+  </div>
+}
+
 @if (searched()) {
-  <div class="card report-card">
-    <div class="card-header">
+  <div class="card rpt-card report-card">
+    <div class="rpt-card-head">
+      <span class="rpt-chip material-symbols-rounded">grid_view</span>
       <h3>{{ 'current.day.total.commission.grid.title' | i18n }}</h3>
+      @if (rows().length > 0) {
+        <span class="rpt-count">{{ rows().length }}</span>
+      }
     </div>
     <div class="card-body">
       <div class="table-container">
         <table class="report-table">
           <thead>
             <tr>
+              <th style="width: 50px">{{ 'txn.sno' | i18n }}</th>
               <th>{{ 'current.day.total.commission.col.farmer.name' | i18n }}</th>
               <th class="amount-col">{{ 'current.day.total.commission.col.total.sales.amt' | i18n }}</th>
               <th class="amount-col">{{ 'current.day.total.commission.col.total.net.amt' | i18n }}</th>
@@ -31,33 +53,37 @@
             </tr>
           </thead>
           <tbody>
-            @for (row of rows(); track $index) {
+            @for (row of rows(); track $index; let i = $index) {
               <tr>
+                <td class="rpt-sno">{{ i + 1 }}</td>
                 <td>
-                  <span class="material-symbols-rounded farmer-icon">agriculture</span>
-                  {{ row.farmerName }}
+                  <div class="rpt-name-cell">
+                    <span class="rpt-avatar">{{ initials(row.farmerName) }}</span>
+                    <span class="rpt-name">{{ row.farmerName }}</span>
+                  </div>
                 </td>
-                <td class="amount-col">{{ formatCurrency(row.totalSalesAmt) }}</td>
-                <td class="amount-col">{{ formatCurrency(row.totalNetAmt) }}</td>
-                <td class="amount-col">{{ formatCurrency(row.debitAmt) }}</td>
-                <td class="amount-col">{{ formatCurrency(row.finalAmt) }}</td>
+                <td class="amount-col"><span class="rpt-amt chip-sales">{{ formatCurrency(row.totalSalesAmt) }}</span></td>
+                <td class="amount-col"><span class="rpt-amt chip-net">{{ formatCurrency(row.totalNetAmt) }}</span></td>
+                <td class="amount-col"><span class="rpt-amt chip-debit">{{ formatCurrency(row.debitAmt) }}</span></td>
+                <td class="amount-col"><span class="rpt-amt chip-final">{{ formatCurrency(row.finalAmt) }}</span></td>
                 <td class="amount-col">
-                  {{ formatCurrency(row.commissionAmt) }}
-                  <a class="view-link" (click)="openSalesDetail(row.farmerId, row.farmerName)" title="View">
+                  <span class="rpt-amt chip-commission">{{ formatCurrency(row.commissionAmt) }}</span>
+                  <a class="view-link" (click)="openSalesDetail(row.farmerId, row.farmerName)" [attr.title]="'btn.view' | i18n">
                     <span class="material-symbols-rounded view-icon">visibility</span>
                   </a>
                 </td>
               </tr>
             } @empty {
               <tr>
-                <td colspan="6" class="no-records">
+                <td colspan="7" class="no-records">
                   {{ 'current.day.total.commission.no.records' | i18n }}
                 </td>
               </tr>
             }
           </tbody>
           <tfoot>
-            <tr class="report-footer-row">
+            <tr class="report-footer-row rpt-total-row">
+              <td></td>
               <td>{{ 'report.total' | i18n }}</td>
               <td class="amount-col">{{ formatCurrency(totalSales()) }}</td>
               <td class="amount-col">{{ formatCurrency(totalNet()) }}</td>
@@ -66,7 +92,7 @@
               <td class="amount-col">
                 {{ formatCurrency(totalCommission()) }}
                 @if (rows().length > 0) {
-                  <a class="view-link" (click)="openSalesDetail('', '')" title="View">
+                  <a class="view-link" (click)="openSalesDetail('', '')" [attr.title]="'btn.view' | i18n">
                     <span class="material-symbols-rounded view-icon">visibility</span>
                   </a>
                 }
@@ -124,7 +150,7 @@
                 </td>
                 <td class="amount-col">{{ formatCurrency(popupTotal()) }}</td>
               </tr>
-              <tr class="report-footer-row">
+              <tr class="report-footer-row rpt-total-row">
                 <td colspan="5" class="amount-col">
                   {{ 'current.day.total.commission.popup.commission' | i18n }}
                 </td>

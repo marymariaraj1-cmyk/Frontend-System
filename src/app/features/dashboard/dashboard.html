@@ -1,51 +1,127 @@
-<div class="dashboard-welcome">
-  <h2>{{ 'dashboard.welcome' | i18n }} {{ auth.user()?.shopName }}</h2>
-  <p>{{ 'app.name' | i18n }}</p>
+<div class="dash-hero">
+  <span class="dash-accent"></span>
+  <span class="dash-ring dash-ring-1"></span>
+  <span class="dash-ring dash-ring-2"></span>
+  <span class="material-symbols-rounded dash-glyph">local_florist</span>
+  <div class="dash-hero-icon">
+    <span class="material-symbols-rounded">local_florist</span>
+  </div>
+  <div class="dash-hero-text">
+    <h2>{{ 'dashboard.welcome' | i18n }} {{ auth.user()?.shopName || auth.user()?.clientUsername }}</h2>
+    <p class="dash-hero-sub">{{ 'dashboard.header.sub' | i18n }}</p>
+    <p class="dash-hero-date">
+      <span class="material-symbols-rounded">calendar_month</span>
+      {{ todayLabel() }}
+    </p>
+  </div>
+</div>
+
+<div class="dash-section-title">
+  <span class="material-symbols-rounded">bolt</span>
+  {{ 'dashboard.quick.title' | i18n }}
+</div>
+<div class="quick-grid">
+  <a class="quick-tile" routerLink="/sales-entry">
+    <span class="quick-tile-icon qti-sales"><span class="material-symbols-rounded">add_shopping_cart</span></span>
+    <span class="quick-tile-label">{{ 'sidebar.sales.entry' | i18n }}</span>
+    <span class="material-symbols-rounded quick-tile-arrow">chevron_right</span>
+  </a>
+  <a class="quick-tile" routerLink="/multi-sales">
+    <span class="quick-tile-icon qti-multi"><span class="material-symbols-rounded">playlist_add</span></span>
+    <span class="quick-tile-label">{{ 'sidebar.multi.sales' | i18n }}</span>
+    <span class="material-symbols-rounded quick-tile-arrow">chevron_right</span>
+  </a>
+  <a class="quick-tile" routerLink="/sales-details-edit">
+    <span class="quick-tile-icon qti-edit"><span class="material-symbols-rounded">edit_note</span></span>
+    <span class="quick-tile-label">{{ 'sidebar.sales.details.edit' | i18n }}</span>
+    <span class="material-symbols-rounded quick-tile-arrow">chevron_right</span>
+  </a>
+  <a class="quick-tile" routerLink="/farmer-transaction">
+    <span class="quick-tile-icon qti-ftxn"><span class="material-symbols-rounded">agriculture</span></span>
+    <span class="quick-tile-label">{{ 'sidebar.farmer.transaction' | i18n }}</span>
+    <span class="material-symbols-rounded quick-tile-arrow">chevron_right</span>
+  </a>
+  <a class="quick-tile" routerLink="/buyer-transaction">
+    <span class="quick-tile-icon qti-btxn"><span class="material-symbols-rounded">currency_exchange</span></span>
+    <span class="quick-tile-label">{{ 'sidebar.buyer.transaction' | i18n }}</span>
+    <span class="material-symbols-rounded quick-tile-arrow">chevron_right</span>
+  </a>
+  <a class="quick-tile" routerLink="/farmer-ledger-report">
+    <span class="quick-tile-icon qti-fledger"><span class="material-symbols-rounded">book</span></span>
+    <span class="quick-tile-label">{{ 'sidebar.farmer.ledger.report' | i18n }}</span>
+    <span class="material-symbols-rounded quick-tile-arrow">chevron_right</span>
+  </a>
+  <a class="quick-tile" routerLink="/buyer-ledger-report">
+    <span class="quick-tile-icon qti-bledger"><span class="material-symbols-rounded">receipt_long</span></span>
+    <span class="quick-tile-label">{{ 'sidebar.buyer.ledger.report' | i18n }}</span>
+    <span class="material-symbols-rounded quick-tile-arrow">chevron_right</span>
+  </a>
+  <a class="quick-tile" routerLink="/current-day-profit">
+    <span class="quick-tile-icon qti-profit"><span class="material-symbols-rounded">calculate</span></span>
+    <span class="quick-tile-label">{{ 'sidebar.current.day.total.commission' | i18n }}</span>
+    <span class="material-symbols-rounded quick-tile-arrow">chevron_right</span>
+  </a>
+  <a class="quick-tile" routerLink="/opening-balance">
+    <span class="quick-tile-icon qti-opening"><span class="material-symbols-rounded">account_balance_wallet</span></span>
+    <span class="quick-tile-label">{{ 'sidebar.opening.balance' | i18n }}</span>
+    <span class="material-symbols-rounded quick-tile-arrow">chevron_right</span>
+  </a>
+  <a class="quick-tile" routerLink="/bag-count-config">
+    <span class="quick-tile-icon qti-bag"><span class="material-symbols-rounded">style</span></span>
+    <span class="quick-tile-label">{{ 'sidebar.bag.count.config' | i18n }}</span>
+    <span class="material-symbols-rounded quick-tile-arrow">chevron_right</span>
+  </a>
+  <a class="quick-tile" routerLink="/inactive-list">
+    <span class="quick-tile-icon qti-inactive"><span class="material-symbols-rounded">event_busy</span></span>
+    <span class="quick-tile-label">{{ 'sidebar.inactive.list' | i18n }}</span>
+    <span class="material-symbols-rounded quick-tile-arrow">chevron_right</span>
+  </a>
 </div>
 
 @if (data(); as d) {
   <div class="kpi-grid">
-    <div class="kpi-card kpi-green">
-      <div class="kpi-icon"><span class="material-symbols-rounded">payments</span></div>
+    <div class="kpi-card">
+      <div class="kpi-tile kpi-tile-sales"><span class="material-symbols-rounded">payments</span></div>
       <div class="kpi-body">
         <div class="kpi-label">{{ 'dashboard.kpi.today.sales' | i18n }}</div>
         <div class="kpi-value">{{ formatCurrency(d.kpis.todaySales) }}</div>
-        <div class="kpi-sub">
-          @if (d.kpis.yesterdaySales > 0) {
-            {{ 'dashboard.kpi.vs.yesterday' | i18n }}: {{ formatCurrency(d.kpis.yesterdaySales) }}
-          } @else {
-            {{ 'dashboard.kpi.no.previous' | i18n }}
-          }
-        </div>
+        @if (salesDelta(); as delta) {
+          <div class="kpi-delta" [class.delta-down]="!delta.up">
+            <span class="material-symbols-rounded">{{ delta.up ? 'trending_up' : 'trending_down' }}</span>
+            {{ delta.pct }}% {{ 'dashboard.kpi.vs.yesterday' | i18n }}
+          </div>
+        } @else {
+          <div class="kpi-sub">{{ 'dashboard.kpi.no.previous' | i18n }}</div>
+        }
       </div>
     </div>
 
-    <div class="kpi-card kpi-blue">
-      <div class="kpi-icon"><span class="material-symbols-rounded">scale</span></div>
+    <div class="kpi-card">
+      <div class="kpi-tile kpi-tile-kg"><span class="material-symbols-rounded">scale</span></div>
       <div class="kpi-body">
         <div class="kpi-label">{{ 'dashboard.kpi.total.kg' | i18n }}</div>
-        <div class="kpi-value">{{ formatDecimal(d.kpis.todayKg) }} Kg</div>
+        <div class="kpi-value">{{ formatDecimal(d.kpis.todayKg) }} <span class="kpi-unit">Kg</span></div>
       </div>
     </div>
 
-    <div class="kpi-card kpi-purple">
-      <div class="kpi-icon"><span class="material-symbols-rounded">percent</span></div>
+    <div class="kpi-card">
+      <div class="kpi-tile kpi-tile-comm"><span class="material-symbols-rounded">percent</span></div>
       <div class="kpi-body">
         <div class="kpi-label">{{ 'dashboard.kpi.today.commission' | i18n }}</div>
         <div class="kpi-value">{{ formatCurrency(d.kpis.todayCommission) }}</div>
       </div>
     </div>
 
-    <div class="kpi-card kpi-orange">
-      <div class="kpi-icon"><span class="material-symbols-rounded">agriculture</span></div>
+    <div class="kpi-card">
+      <div class="kpi-tile kpi-tile-farmers"><span class="material-symbols-rounded">agriculture</span></div>
       <div class="kpi-body">
         <div class="kpi-label">{{ 'dashboard.kpi.active.farmers' | i18n }}</div>
         <div class="kpi-value">{{ d.kpis.activeFarmers }}</div>
       </div>
     </div>
 
-    <div class="kpi-card kpi-red">
-      <div class="kpi-icon"><span class="material-symbols-rounded">shopping_cart</span></div>
+    <div class="kpi-card">
+      <div class="kpi-tile kpi-tile-buyers"><span class="material-symbols-rounded">shopping_cart</span></div>
       <div class="kpi-body">
         <div class="kpi-label">{{ 'dashboard.kpi.active.buyers' | i18n }}</div>
         <div class="kpi-value">{{ d.kpis.activeBuyers }}</div>
@@ -54,63 +130,81 @@
   </div>
 
   <div class="master-count-grid">
-    <div class="master-count-card">
-      <span class="material-symbols-rounded master-count-icon">agriculture</span>
+    <a class="master-count-card" routerLink="/farmers">
+      <span class="mc-tile mc-farmers"><span class="material-symbols-rounded">agriculture</span></span>
       <div>
         <div class="master-count-value">{{ d.masterCounts.farmers }}</div>
         <div class="master-count-label">{{ 'dashboard.master.total.farmers' | i18n }}</div>
       </div>
-    </div>
-    <div class="master-count-card">
-      <span class="material-symbols-rounded master-count-icon">shopping_cart</span>
+      <span class="material-symbols-rounded mc-arrow">chevron_right</span>
+    </a>
+    <a class="master-count-card" routerLink="/buyers">
+      <span class="mc-tile mc-buyers"><span class="material-symbols-rounded">shopping_cart</span></span>
       <div>
         <div class="master-count-value">{{ d.masterCounts.buyers }}</div>
         <div class="master-count-label">{{ 'dashboard.master.total.buyers' | i18n }}</div>
       </div>
-    </div>
-    <div class="master-count-card">
-      <span class="material-symbols-rounded master-count-icon">local_florist</span>
+      <span class="material-symbols-rounded mc-arrow">chevron_right</span>
+    </a>
+    <a class="master-count-card" routerLink="/flowers">
+      <span class="mc-tile mc-flowers"><span class="material-symbols-rounded">local_florist</span></span>
       <div>
         <div class="master-count-value">{{ d.masterCounts.flowers }}</div>
         <div class="master-count-label">{{ 'dashboard.master.total.flowers' | i18n }}</div>
       </div>
-    </div>
+      <span class="material-symbols-rounded mc-arrow">chevron_right</span>
+    </a>
   </div>
 
   <div class="dash-grid">
     <div class="card dash-card dash-card-wide">
       <div class="card-header">
         <h3>{{ 'dashboard.trend.title' | i18n }}</h3>
-        <div class="trend-toggle">
-          <button
-            type="button"
-            class="trend-toggle-btn"
-            [class.active]="trendRange() === 'week'"
-            (click)="setTrendRange('week')"
-          >{{ 'dashboard.trend.week' | i18n }}</button>
-          <button
-            type="button"
-            class="trend-toggle-btn"
-            [class.active]="trendRange() === 'month'"
-            (click)="setTrendRange('month')"
-          >{{ 'dashboard.trend.month' | i18n }}</button>
+        <div class="trend-tools">
+          @if (trendTotal() > 0) {
+            <span class="trend-total-chip">{{ 'dashboard.trend.total' | i18n }}: {{ formatCurrency(trendTotal()) }}</span>
+          }
+          <div class="trend-toggle">
+            <button
+              type="button"
+              class="trend-toggle-btn"
+              [class.active]="trendRange() === 'week'"
+              (click)="setTrendRange('week')"
+            >{{ 'dashboard.trend.week' | i18n }}</button>
+            <button
+              type="button"
+              class="trend-toggle-btn"
+              [class.active]="trendRange() === 'month'"
+              (click)="setTrendRange('month')"
+            >{{ 'dashboard.trend.month' | i18n }}</button>
+          </div>
         </div>
       </div>
       <div class="card-body">
-        @if (activeTrend().length > 0 && trendMax() > 0) {
-          <div class="trend-chart">
+        @if (trendPoints().length >= 2) {
+          <div class="trend-chart-wrap">
+            <svg class="trend-svg" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#7267ef" stop-opacity="0.45" />
+                  <stop offset="100%" stop-color="#7267ef" stop-opacity="0.02" />
+                </linearGradient>
+              </defs>
+              <path [attr.d]="trendAreaPath()" fill="url(#trendFill)" />
+              <polyline [attr.points]="trendLinePoints()" fill="none" stroke="#7267ef" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            @for (row of activeTrend(); track row.salesDate; let i = $index) {
+              <span
+                class="trend-dot"
+                [style.left.%]="trendPoints()[i].x"
+                [style.top.%]="trendPoints()[i].y"
+                [attr.title]="row.salesDate + ' - ' + formatCurrency(row.amount)"
+              ></span>
+            }
+          </div>
+          <div class="trend-labels">
             @for (row of activeTrend(); track row.salesDate) {
-              <div class="trend-col" [attr.title]="row.salesDate">
-                <div class="trend-value">{{ compactAmount(row.amount) }}</div>
-                <div class="trend-bar-wrap">
-                  <div
-                    class="trend-bar"
-                    [class.trend-bar-empty]="(row.amount ?? 0) <= 0"
-                    [style.height]="trendPct(row.amount, trendMax()) + '%'"
-                  ></div>
-                </div>
-                <div class="trend-label">{{ shortDay(row.salesDate) }}</div>
-              </div>
+              <span>{{ shortDay(row.salesDate) }}</span>
             }
           </div>
         } @else {
@@ -127,16 +221,14 @@
         @if (d.topFlowers.length > 0) {
           @for (row of d.topFlowers; track $index) {
             <div class="hbar-row">
-              <div class="hbar-label">{{ row.flowerType || '-' }}</div>
-              <div class="hbar-track">
-                <div
-                  class="hbar-fill"
-                  [style.width]="flowerPct(row.totalKg, flowersMax()) + '%'"
-                ></div>
+              <span class="hpic"><span class="material-symbols-rounded">local_florist</span></span>
+              <div class="hbar-main">
+                <div class="hbar-label">{{ row.flowerType || '-' }}</div>
+                <div class="hbar-track">
+                  <div class="hbar-fill" [style.width]="flowerPct(row.totalKg, flowersMax()) + '%'"></div>
+                </div>
               </div>
-              <div class="hbar-value">
-                {{ formatDecimal(row.totalKg) }} {{ 'dashboard.top.kg.suffix' | i18n }}
-              </div>
+              <div class="hbar-value">{{ formatDecimal(row.totalKg) }} {{ 'dashboard.top.kg.suffix' | i18n }}</div>
             </div>
           }
         } @else {
@@ -151,11 +243,12 @@
       </div>
       <div class="card-body">
         @if (d.topFarmers.length > 0) {
-          @for (row of d.topFarmers; track $index) {
-            <div class="name-list-row">
-              <span class="material-symbols-rounded name-list-icon">agriculture</span>
-              <span class="name-list-name">{{ row.farmerName || row.farmerId || '-' }}</span>
-              <span class="name-list-value">{{ formatCurrency(row.totalSalesAmt) }}</span>
+          @for (row of d.topFarmers; track $index; let r = $index) {
+            <div class="rank-row">
+              <span class="rank-badge" [class.rank-gold]="r === 0" [class.rank-silver]="r === 1" [class.rank-bronze]="r === 2">{{ r + 1 }}</span>
+              <span class="rank-avatar">{{ initials(row.farmerName) }}</span>
+              <span class="rank-name">{{ row.farmerName || row.farmerId || '-' }}</span>
+              <span class="rank-value">{{ formatCurrency(row.totalSalesAmt) }}</span>
             </div>
           }
         } @else {
@@ -167,6 +260,10 @@
     <div class="card dash-card">
       <div class="card-header">
         <h3>{{ 'dashboard.outstanding.farmers' | i18n }}</h3>
+        <a class="card-link" routerLink="/farmer-ledger-list">
+          {{ 'dashboard.view.all' | i18n }}
+          <span class="material-symbols-rounded">arrow_forward</span>
+        </a>
       </div>
       <div class="card-body">
         @if (d.outstandingFarmers.length > 0) {
@@ -174,7 +271,7 @@
             <div class="name-list-row">
               <span class="material-symbols-rounded name-list-icon">agriculture</span>
               <span class="name-list-name">{{ row.farmerName || row.farmerId || '-' }}</span>
-              <span class="name-list-value">{{ formatCurrency(row.outstandingBalance) }}</span>
+              <span class="name-list-value amt-amber">{{ formatCurrency(row.outstandingBalance) }}</span>
             </div>
           }
         } @else {
@@ -186,6 +283,10 @@
     <div class="card dash-card">
       <div class="card-header">
         <h3>{{ 'dashboard.outstanding.buyers' | i18n }}</h3>
+        <a class="card-link" routerLink="/buyer-ledger-list">
+          {{ 'dashboard.view.all' | i18n }}
+          <span class="material-symbols-rounded">arrow_forward</span>
+        </a>
       </div>
       <div class="card-body">
         @if (d.outstandingBuyers.length > 0) {
@@ -193,7 +294,7 @@
             <div class="name-list-row">
               <span class="material-symbols-rounded name-list-icon">shopping_cart</span>
               <span class="name-list-name">{{ row.buyerName || row.buyerId || '-' }}</span>
-              <span class="name-list-value">{{ formatCurrency(row.outstandingBalance) }}</span>
+              <span class="name-list-value amt-red">{{ formatCurrency(row.outstandingBalance) }}</span>
             </div>
           }
         } @else {

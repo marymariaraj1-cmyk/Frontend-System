@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { DashboardData } from '../../core/models/dashboard-data';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
@@ -11,7 +12,7 @@ import { formatDecimal } from '../../core/utils/round-off.util';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [I18nPipe],
+  imports: [RouterLink, I18nPipe],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
@@ -62,9 +63,78 @@ export class DashboardComponent implements OnInit {
     return max;
   }
 
-  protected trendPct(amount: number | undefined, max: number): number {
-    const value = this.parseNum(amount);
-    return max > 0 ? Math.max(Math.round((value / max) * 100), 2) : 0;
+  protected trendTotal(): number {
+    let total = 0;
+    for (const row of this.activeTrend()) {
+      total += this.parseNum(row.amount);
+    }
+    return total;
+  }
+
+  protected trendPoints(): { x: number; y: number }[] {
+    const rows = this.activeTrend();
+    const max = this.trendMax();
+    const n = rows.length;
+    if (n < 2 || max <= 0) {
+      return [];
+    }
+    return rows.map((row, i) => {
+      const value = this.parseNum(row.amount);
+      const x = i / (n - 1) * 100;
+      const y = 40 - 2 - (value / max) * 36;
+      return { x, y };
+    });
+  }
+
+  protected trendAreaPath(): string {
+    const pts = this.trendPoints();
+    if (pts.length < 2) {
+      return '';
+    }
+    const line = pts
+      .map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(2)},${p.y.toFixed(2)}`)
+      .join(' ');
+    return `${line} L${pts[pts.length - 1].x.toFixed(2)},40 L${pts[0].x.toFixed(2)},40 Z`;
+  }
+
+  protected trendLinePoints(): string {
+    const pts = this.trendPoints();
+    if (pts.length < 2) {
+      return '';
+    }
+    return pts.map((p, i) => `${i === 0 ? '' : ' '}${p.x.toFixed(2)},${p.y.toFixed(2)}`).join('');
+  }
+
+  protected salesDelta(): { pct: number; up: boolean } | null {
+    const d = this.data();
+    if (!d || d.kpis.yesterdaySales <= 0) {
+      return null;
+    }
+    const diff = d.kpis.todaySales - d.kpis.yesterdaySales;
+    const pct = Math.round((diff / d.kpis.yesterdaySales) * 100);
+    return { pct: Math.abs(pct), up: diff >= 0 };
+  }
+
+  protected todayLabel(): string {
+    const now = new Date();
+    if (Number.isNaN(now.getTime())) {
+      return '';
+    }
+    return now.toLocaleDateString(undefined, {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  }
+
+  protected initials(name: string | undefined): string {
+    if (!name) {
+      return '?';
+    }
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    const picked = parts.slice(0, 2).map((p) => p[0]);
+    return picked.join('').toUpperCase();
   }
 
   protected flowersMax(): number {
@@ -81,14 +151,6 @@ export class DashboardComponent implements OnInit {
   protected flowerPct(kg: number | undefined, max: number): number {
     const value = this.parseNum(kg);
     return max > 0 ? Math.round((value / max) * 100) : 0;
-  }
-
-  protected compactAmount(value: number | undefined): string {
-    const num = this.parseNum(value);
-    if (num >= 100000) {
-      return Math.round(num / 1000) + 'K';
-    }
-    return Math.round(num).toString();
   }
 
   protected shortDay(isoDate: string | undefined): string {

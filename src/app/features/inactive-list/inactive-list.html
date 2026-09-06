@@ -1,0 +1,166 @@
+<div class="mst-header inactive-hero">
+  <span class="mst-accent"></span>
+  <span class="mst-ring mst-ring-1"></span>
+  <span class="mst-ring mst-ring-2"></span>
+  <span class="material-symbols-rounded mst-glyph">group_off</span>
+  <div class="mst-header-icon">
+    <span class="material-symbols-rounded">event_busy</span>
+  </div>
+  <div class="mst-header-text">
+    <h2>{{ 'inactive.list.title' | i18n }}</h2>
+    <p class="mst-subtitle">{{ 'inactive.list.sub' | i18n }}</p>
+    <p class="ilf-hero-date">
+      <span class="material-symbols-rounded">calendar_month</span>
+      {{ 'inactive.list.date.label' | i18n }}: {{ todayLabel() }}
+    </p>
+  </div>
+  <div class="ilf-hero-stats">
+    <div class="ilf-stat-chip" [class.current]="section() === 'farmer'">
+      <span class="ilf-stat-icon material-symbols-rounded">agriculture</span>
+      <div class="ilf-stat-meta">
+        <span class="ilf-stat-label">{{ 'inactive.list.summary.count.farmers' | i18n }}</span>
+        <span class="ilf-stat-value">{{ farmerCount() }}</span>
+      </div>
+    </div>
+    <div class="ilf-stat-chip" [class.current]="section() === 'buyer'">
+      <span class="ilf-stat-icon material-symbols-rounded">shopping_bag</span>
+      <div class="ilf-stat-meta">
+        <span class="ilf-stat-label">{{ 'inactive.list.summary.count.buyers' | i18n }}</span>
+        <span class="ilf-stat-value">{{ buyerCount() }}</span>
+      </div>
+    </div>
+    <button type="button" class="ilf-print-btn" (click)="print()">
+      <span class="material-symbols-rounded">print</span>
+      {{ 'btn.print' | i18n }}
+    </button>
+  </div>
+</div>
+
+<div class="card ilf-card">
+  <div class="card-body">
+    <div class="mst-tabs">
+      <button
+        type="button"
+        class="mst-tab"
+        [class.active]="section() === 'farmer'"
+        (click)="section.set('farmer')"
+      >
+        <span class="material-symbols-rounded">agriculture</span>
+        {{ 'inactive.list.farmer.tab' | i18n }}
+      </button>
+      <button
+        type="button"
+        class="mst-tab"
+        [class.active]="section() === 'buyer'"
+        (click)="section.set('buyer')"
+      >
+        <span class="material-symbols-rounded">shopping_bag</span>
+        {{ 'inactive.list.buyer.tab' | i18n }}
+      </button>
+    </div>
+
+    @if (isLoading()) {
+      <div class="ilf-loader">
+        <div class="ilf-spinner"></div>
+      </div>
+    }
+
+    @if (section() === 'farmer') {
+      <div class="mst-search">
+        <span class="material-symbols-rounded mst-search-icon">search</span>
+        <input
+          type="text"
+          class="mst-search-input"
+          [placeholder]="'inactive.list.farmer.search.placeholder' | i18n"
+          [(ngModel)]="farmerSearch"
+        />
+      </div>
+      <div class="table-container ilf-table-wrap">
+        <table class="report-table ilf-table">
+          <thead>
+            <tr>
+              <th style="width: 70px">{{ 'common.sno' | i18n }}</th>
+              <th>{{ 'farmer.name' | i18n }}</th>
+              <th class="amount-col">{{ 'ledger.list.col.outstanding.balance' | i18n }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of filteredFarmers(); track row.farmerId; let i = $index) {
+              <tr>
+                <td class="ilf-sno">{{ i + 1 }}</td>
+                <td>
+                  <div class="mst-name-cell">
+                    <span class="row-avatar">{{ initials(row.farmerName) }}</span>
+                    <span class="ilf-name">{{ row.farmerName }}</span>
+                  </div>
+                </td>
+                <td class="amount-col">
+                  <span class="ilf-balance" [class]="balanceClass(row.outstandingBalance)">
+                    {{ formatCurrency(outstandingAbs(row.outstandingBalance)) }}
+                  </span>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="3" class="no-records">
+                  @if (loaded() && !isLoading()) {
+                    {{ 'inactive.list.no.farmers' | i18n }}
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    @if (section() === 'buyer') {
+      <div class="mst-search">
+        <span class="material-symbols-rounded mst-search-icon">search</span>
+        <input
+          type="text"
+          class="mst-search-input"
+          [placeholder]="'inactive.list.buyer.search.placeholder' | i18n"
+          [(ngModel)]="buyerSearch"
+        />
+      </div>
+      <div class="table-container ilf-table-wrap">
+        <table class="report-table ilf-table">
+          <thead>
+            <tr>
+              <th style="width: 70px">{{ 'common.sno' | i18n }}</th>
+              <th>{{ 'buyer.name' | i18n }}</th>
+              <th class="amount-col">{{ 'ledger.list.col.outstanding.balance' | i18n }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of filteredBuyers(); track row.buyerId; let i = $index) {
+              <tr>
+                <td class="ilf-sno">{{ i + 1 }}</td>
+                <td>
+                  <div class="mst-name-cell">
+                    <span class="row-avatar">{{ initials(row.buyerName) }}</span>
+                    <span class="ilf-name">{{ row.buyerName }}</span>
+                  </div>
+                </td>
+                <td class="amount-col">
+                  <span class="ilf-balance" [class]="balanceClass(row.outstandingBalance)">
+                    {{ formatCurrency(outstandingAbs(row.outstandingBalance)) }}
+                  </span>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="3" class="no-records">
+                  @if (loaded() && !isLoading()) {
+                    {{ 'inactive.list.no.buyers' | i18n }}
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

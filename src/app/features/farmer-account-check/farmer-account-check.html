@@ -1,44 +1,99 @@
-<div class="card">
-  <div class="card-header">
-    <h3>{{ 'fac.title' | i18n }}</h3>
-  </div>
-  <div class="card-body">
-    <div class="form-row">
-      <div class="form-group">
-        <label>{{ 'farmer.name' | i18n }} <span class="required">*</span></label>
-        <app-autocomplete
-          [items]="farmerNames()"
-          [invalid]="farmerInvalid()"
-          [(value)]="farmer"
-          (onSelect)="onFarmerSelected($event)"
-          (blur)="validateFarmer()"
-          [placeholder]="'opening.balance.config.farmer.placeholder' | i18n"
-        />
-        @if (farmerInvalid()) {
-          <span class="field-error">{{ 'txn.error.farmer.notfound' | i18n }}</span>
-        }
+<div class="fac-page">
+  <div class="fac-hero">
+    <span class="fac-hero-accent"></span>
+    <span class="fac-hero-ring fac-hero-ring-1"></span>
+    <span class="fac-hero-ring fac-hero-ring-2"></span>
+    <span class="fac-hero-glyph material-symbols-rounded">account_balance_wallet</span>
+
+    <div class="fac-hero-main">
+      <div class="fac-hero-icon">
+        <span class="material-symbols-rounded">verified_user</span>
       </div>
-      <div class="form-group form-actions-inline">
-        <button
-          type="button"
-          class="btn btn-primary"
-          [disabled]="loading()"
-          (click)="viewActiveLedger()"
-        >
-          <span class="material-symbols-rounded">visibility</span>
-          {{ 'fac.view.active.ledger' | i18n }}
-        </button>
+      <div class="fac-hero-text">
+        <h2>{{ 'fac.title' | i18n }}</h2>
+        <p>{{ 'fac.subtitle' | i18n }}</p>
+      </div>
+    </div>
+
+    @if (loaded()) {
+      <div class="fac-hero-stats">
+        <div class="fac-stat-chip">
+          <span class="fac-stat-icon material-symbols-rounded">local_florist</span>
+          <div class="fac-stat-meta">
+            <span class="fac-stat-label">{{ 'fac.col.credit.or.sale' | i18n }}</span>
+            <span class="fac-stat-value">{{ formatCurrency(totalCredit()) }}</span>
+          </div>
+        </div>
+        <div class="fac-stat-chip">
+          <span class="fac-stat-icon material-symbols-rounded">payments</span>
+          <div class="fac-stat-meta">
+            <span class="fac-stat-label">{{ 'fac.col.debit.or.advance' | i18n }}</span>
+            <span class="fac-stat-value">{{ formatCurrency(totalDebit()) }}</span>
+          </div>
+        </div>
+        <div class="fac-stat-chip">
+          <span class="fac-stat-icon material-symbols-rounded">account_balance</span>
+          <div class="fac-stat-meta">
+            <span class="fac-stat-label">{{ 'fac.net' | i18n }}</span>
+            <span class="fac-stat-value">{{ formatCurrency(netTotal()) }}</span>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>
+        <span class="fac-card-icon material-symbols-rounded">person_search</span>
+        {{ 'fac.select.farmer' | i18n }}
+      </h3>
+    </div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>{{ 'farmer.name' | i18n }} <span class="required">*</span></label>
+          <app-autocomplete
+            [items]="farmerNames()"
+            [invalid]="farmerInvalid()"
+            [(value)]="farmer"
+            (onSelect)="onFarmerSelected($event)"
+            (blur)="validateFarmer()"
+            [placeholder]="'opening.balance.config.farmer.placeholder' | i18n"
+          />
+          @if (farmerInvalid()) {
+            <span class="field-error">{{ 'txn.error.farmer.notfound' | i18n }}</span>
+          }
+        </div>
+        <div class="form-group form-actions-inline">
+          <button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="loading()"
+            (click)="viewActiveLedger()"
+          >
+            <span class="material-symbols-rounded">visibility</span>
+            {{ 'fac.view.active.ledger' | i18n }}
+          </button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
 @if (loaded()) {
   <div class="card">
     <div class="card-header">
-      <h3>{{ 'fac.active.ledger.rows' | i18n }}</h3>
+      <h3>
+        <span class="fac-card-icon material-symbols-rounded">receipt_long</span>
+        {{ 'fac.active.ledger.rows' | i18n }}
+      </h3>
     </div>
     <div class="card-body">
+      @if (loading()) {
+        <div class="fac-loader">
+          <div class="fac-spinner"></div>
+        </div>
+      }
       @if (activeRows().length === 0) {
         <p class="no-data">{{ 'fac.no.active.rows' | i18n }}</p>
       } @else {
@@ -72,31 +127,78 @@
         </div>
 
         <div class="model-buttons">
-          <button type="button" class="btn btn-secondary" (click)="calculate('model1')" [disabled]="loading()">
+          <button
+            type="button"
+            class="fac-model-btn"
+            [class.active]="selectedModel() === 'model1'"
+            (click)="calculate('model1')"
+            [disabled]="loading()"
+          >
+            <span class="material-symbols-rounded">percent</span>
             {{ 'fac.model.1.button' | i18n }}
           </button>
-          <button type="button" class="btn btn-secondary" (click)="calculate('model2')" [disabled]="loading()">
+          <button
+            type="button"
+            class="fac-model-btn"
+            [class.active]="selectedModel() === 'model2'"
+            (click)="calculate('model2')"
+            [disabled]="loading()"
+          >
+            <span class="material-symbols-rounded">trending_down</span>
             {{ 'fac.model.2.button' | i18n }}
           </button>
-          <button type="button" class="btn btn-secondary" (click)="calculate('model3')" [disabled]="loading()">
+          <button
+            type="button"
+            class="fac-model-btn"
+            [class.active]="selectedModel() === 'model3'"
+            (click)="calculate('model3')"
+            [disabled]="loading()"
+          >
+            <span class="material-symbols-rounded">calculate</span>
             {{ 'fac.model.3.button' | i18n }}
           </button>
         </div>
 
         @if (modelResult()) {
           <div class="calc-result">
+            <span class="calc-result-chip material-symbols-rounded">fact_check</span>
             <h3>{{ modelResult()!.label }}</h3>
             <table class="calc-table">
-              @for (line of modelResult()!.lines; track $index) {
+              <thead>
                 <tr>
-                  <td class="lbl">{{ line.label }}</td>
-                  <td class="amt">{{ formatCurrency(line.value) }}</td>
+                  <th class="lbl">{{ 'fac.calc.col.description' | i18n }}</th>
+                  <th class="amt">{{ 'fac.calc.col.amount' | i18n }}</th>
+                  <th class="desc">{{ 'fac.calc.col.formula' | i18n }}</th>
                 </tr>
-              }
-              <tr class="final">
-                <td class="lbl">{{ modelResult()!.finalLabel }}</td>
-                <td class="amt">{{ formatCurrency(modelResult()!.finalAmount) }}</td>
-              </tr>
+              </thead>
+              <tbody>
+                @for (line of modelResult()!.lines; track $index) {
+                  <tr>
+                    <td class="lbl">{{ line.label }}</td>
+                    <td class="amt">{{ formatCurrency(line.sign ? absAmount(line.value) : line.value) }}</td>
+                    <td class="desc">
+                      {{ line.desc }}
+                      @if (line.sign && line.value < 0) {
+                        <span class="fac-tag fac-tag-debit">{{ 'fac.debit' | i18n }}</span>
+                      } @else if (line.sign && line.value > 0) {
+                        <span class="fac-tag fac-tag-credit">{{ 'fac.credit' | i18n }}</span>
+                      }
+                    </td>
+                  </tr>
+                }
+                <tr class="final">
+                  <td class="lbl">{{ modelResult()!.finalLabel }}</td>
+                  <td class="amt">{{ formatCurrency(absAmount(modelResult()!.finalAmount)) }}</td>
+                  <td class="desc">
+                    {{ modelResult()!.finalDesc }}
+                    @if (modelResult()!.finalAmount < 0) {
+                      <span class="fac-tag fac-tag-debit">{{ 'fac.debit' | i18n }}</span>
+                    } @else if (modelResult()!.finalAmount > 0) {
+                      <span class="fac-tag fac-tag-credit">{{ 'fac.credit' | i18n }}</span>
+                    }
+                  </td>
+                </tr>
+              </tbody>
             </table>
           </div>
 
@@ -120,3 +222,4 @@
     </div>
   </div>
 }
+</div>

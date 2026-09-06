@@ -1,6 +1,24 @@
-<div class="card">
-  <div class="card-header">
-    <h3>{{ 'buyer.sales.report.title' | i18n }}</h3>
+<div class="bsr-hero">
+  <span class="bsr-accent"></span>
+  <span class="bsr-ring bsr-ring-1"></span>
+  <span class="bsr-ring bsr-ring-2"></span>
+  <span class="bsr-glyph material-symbols-rounded">trending_up</span>
+
+  <div class="bsr-hero-id">
+    <div class="bsr-hero-icon">
+      <span class="material-symbols-rounded">shopping_cart</span>
+    </div>
+    <div class="bsr-hero-text">
+      <h2>{{ 'buyer.sales.report.title' | i18n }}</h2>
+      <p>{{ 'buyer.sales.report.sub' | i18n }}</p>
+    </div>
+  </div>
+</div>
+
+<div class="card rpt-card">
+  <div class="rpt-card-head">
+    <span class="rpt-chip material-symbols-rounded">tune</span>
+    <h3>{{ 'buyer.sales.report.filters' | i18n }}</h3>
   </div>
   <div class="card-body">
     <div class="form-row">
@@ -55,13 +73,16 @@
       </div>
       <div class="form-group">
         <label for="buyerSearch">{{ 'buyer.name' | i18n }}</label>
-        <input
-          id="buyerSearch"
-          name="buyerSearch"
-          type="text"
-          [(ngModel)]="buyerSearch"
-          [placeholder]="'buyer.sales.report.search.placeholder' | i18n"
-        />
+        <div class="rpt-search">
+          <span class="material-symbols-rounded rpt-search-icon">search</span>
+          <input
+            id="buyerSearch"
+            name="buyerSearch"
+            type="text"
+            [(ngModel)]="buyerSearch"
+            [placeholder]="'buyer.sales.report.search.placeholder' | i18n"
+          />
+        </div>
       </div>
       <div class="form-group form-actions-inline">
         <button type="button" class="btn btn-primary" [disabled]="loading()" (click)="searchCustom()">
@@ -73,10 +94,20 @@
   </div>
 </div>
 
+@if (loading()) {
+  <div class="rpt-loader">
+    <div class="rpt-spinner"></div>
+  </div>
+}
+
 @if (searched()) {
-  <div class="card report-card">
-    <div class="card-header">
+  <div class="card rpt-card report-card">
+    <div class="rpt-card-head">
+      <span class="rpt-chip material-symbols-rounded">grid_view</span>
       <h3>{{ 'buyer.sales.report.grid.title' | i18n }}</h3>
+      @if (filteredRows().length > 0) {
+        <span class="rpt-count">{{ filteredRows().length }}</span>
+      }
     </div>
     <div class="card-body">
       <div class="table-container">
@@ -93,16 +124,18 @@
           <tbody>
             @for (row of filteredRows(); track $index; let i = $index) {
               <tr>
-                <td>{{ i + 1 }}</td>
+                <td class="rpt-sno">{{ i + 1 }}</td>
                 <td>
-                  <span class="material-symbols-rounded buyer-icon">shopping_cart</span>
-                  {{ row.buyerName }}
+                  <div class="rpt-name-cell">
+                    <span class="rpt-avatar">{{ initials(row.buyerName) }}</span>
+                    <span class="rpt-name">{{ row.buyerName }}</span>
+                  </div>
                 </td>
-                <td class="amount-col">{{ formatDecimal(row.totalWeight) }}</td>
-                <td class="amount-col">{{ formatCurrency(row.discount) }}</td>
+                <td class="amount-col"><span class="rpt-amt chip-weight">{{ formatDecimal(row.totalWeight) }}</span></td>
+                <td class="amount-col"><span class="rpt-amt chip-discount">{{ formatCurrency(row.discount) }}</span></td>
                 <td class="amount-col">
-                  {{ formatCurrency(row.totalAmount) }}
-                  <a class="view-link" (click)="openPopup(row.buyerId)" title="View">
+                  <span class="rpt-amt chip-total">{{ formatCurrency(row.totalAmount) }}</span>
+                  <a class="view-link" (click)="openPopup(row.buyerId)" [attr.title]="'btn.view' | i18n">
                     <span class="material-symbols-rounded view-icon">visibility</span>
                   </a>
                 </td>
@@ -115,7 +148,7 @@
           </tbody>
           @if (rows().length > 0) {
             <tfoot>
-              <tr class="report-footer-row">
+              <tr class="report-footer-row rpt-total-row">
                 <td></td>
                 <td>{{ 'report.total' | i18n }}</td>
                 <td class="amount-col">{{ formatDecimal(totalWeight()) }}</td>
@@ -165,7 +198,7 @@
               }
             </tbody>
             <tfoot>
-              <tr class="report-footer-row">
+              <tr class="report-footer-row rpt-total-row">
                 <td colspan="4" class="amount-col">{{ 'buyer.sales.report.detail.total' | i18n }}</td>
                 <td class="amount-col">{{ formatCurrency(popupTotal()) }}</td>
               </tr>

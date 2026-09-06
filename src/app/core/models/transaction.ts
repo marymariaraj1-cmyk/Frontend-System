@@ -16,6 +16,7 @@ export interface FarmerTransaction {
   cashPaidAmt: number;
   excessDebitAmt: number;
   debAmt: number;
+  paymentMode: string;
 }
 
 export interface BuyerTransaction {
@@ -27,6 +28,7 @@ export interface BuyerTransaction {
   transactionDate: string;
   cashPaidAmt: number;
   disAmt: number;
+  paymentMode: string;
 }
 
 export interface FarmerTransactionRequest {
@@ -34,6 +36,7 @@ export interface FarmerTransactionRequest {
   transactionDate: string;
   excessDebitAmt: string;
   debitAmt: string;
+  paymentMode: string;
 }
 
 export interface BuyerTransactionRequest {
@@ -41,6 +44,7 @@ export interface BuyerTransactionRequest {
   transactionDate: string;
   amountReceived: string;
   discountAmt: string;
+  paymentMode: string;
 }
 
 export interface OpeningBalanceData {

@@ -1,6 +1,24 @@
-<div class="card">
-  <div class="card-header">
-    <h3>{{ 'farmer.sales.report.title' | i18n }}</h3>
+<div class="fsr-hero">
+  <span class="fsr-accent"></span>
+  <span class="fsr-ring fsr-ring-1"></span>
+  <span class="fsr-ring fsr-ring-2"></span>
+  <span class="fsr-glyph material-symbols-rounded">bar_chart</span>
+
+  <div class="fsr-hero-id">
+    <div class="fsr-hero-icon">
+      <span class="material-symbols-rounded">agriculture</span>
+    </div>
+    <div class="fsr-hero-text">
+      <h2>{{ 'farmer.sales.report.title' | i18n }}</h2>
+      <p>{{ 'farmer.sales.report.sub' | i18n }}</p>
+    </div>
+  </div>
+</div>
+
+<div class="card rpt-card">
+  <div class="rpt-card-head">
+    <span class="rpt-chip material-symbols-rounded">tune</span>
+    <h3>{{ 'farmer.sales.report.filters' | i18n }}</h3>
   </div>
   <div class="card-body">
     <div class="form-row">
@@ -55,13 +73,16 @@
       </div>
       <div class="form-group">
         <label for="farmerSearch">{{ 'farmer.name' | i18n }}</label>
-        <input
-          id="farmerSearch"
-          name="farmerSearch"
-          type="text"
-          [(ngModel)]="farmerSearch"
-          [placeholder]="'farmer.sales.report.search.placeholder' | i18n"
-        />
+        <div class="rpt-search">
+          <span class="material-symbols-rounded rpt-search-icon">search</span>
+          <input
+            id="farmerSearch"
+            name="farmerSearch"
+            type="text"
+            [(ngModel)]="farmerSearch"
+            [placeholder]="'farmer.sales.report.search.placeholder' | i18n"
+          />
+        </div>
       </div>
       <div class="form-group form-actions-inline">
         <button type="button" class="btn btn-primary" [disabled]="loading()" (click)="searchCustom()">
@@ -73,10 +94,20 @@
   </div>
 </div>
 
+@if (loading()) {
+  <div class="rpt-loader">
+    <div class="rpt-spinner"></div>
+  </div>
+}
+
 @if (searched()) {
-  <div class="card report-card">
-    <div class="card-header">
+  <div class="card rpt-card report-card">
+    <div class="rpt-card-head">
+      <span class="rpt-chip material-symbols-rounded">grid_view</span>
       <h3>{{ 'farmer.sales.report.grid.title' | i18n }}</h3>
+      @if (filteredRows().length > 0) {
+        <span class="rpt-count">{{ filteredRows().length }}</span>
+      }
     </div>
     <div class="card-body">
       <div class="table-container">
@@ -94,17 +125,19 @@
           <tbody>
             @for (row of filteredRows(); track $index; let i = $index) {
               <tr>
-                <td>{{ i + 1 }}</td>
+                <td class="rpt-sno">{{ i + 1 }}</td>
                 <td>
-                  <span class="material-symbols-rounded farmer-icon">agriculture</span>
-                  {{ row.farmerName }}
+                  <div class="rpt-name-cell">
+                    <span class="rpt-avatar">{{ initials(row.farmerName) }}</span>
+                    <span class="rpt-name">{{ row.farmerName }}</span>
+                  </div>
                 </td>
-                <td class="amount-col">{{ formatCurrency(row.total) }}</td>
-                <td class="amount-col">{{ formatCurrency(row.commission) }}</td>
-                <td class="amount-col">{{ formatCurrency(row.debit) }}</td>
+                <td class="amount-col"><span class="rpt-amt chip-total">{{ formatCurrency(row.total) }}</span></td>
+                <td class="amount-col"><span class="rpt-amt chip-commission">{{ formatCurrency(row.commission) }}</span></td>
+                <td class="amount-col"><span class="rpt-amt chip-debit">{{ formatCurrency(row.debit) }}</span></td>
                 <td class="amount-col">
-                  {{ formatCurrency(row.totalNetAmt) }}
-                  <a class="view-link" (click)="openPopup(row.farmerId)" title="View">
+                  <span class="rpt-amt chip-net">{{ formatCurrency(row.totalNetAmt) }}</span>
+                  <a class="view-link" (click)="openPopup(row.farmerId)" [attr.title]="'btn.view' | i18n">
                     <span class="material-symbols-rounded view-icon">visibility</span>
                   </a>
                 </td>
@@ -117,13 +150,13 @@
           </tbody>
           @if (rows().length > 0) {
             <tfoot>
-              <tr class="report-footer-row">
+              <tr class="report-footer-row rpt-total-row">
                 <td></td>
                 <td>{{ 'report.total' | i18n }}</td>
-                <td class="amount-col">{{ formatCurrency(totalTotal()) }}</td>
-                <td class="amount-col">{{ formatCurrency(totalCommission()) }}</td>
-                <td class="amount-col">{{ formatCurrency(totalDebit()) }}</td>
-                <td class="amount-col">{{ formatCurrency(totalNet()) }}</td>
+                <td class="amount-col"><span class="rpt-amt chip-total">{{ formatCurrency(totalTotal()) }}</span></td>
+                <td class="amount-col"><span class="rpt-amt chip-commission">{{ formatCurrency(totalCommission()) }}</span></td>
+                <td class="amount-col"><span class="rpt-amt chip-debit">{{ formatCurrency(totalDebit()) }}</span></td>
+                <td class="amount-col"><span class="rpt-amt chip-net">{{ formatCurrency(totalNet()) }}</span></td>
               </tr>
             </tfoot>
           }
@@ -181,10 +214,15 @@
                 <td class="amount-col">{{ formatCurrency(popupNetAmount()) }}</td>
               </tr>
               <tr class="report-footer-row">
-                <td colspan="4" class="amount-col">{{ 'farmer.sales.daily.report.detail.debit.amount' | i18n }}</td>
+                <td colspan="4" class="amount-col">
+                  {{ 'farmer.sales.daily.report.detail.debit.amount' | i18n }}
+                  @if (popupDebitBreakdown()) {
+                    <span class="debit-breakdown"> ({{ popupDebitBreakdown() }})</span>
+                  }
+                </td>
                 <td class="amount-col">{{ formatCurrency(popupDebit()) }}</td>
               </tr>
-              <tr class="report-footer-row">
+              <tr class="report-footer-row rpt-total-row">
                 <td colspan="4" class="amount-col">{{ 'farmer.sales.daily.report.detail.final.total' | i18n }}</td>
                 <td class="amount-col">{{ formatCurrency(popupFinalTotal()) }}</td>
               </tr>

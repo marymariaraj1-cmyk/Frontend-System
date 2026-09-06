@@ -1,3 +1,12 @@
 :host {
   display: block;
 }
+
+/* ==================== HERO (green harvest band) ==================== */
+.mst-header {
+  background:
+    radial-gradient(circle at 8% 130%, rgba(74, 222, 128, 0.35), transparent 46%),
+    radial-gradient(circle at 92% -20%, rgba(250, 204, 21, 0.22), transparent 40%),
+    linear-gradient(135deg, #14532d 0%, #15803d 52%, #22c55e 130%);
+  box-shadow: 0 14px 34px rgba(21, 128, 61, 0.32);
+}

@@ -2,9 +2,11 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { AutocompleteComponent } from '../../core/components/autocomplete/autocomplete.component';
+import { BagCountConfigRow } from '../../core/models/bag-count-config';
 import { SalesLineInput, SalesMasterData } from '../../core/models/sales';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
 import { AuthService } from '../../core/services/auth.service';
+import { BagCountConfigService } from '../../core/services/bag-count-config.service';
 import { FarmerLedgerService } from '../../core/services/farmer-ledger.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { SalesService } from '../../core/services/sales.service';
@@ -17,6 +19,7 @@ import { printHtml } from '../../core/utils/print.util';
 
 interface SalesRow {
   flowerType: string;
+  bagCount: string;
   totalWeight: string;
   price: string;
   amount: string;
@@ -38,6 +41,7 @@ export class SalesEntryComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly i18n = inject(I18nService);
   private readonly toast = inject(ToastService);
+  private readonly bagCountConfigService = inject(BagCountConfigService);
 
   protected readonly master = signal<SalesMasterData>({
     farmers: [],
@@ -51,8 +55,18 @@ export class SalesEntryComponent implements OnInit {
   protected readonly debit = signal('0');
   protected readonly calcOpen = signal(true);
   protected readonly saving = signal(false);
+  protected readonly bagLimitsOpen = signal(false);
+  protected readonly bagConfigs = signal<BagCountConfigRow[]>([]);
 
   protected readonly formatCurrency = formatCurrency;
+
+  protected readonly bagLimits = computed(() =>
+    this.bagConfigs()
+      .filter((c) => c.salesDate === this.salesDate() && (c.bagCheck ?? 'E').toUpperCase() === 'E')
+      .sort((a, b) => a.flowerName.localeCompare(b.flowerName)),
+  );
+
+  protected readonly bagLimitNotice = computed(() => this.bagLimits().length > 0);
 
   protected readonly summary = computed(() => {
     let total = 0;
@@ -73,7 +87,19 @@ export class SalesEntryComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadMasterData();
+    this.loadBagConfigs();
     this.addRow();
+  }
+
+  private loadBagConfigs(): void {
+    this.bagCountConfigService.getConfigs().subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.bagConfigs.set(response.data ?? []);
+        }
+      },
+      error: () => this.bagConfigs.set([]),
+    });
   }
 
   private loadMasterData(): void {
@@ -120,6 +146,7 @@ export class SalesEntryComponent implements OnInit {
   private emptyRow(): SalesRow {
     return {
       flowerType: '',
+      bagCount: '',
       totalWeight: '',
       price: '',
       amount: '',
@@ -127,6 +154,12 @@ export class SalesEntryComponent implements OnInit {
       flowerInvalid: false,
       customerInvalid: false,
     };
+  }
+
+  protected onBagInput(index: number): void {
+    const row = this.rows()[index];
+    const cleaned = row.bagCount.replace(/[^0-9]/g, '');
+    this.updateRow(index, { bagCount: cleaned });
   }
 
   protected recalcRowAmount(index: number): void {
@@ -138,6 +171,32 @@ export class SalesEntryComponent implements OnInit {
     const rate = parseFloat(row.price);
     if (!Number.isNaN(weight) && !Number.isNaN(rate)) {
       this.updateRow(index, { amount: String(roundOff(weight * rate)) });
+    }
+  }
+
+  protected recalcRowRate(index: number): void {
+    const row = this.rows()[index];
+    if (row.totalWeight.trim() === '' || row.amount.trim() === '') {
+      return;
+    }
+    const weight = parseFloat(row.totalWeight);
+    const amount = parseFloat(row.amount);
+    if (!Number.isNaN(weight) && !Number.isNaN(amount) && weight !== 0) {
+      this.updateRow(index, { price: String(roundOff(amount / weight)) });
+    }
+  }
+
+  protected onQtyChange(index: number): void {
+    const row = this.rows()[index];
+    if (row.totalWeight.trim() === '') {
+      return;
+    }
+    // If rate exists, qty change => amount = rate * qty (traditional)
+    // If rate empty but amount exists => rate = amount / qty (amount-first workflow)
+    if (row.price.trim() !== '') {
+      this.recalcRowAmount(index);
+    } else if (row.amount.trim() !== '') {
+      this.recalcRowRate(index);
     }
   }
 
@@ -249,7 +308,7 @@ export class SalesEntryComponent implements OnInit {
         return;
       }
 
-      lineItems.push({ flowerType: flower, totalWeight: weight, price, amount, customerName: customer });
+      lineItems.push({ flowerType: flower, bagCount: row.bagCount, totalWeight: weight, price, amount, customerName: customer });
     }
 
     if (lineItems.length === 0) {
@@ -346,6 +405,8 @@ export class SalesEntryComponent implements OnInit {
       return;
     }
 
+    const bagLimits = this.bagLimits();
+
     const shopName = this.auth.user()?.shopName ?? '';
     const summary = this.summary();
     const t = this.i18n.translate.bind(this.i18n);
@@ -361,6 +422,29 @@ export class SalesEntryComponent implements OnInit {
         '<td class="right">' + (row.amount || '-') + '</td>' +
         '</tr>';
     });
+
+    let bagLimitHtml = '';
+    if (bagLimits.length > 0) {
+      let body = '';
+      bagLimits.forEach((config, i) => {
+        body +=
+          '<tr>' +
+          '<td class="left">' + (i + 1) + '</td>' +
+          '<td class="left">' + (config.flowerName || '-') + '</td>' +
+          '<td class="right">' + (config.bagCount ?? 0) + '</td>' +
+          '</tr>';
+      });
+      bagLimitHtml =
+        '<div class="divider"></div>' +
+        '<div class="bl-title">' + t('bag.limit.title') + '</div>' +
+        '<table>' +
+        '<colgroup><col style="width:12%"><col style="width:60%"><col style="width:28%"></colgroup>' +
+        '<thead><tr>' +
+        '<th class="left">#</th>' +
+        '<th class="left">' + t('sales.flower') + '</th>' +
+        '<th class="right">' + t('bag.limit.limit') + '</th>' +
+        '</tr></thead><tbody>' + body + '</tbody></table>';
+    }
 
     const reportHtml =
       '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + t('print.receipt.title') + '</title>' +
@@ -381,6 +465,7 @@ export class SalesEntryComponent implements OnInit {
       'tbody tr{border-bottom:0.5px dotted #ccc;}' +
       'tbody tr:last-child{border-bottom:none;}' +
       '.divider{border-top:1px dashed #000;margin:6px 0;}' +
+      '.bl-title{font-size:9px;font-weight:700;text-align:center;text-transform:uppercase;letter-spacing:0.4px;margin:0 0 3px;}' +
       '.summary{margin:0 0 4px;}' +
       '.summary p{display:flex;justify-content:flex-end;gap:8px;margin:2px 0;font-size:8px;line-height:1.4;}' +
       '.summary p strong{min-width:40px;text-align:right;}' +
@@ -405,7 +490,7 @@ export class SalesEntryComponent implements OnInit {
       '<th class="right">' + t('report.col.weight') + '</th>' +
       '<th class="right">' + t('report.col.price') + '</th>' +
       '<th class="right">' + t('report.col.total') + '</th>' +
-      '</tr></thead><tbody>' + rowsHtml + '</tbody></table>' +
+      '</tr></thead><tbody>' + rowsHtml + '</tbody></table>' + bagLimitHtml +
       '<div class="divider"></div>' +
       '<div class="summary">' +
       '<p><span>' + t('report.total') + '</span><strong>' + this.formatCurrency(summary.total) + '</strong></p>' +

@@ -79,6 +79,16 @@ export class CurrentDayProfitComponent {
     return this.rows().reduce((sum, row) => sum + (Number(row.commissionAmt) || 0), 0);
   }
 
+  protected initials(name: string | undefined): string {
+    if (!name) {
+      return '?';
+    }
+    const parts = name.trim().split(/\s+/);
+    const first = parts[0]?.[0] ?? '';
+    const last = parts.length > 1 ? parts[parts.length - 1][0] ?? '' : '';
+    return (first + last).toUpperCase();
+  }
+
   protected openSalesDetail(farmerId: string, farmerName: string): void {
     this.popupLoading.set(true);
     this.popupOpen.set(true);

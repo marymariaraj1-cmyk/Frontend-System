@@ -2,9 +2,11 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { AutocompleteComponent } from '../../core/components/autocomplete/autocomplete.component';
+import { BagCountConfigRow } from '../../core/models/bag-count-config';
 import { SalesEditRowRequest, SalesMasterData } from '../../core/models/sales';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
 import { AuthService } from '../../core/services/auth.service';
+import { BagCountConfigService } from '../../core/services/bag-count-config.service';
 import { FarmerLedgerService } from '../../core/services/farmer-ledger.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { SalesEditService } from '../../core/services/sales-edit.service';
@@ -19,6 +21,8 @@ interface EditRow {
   salesId: number;
   flower: string;
   origFlower: string;
+  bag: string;
+  origBag: string;
   weight: string;
   origWeight: string;
   rate: string;
@@ -44,6 +48,7 @@ export class SalesDetailsEditComponent implements OnInit {
   private readonly i18n = inject(I18nService);
   private readonly toast = inject(ToastService);
   private readonly auth = inject(AuthService);
+  private readonly bagCountConfigService = inject(BagCountConfigService);
 
   protected readonly master = signal<SalesMasterData>({
     farmers: [],
@@ -59,12 +64,26 @@ export class SalesDetailsEditComponent implements OnInit {
   protected readonly calcOpen = signal(true);
   protected readonly fetching = signal(false);
   protected readonly saving = signal(false);
+  protected readonly bagLimitsOpen = signal(false);
+  protected readonly bagConfigs = signal<BagCountConfigRow[]>([]);
 
   protected currentFarmer = '';
   protected currentDate = '';
   protected readonly noData = signal(false);
 
   protected readonly formatCurrency = formatCurrency;
+
+  protected readonly bagLimits = computed(() =>
+    this.bagConfigs()
+      .filter(
+        (c) =>
+          c.salesDate === this.salesDate() &&
+          (c.bagCheck ?? 'E').toUpperCase() === 'E',
+      )
+      .sort((a, b) => a.flowerName.localeCompare(b.flowerName)),
+  );
+
+  protected readonly bagLimitNotice = computed(() => this.bagLimits().length > 0);
 
   protected readonly debitEdited = computed(() => {
     const value = parseFloat(this.debit());
@@ -95,6 +114,18 @@ export class SalesDetailsEditComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadMasterData();
+    this.loadBagConfigs();
+  }
+
+  private loadBagConfigs(): void {
+    this.bagCountConfigService.getConfigs().subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.bagConfigs.set(response.data ?? []);
+        }
+      },
+      error: () => this.bagConfigs.set([]),
+    });
   }
 
   private loadMasterData(): void {
@@ -151,6 +182,8 @@ export class SalesDetailsEditComponent implements OnInit {
             salesId: entry.salesId,
             flower: entry.flowerType ?? '',
             origFlower: entry.flowerType ?? '',
+            bag: entry.bagCount != null ? String(entry.bagCount) : '',
+            origBag: entry.bagCount != null ? String(entry.bagCount) : '',
             weight: this.formatDecimal(entry.totalWeight),
             origWeight: this.formatDecimal(entry.totalWeight),
             rate: this.formatDecimal(entry.perKgRate),
@@ -198,6 +231,7 @@ export class SalesDetailsEditComponent implements OnInit {
     const row = this.rows()[index];
     const edited =
       row.flower !== row.origFlower ||
+      row.bag !== row.origBag ||
       row.weight !== row.origWeight ||
       row.rate !== row.origRate ||
       row.amount !== row.origAmount;
@@ -208,10 +242,18 @@ export class SalesDetailsEditComponent implements OnInit {
     const row = this.rows()[index];
     const edited =
       row.flower !== row.origFlower ||
+      row.bag !== row.origBag ||
       row.weight !== row.origWeight ||
       row.rate !== row.origRate ||
       row.amount !== row.origAmount;
     this.updateRow(index, { edited });
+  }
+
+  protected onBagInput(index: number): void {
+    const row = this.rows()[index];
+    const cleaned = row.bag.replace(/[^0-9]/g, '');
+    this.updateRow(index, { bag: cleaned });
+    this.markEdited(index);
   }
 
   protected recalcRowAmount(index: number): void {
@@ -227,6 +269,33 @@ export class SalesDetailsEditComponent implements OnInit {
       }
     }
     this.markEdited(index);
+  }
+
+  protected recalcRowRate(index: number): void {
+    const row = this.rows()[index];
+    if (!row.enabled) {
+      return;
+    }
+    if (row.weight.trim() !== '' && row.amount.trim() !== '') {
+      const weight = parseFloat(row.weight);
+      const amount = parseFloat(row.amount);
+      if (!Number.isNaN(weight) && !Number.isNaN(amount) && weight !== 0) {
+        this.updateRow(index, { rate: String(roundOff(amount / weight)) });
+      }
+    }
+    this.markEdited(index);
+  }
+
+  protected onQtyChange(index: number): void {
+    const row = this.rows()[index];
+    if (!row.enabled || row.weight.trim() === '') {
+      return;
+    }
+    if (row.rate.trim() !== '') {
+      this.recalcRowAmount(index);
+    } else if (row.amount.trim() !== '') {
+      this.recalcRowRate(index);
+    }
   }
 
   protected validateFlower(index: number): void {
@@ -277,6 +346,7 @@ export class SalesDetailsEditComponent implements OnInit {
     const shopName = this.auth.user()?.shopName ?? '';
     const summary = this.summary();
     const t = this.i18n.translate.bind(this.i18n);
+    const bagLimits = this.bagLimits();
 
     let rowsHtml = '';
     rows.forEach((row, i) => {
@@ -290,6 +360,29 @@ export class SalesDetailsEditComponent implements OnInit {
         '<td class="left">' + (row.customer || '-') + '</td>' +
         '</tr>';
     });
+
+    let bagLimitHtml = '';
+    if (bagLimits.length > 0) {
+      let body = '';
+      bagLimits.forEach((config, i) => {
+        body +=
+          '<tr>' +
+          '<td class="left">' + (i + 1) + '</td>' +
+          '<td class="left">' + (config.flowerName || '-') + '</td>' +
+          '<td class="right">' + (config.bagCount ?? 0) + '</td>' +
+          '</tr>';
+      });
+      bagLimitHtml =
+        '<div class="divider"></div>' +
+        '<div class="bl-title">' + t('bag.limit.title') + '</div>' +
+        '<table>' +
+        '<colgroup><col style="width:12%"><col style="width:60%"><col style="width:28%"></colgroup>' +
+        '<thead><tr>' +
+        '<th class="left">#</th>' +
+        '<th class="left">' + t('sales.flower') + '</th>' +
+        '<th class="right">' + t('bag.limit.limit') + '</th>' +
+        '</tr></thead><tbody>' + body + '</tbody></table>';
+    }
 
     const reportHtml =
       '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + t('print.receipt.title') + '</title>' +
@@ -310,6 +403,7 @@ export class SalesDetailsEditComponent implements OnInit {
       'tbody tr{border-bottom:0.5px dotted #ccc;}' +
       'tbody tr:last-child{border-bottom:none;}' +
       '.divider{border-top:1px dashed #000;margin:6px 0;}' +
+      '.bl-title{font-size:9px;font-weight:700;text-align:center;text-transform:uppercase;letter-spacing:0.4px;margin:0 0 3px;}' +
       '.summary{margin:0 0 4px;}' +
       '.summary p{display:flex;justify-content:flex-end;gap:8px;margin:2px 0;font-size:8px;line-height:1.4;}' +
       '.summary p strong{min-width:40px;text-align:right;}' +
@@ -335,7 +429,7 @@ export class SalesDetailsEditComponent implements OnInit {
       '<th class="right">' + t('report.col.price') + '</th>' +
       '<th class="right">' + t('report.col.total') + '</th>' +
       '<th class="left">' + t('report.col.customer') + '</th>' +
-      '</tr></thead><tbody>' + rowsHtml + '</tbody></table>' +
+      '</tr></thead><tbody>' + rowsHtml + '</tbody></table>' + bagLimitHtml +
       '<div class="divider"></div>' +
       '<div class="summary">' +
       '<p><span>' + t('report.total') + '</span><strong>' + this.formatCurrency(summary.total) + '</strong></p>' +
@@ -419,7 +513,7 @@ export class SalesDetailsEditComponent implements OnInit {
         return;
       }
 
-      editedRows.push({ salesId: row.salesId, flowerType: flower, totalWeight: weight, price: rate, amount });
+      editedRows.push({ salesId: row.salesId, flowerType: flower, bagCount: row.bag, totalWeight: weight, price: rate, amount });
     }
 
     const debitValue = this.debit().trim();

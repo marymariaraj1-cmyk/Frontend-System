@@ -1,66 +1,254 @@
-<div class="card">
-  <div class="card-header">
-    <h3>{{ 'farmer.txn.details' | i18n }}</h3>
-  </div>
-  <div class="card-body">
-    <div class="form-row">
-      <div class="form-group">
-        <label for="txnFarmerName">{{ 'farmer.name' | i18n }} <span class="required">*</span></label>
-        <app-autocomplete
-          [items]="master().farmers"
-          [invalid]="farmerInvalid()"
-          [(value)]="farmer"
-          (onSelect)="farmer.set($event)"
-          (blur)="validateFarmer()"
-        />
-        @if (farmerInvalid()) {
-          <span class="field-error">{{ 'txn.error.farmer.notfound' | i18n }}</span>
-        }
+<div class="ftx-hero">
+  <span class="ftx-accent"></span>
+  <span class="ftx-ring ftx-ring-1"></span>
+  <span class="ftx-ring ftx-ring-2"></span>
+  <span class="ftx-glyph material-symbols-rounded">currency_rupee</span>
+
+  <div class="ftx-hero-head">
+    <div class="ftx-hero-id">
+      <div class="ftx-hero-icon">
+        <span class="material-symbols-rounded">payments</span>
       </div>
-      <div class="form-group">
-        <label for="txnDate">{{ 'txn.date' | i18n }} <span class="required">*</span></label>
-        <input id="txnDate" name="txnDate" type="date" [(ngModel)]="txnDate" required />
+      <div class="ftx-hero-text">
+        <h2>{{ 'farmer.txn.title' | i18n }}</h2>
+        <p>{{ 'farmer.txn.sub' | i18n }}</p>
       </div>
     </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label for="debitAmt">{{ 'farmer.txn.debit' | i18n }}</label>
-        <div class="input-with-icon">
-          <span class="input-icon">&#8377;</span>
-          <input
-            id="debitAmt"
-            name="debitAmt"
-            type="text"
-            autocomplete="off"
-            [ngModel]="debit()"
-            (ngModelChange)="sanitizeDebit($event)"
-          />
-        </div>
-      </div>
-      <div class="form-group">
-        <label for="excessDebitAmt">{{ 'farmer.txn.excess.debit' | i18n }}</label>
-        <div class="input-with-icon">
-          <span class="input-icon">&#8377;</span>
-          <input
-            id="excessDebitAmt"
-            name="excessDebitAmt"
-            type="text"
-            autocomplete="off"
-            [ngModel]="excessDebit()"
-            (ngModelChange)="sanitizeExcessDebit($event)"
-          />
-        </div>
-      </div>
-    </div>
-    <div class="form-actions">
-      <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="save()">
-        <span class="material-symbols-rounded">save</span>
-        {{ 'btn.save' | i18n }}
+    <div class="ftx-tabs">
+      <button type="button" class="ftx-tab" [class.active]="activeTab() === 'transaction'" (click)="switchTab('transaction')">
+        <span class="material-symbols-rounded">edit_note</span>
+        {{ 'txn.tab.transaction' | i18n }}
       </button>
-      <button type="button" class="btn btn-secondary" (click)="clearForm()">
-        <span class="material-symbols-rounded">cleaning_services</span>
-        {{ 'btn.clear' | i18n }}
+      <button type="button" class="ftx-tab" [class.active]="activeTab() === 'history'" (click)="switchTab('history')">
+        <span class="material-symbols-rounded">history</span>
+        {{ 'txn.tab.history' | i18n }}
       </button>
     </div>
   </div>
 </div>
+
+@if (activeTab() === 'transaction') {
+  <div class="card tx-card">
+    <div class="tx-card-head">
+      <span class="tx-card-chip material-symbols-rounded">edit_note</span>
+      <h3>{{ 'farmer.txn.details' | i18n }}</h3>
+    </div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="txnFarmerName">{{ 'farmer.name' | i18n }} <span class="required">*</span></label>
+          <app-autocomplete
+            [items]="master().farmers"
+            [invalid]="farmerInvalid()"
+            [(value)]="farmer"
+            (onSelect)="farmer.set($event)"
+            (blur)="validateFarmer()"
+          />
+          @if (farmerInvalid()) {
+            <span class="field-error">{{ 'txn.error.farmer.notfound' | i18n }}</span>
+          }
+        </div>
+        <div class="form-group">
+          <label for="txnDate">{{ 'txn.date' | i18n }} <span class="required">*</span></label>
+          <input id="txnDate" name="txnDate" type="date" [(ngModel)]="txnDate" required />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="debitAmt"><span class="material-symbols-rounded label-icon">payments</span> {{ 'farmer.txn.debit' | i18n }}</label>
+          <div class="input-with-icon">
+            <span class="input-icon">&#8377;</span>
+            <input
+              id="debitAmt"
+              name="debitAmt"
+              type="text"
+              autocomplete="off"
+              [ngModel]="debit()"
+              (ngModelChange)="sanitizeDebit($event)"
+            />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="excessDebitAmt"><span class="material-symbols-rounded label-icon">account_balance_wallet</span> {{ 'farmer.txn.excess.debit' | i18n }}</label>
+          <div class="input-with-icon">
+            <span class="input-icon">&#8377;</span>
+            <input
+              id="excessDebitAmt"
+              name="excessDebitAmt"
+              type="text"
+              autocomplete="off"
+              [ngModel]="excessDebit()"
+              (ngModelChange)="sanitizeExcessDebit($event)"
+            />
+          </div>
+          <div class="payment-mode-group">
+            <span class="payment-mode-label"><span class="material-symbols-rounded">credit_card</span> {{ 'txn.payment.mode' | i18n }}</span>
+            <div class="radio-group">
+              <label class="radio-option" [class.active]="paymentMode() === 'C'">
+                <input type="radio" name="farmerPaymentMode" value="C" [checked]="paymentMode() === 'C'" (change)="paymentMode.set('C')" />
+                <span class="radio-custom"></span>
+                <span class="material-symbols-rounded radio-icon">payments</span>
+                {{ 'txn.payment.cash' | i18n }}
+              </label>
+              <label class="radio-option" [class.active]="paymentMode() === 'U'">
+                <input type="radio" name="farmerPaymentMode" value="U" [checked]="paymentMode() === 'U'" (change)="paymentMode.set('U')" />
+                <span class="radio-custom"></span>
+                <span class="material-symbols-rounded radio-icon">qr_code_2</span>
+                {{ 'txn.payment.upi' | i18n }}
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="save()">
+          <span class="material-symbols-rounded">save</span>
+          {{ 'btn.save' | i18n }}
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="clearForm()">
+          <span class="material-symbols-rounded">cleaning_services</span>
+          {{ 'btn.clear' | i18n }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (activeTab() === 'history') {
+  <div class="card tx-card">
+    <div class="tx-card-head">
+      <span class="tx-card-chip material-symbols-rounded">history</span>
+      <h3>{{ 'farmer.txn.history' | i18n }}</h3>
+    </div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="histFarmerName">{{ 'farmer.name' | i18n }} <span class="required">*</span></label>
+          <app-autocomplete
+            [items]="master().farmers"
+            [invalid]="histFarmerInvalid()"
+            [(value)]="histFarmer"
+            (onSelect)="histFarmer.set($event)"
+            (blur)="validateHistFarmer()"
+          />
+          @if (histFarmerInvalid()) {
+            <span class="field-error">{{ 'txn.error.farmer.notfound' | i18n }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="period-bar">
+        <button type="button" class="period-btn" [class.active]="period() === 'daily'" (click)="onPeriodChange('daily')">
+          <span class="material-symbols-rounded">today</span> {{ 'txn.period.daily' | i18n }}
+        </button>
+        <button type="button" class="period-btn" [class.active]="period() === 'monthly'" (click)="onPeriodChange('monthly')">
+          <span class="material-symbols-rounded">calendar_month</span> {{ 'txn.period.monthly' | i18n }}
+        </button>
+        <button type="button" class="period-btn" [class.active]="period() === 'yearly'" (click)="onPeriodChange('yearly')">
+          <span class="material-symbols-rounded">calendar_view_month</span> {{ 'txn.period.yearly' | i18n }}
+        </button>
+      </div>
+
+      @if (period() === 'daily') {
+        <div class="form-row">
+          <div class="form-group">
+            <label for="histFromDate">{{ 'txn.from.date' | i18n }} <span class="required">*</span></label>
+            <input id="histFromDate" name="histFromDate" type="date" [(ngModel)]="fromDate" required />
+          </div>
+          <div class="form-group">
+            <label for="histToDate">{{ 'txn.to.date' | i18n }} <span class="required">*</span></label>
+            <input id="histToDate" name="histToDate" type="date" [(ngModel)]="toDate" required />
+          </div>
+        </div>
+      } @else if (period() === 'monthly') {
+        <div class="form-row">
+          <div class="form-group">
+            <label for="histMonth">{{ 'txn.month' | i18n }} <span class="required">*</span></label>
+            <input id="histMonth" name="histMonth" type="month" [(ngModel)]="histMonth" required />
+          </div>
+        </div>
+      } @else {
+        <div class="form-row">
+          <div class="form-group">
+            <label for="histYear">{{ 'txn.year' | i18n }} <span class="required">*</span></label>
+            <select id="histYear" name="histYear" [(ngModel)]="histYear">
+              @for (y of yearOptions(); track y) {
+                <option [value]="y">{{ y }}</option>
+              }
+            </select>
+          </div>
+        </div>
+      }
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-primary" [disabled]="loading()" (click)="searchHistory()">
+          <span class="material-symbols-rounded">search</span>
+          {{ 'btn.search' | i18n }}
+        </button>
+      </div>
+
+      @if (loading()) {
+        <div class="tx-loader">
+          <div class="tx-spinner"></div>
+        </div>
+      }
+
+      @if (searched()) {
+        <div class="table-container">
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th style="width: 50px">{{ 'txn.sno' | i18n }}</th>
+                <th style="width: 130px">{{ 'txn.date' | i18n }}</th>
+                <th>{{ 'farmer.name' | i18n }}</th>
+                <th class="ob-amount-col">{{ 'farmer.txn.acc.check.credit' | i18n }}</th>
+                <th class="ob-amount-col">{{ 'farmer.txn.excess.debit' | i18n }}</th>
+                <th class="ob-amount-col">{{ 'farmer.txn.debit' | i18n }}</th>
+                <th style="width: 110px">{{ 'txn.payment.mode.col' | i18n }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (txn of transactions(); track txn.farmerTransactionId; let i = $index) {
+                <tr>
+                  <td class="tx-sno">{{ i + 1 }}</td>
+                  <td class="tx-date">{{ txn.transactionDate }}</td>
+                  <td>
+                    <div class="tx-name-cell">
+                      <span class="tx-avatar">{{ initials(txn.farmerName) }}</span>
+                      <span class="tx-name">{{ txn.farmerName }}</span>
+                    </div>
+                  </td>
+                  <td class="ob-amount-col"><span class="tx-amt chip-credit">{{ formatCurrency(txn.cashPaidAmt) }}</span></td>
+                  <td class="ob-amount-col"><span class="tx-amt chip-debit">{{ formatCurrency(txn.excessDebitAmt) }}</span></td>
+                  <td class="ob-amount-col"><span class="tx-amt chip-debit">{{ formatCurrency(txn.debAmt) }}</span></td>
+                  <td>
+                    @if (txn.paymentMode === 'U') {
+                      <span class="payment-badge upi"><span class="material-symbols-rounded">qr_code_2</span> {{ 'txn.payment.upi' | i18n }}</span>
+                    } @else {
+                      <span class="payment-badge cash"><span class="material-symbols-rounded">payments</span> {{ 'txn.payment.cash' | i18n }}</span>
+                    }
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="7" class="no-records">{{ 'msg.no.records' | i18n }}</td>
+                </tr>
+              }
+            </tbody>
+            @if (transactions().length > 0) {
+              <tfoot>
+                <tr class="tx-total-row">
+                  <td colspan="3" class="amount-col">{{ 'report.total' | i18n }}</td>
+                  <td class="ob-amount-col"><span class="tx-amt chip-credit">{{ formatCurrency(historyTotalCashPaid()) }}</span></td>
+                  <td class="ob-amount-col"><span class="tx-amt chip-debit">{{ formatCurrency(historyTotalExcess()) }}</span></td>
+                  <td class="ob-amount-col"><span class="tx-amt chip-debit">{{ formatCurrency(historyTotalDebit()) }}</span></td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            }
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+}

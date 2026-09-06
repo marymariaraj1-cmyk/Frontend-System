@@ -2,6 +2,21 @@
   display: block;
 }
 
-.table-container {
-  max-width: 520px;
+/* ==================== HERO (pink blossom band) ==================== */
+.mst-header {
+  background:
+    radial-gradient(circle at 8% 130%, rgba(244, 114, 182, 0.35), transparent 46%),
+    radial-gradient(circle at 92% -20%, rgba(255, 255, 255, 0.16), transparent 40%),
+    linear-gradient(135deg, #831843 0%, #be185d 50%, #ec4899 130%);
+  box-shadow: 0 14px 34px rgba(190, 24, 93, 0.32);
+}
+
+:host .mst-table-wrap {
+  max-width: 700px;
+}
+
+@media (max-width: 600px) {
+  :host .mst-table-wrap {
+    max-width: 100%;
+  }
 }

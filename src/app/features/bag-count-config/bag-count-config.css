@@ -1,0 +1,207 @@
+﻿:host {
+  display: block;
+}
+
+/* ==================== HERO (slate→cyan stock band) ==================== */
+.mst-header {
+  background:
+    radial-gradient(circle at 92% -20%, rgba(255, 255, 255, 0.14), transparent 42%),
+    radial-gradient(circle at -8% 130%, rgba(6, 182, 212, 0.35), transparent 48%),
+    linear-gradient(135deg, #0f172a 0%, #164e63 55%, #0891b2 130%);
+  box-shadow: 0 14px 34px rgba(8, 51, 68, 0.4);
+}
+
+/* ---------- Column widths ---------- */
+.bcl-col-sno {
+  width: 60px;
+  text-align: center;
+}
+
+.bcl-col-flower {
+  width: 200px;
+  min-width: 160px;
+}
+
+.bcl-col-limit {
+  width: 140px;
+  text-align: center;
+}
+
+.bcl-col-date {
+  width: 150px;
+  text-align: center;
+}
+
+.bcl-col-check {
+  width: 200px;
+  text-align: center;
+}
+
+.bcl-col-action {
+  width: 110px;
+  text-align: center;
+}
+
+/* Flower cell */
+.bcl-flower-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bcl-flower-icon {
+  font-size: 20px;
+  color: var(--sd-primary);
+  flex: 0 0 auto;
+}
+
+.bcl-flower-name {
+  font-weight: 600;
+  color: #2c3350;
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* Limit input */
+.bcl-limit-input-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.bcl-field-icon {
+  position: absolute;
+  left: 10px;
+  font-size: 18px;
+  color: #a0a8ba;
+  pointer-events: none;
+}
+
+.bcl-input {
+  padding: 9px 12px;
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius-md);
+  font-size: 14px;
+  background: #fff;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.bcl-input:focus {
+  outline: none;
+  border-color: var(--sd-primary);
+  box-shadow: 0 0 0 3px rgba(114, 103, 239, 0.15);
+}
+
+.bcl-input-limit {
+  width: 92px;
+  text-align: right;
+  padding-left: 34px;
+}
+
+.bcl-date-input {
+  width: 152px;
+}
+
+/* ---------- Toggle segment control ---------- */
+.bcl-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  background: #eef1f7;
+  border-radius: 10px;
+  border: 1px solid #e1e6f0;
+}
+
+.bcl-toggle-btn {
+  padding: 7px 14px;
+  border: none;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: #5c667a;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.bcl-toggle-btn.active {
+  background: #fff;
+  color: #2c3350;
+  box-shadow: 0 2px 6px rgba(20, 24, 40, 0.14);
+}
+
+.bcl-toggle-enable.active {
+  background: #1e8e3e;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(30, 142, 62, 0.35);
+}
+
+.bcl-toggle-disable.active {
+  background: #d93025;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(217, 48, 37, 0.35);
+}
+
+/* ---------- Row action area ---------- */
+.bcl-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* ---------- Saved configs ---------- */
+.bcl-limit-value {
+  display: inline-block;
+  min-width: 36px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: #eef1fb;
+  color: #3f5ef0;
+  font-weight: 700;
+  font-size: 14px;
+  text-align: center;
+}
+
+.bcl-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.bcl-status-icon {
+  font-size: 16px;
+}
+
+.bcl-status-enabled {
+  background: #e6f4ea;
+  color: #1e8e3e;
+}
+
+.bcl-status-disabled {
+  background: #fce8e6;
+  color: #d93025;
+}
+
+.bcl-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 28px;
+  color: #8a94a6;
+  font-size: 14px;
+  background: #fafbfd;
+  border: 1px dashed #d8dee9;
+  border-radius: 12px;
+}
+
+.bcl-empty-icon {
+  font-size: 28px;
+  color: #c3cbd9;
+}

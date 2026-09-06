@@ -47,6 +47,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'bag-count-config',
+        loadComponent: () =>
+          import('./features/bag-count-config/bag-count-config.component').then(
+            (m) => m.BagCountConfigComponent,
+          ),
+      },
+      {
         path: 'sales-entry',
         loadComponent: () =>
           import('./features/sales-entry/sales-entry.component').then(
@@ -79,20 +86,6 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/buyer-transaction/buyer-transaction.component').then(
             (m) => m.BuyerTransactionComponent,
-          ),
-      },
-      {
-        path: 'farmer-transaction-history',
-        loadComponent: () =>
-          import('./features/farmer-transaction-history/farmer-transaction-history.component').then(
-            (m) => m.FarmerTransactionHistoryComponent,
-          ),
-      },
-      {
-        path: 'buyer-transaction-history',
-        loadComponent: () =>
-          import('./features/buyer-transaction-history/buyer-transaction-history.component').then(
-            (m) => m.BuyerTransactionHistoryComponent,
           ),
       },
       {
@@ -135,6 +128,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/buyer-ledger-detail/buyer-ledger-detail.component').then(
             (m) => m.BuyerLedgerDetailComponent,
+          ),
+      },
+      {
+        path: 'inactive-list',
+        loadComponent: () =>
+          import('./features/inactive-list/inactive-list.component').then(
+            (m) => m.InactiveListComponent,
           ),
       },
       {

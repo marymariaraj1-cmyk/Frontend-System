@@ -21,6 +21,10 @@ export class ClientsComponent implements OnInit {
 
   protected readonly rows = signal<Client[]>([]);
   protected readonly showForm = signal(false);
+  protected initials(name: string): string {
+    return (name || '').trim().split(/\s+/).slice(0, 2).map((part) => part.charAt(0)).join('').toUpperCase() || '?';
+  }
+
   protected form = emptyClient();
   protected editing = false;
   protected submitting = false;

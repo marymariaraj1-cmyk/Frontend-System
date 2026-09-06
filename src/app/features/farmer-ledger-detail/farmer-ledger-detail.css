@@ -11,6 +11,209 @@
   text-align: right;
 }
 
+.amt-debit {
+  color: #dc2626;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.amt-credit {
+  color: #059669;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==================== DETAIL HERO ==================== */
+.ldg-hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow: hidden;
+  padding: 26px 28px;
+  margin-bottom: 20px;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 92% -20%, rgba(20, 184, 166, 0.38), transparent 42%),
+    radial-gradient(circle at -8% 130%, rgba(129, 140, 248, 0.4), transparent 48%),
+    linear-gradient(135deg, #1e1b4b 0%, #3730a3 48%, #0f766e 125%);
+  box-shadow: 0 14px 34px rgba(30, 27, 75, 0.28);
+}
+
+.ldg-accent {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 34%;
+  height: 100%;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.09) 60%, rgba(20, 184, 166, 0.22));
+  clip-path: polygon(30% 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.ldg-ring {
+  position: absolute;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 50%;
+}
+
+.ldg-ring-1 {
+  width: 190px;
+  height: 190px;
+  top: -70px;
+  right: 34%;
+}
+
+.ldg-ring-2 {
+  width: 120px;
+  height: 120px;
+  bottom: -50px;
+  left: 16%;
+}
+
+.ldg-glyph {
+  position: absolute;
+  right: 24px;
+  bottom: -18px;
+  font-size: 130px;
+  color: rgba(255, 255, 255, 0.07);
+}
+
+.ldg-hero-top {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.ldg-hero-id {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ldg-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #7267ef, #4338ca);
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 8px 20px rgba(114, 103, 239, 0.4);
+}
+
+.ldg-hero-text h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.ldg-hero-text p {
+  margin: 4px 0 0;
+  max-width: 460px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.ldg-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ldg-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.ldg-action:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+.ldg-action--primary {
+  background: rgba(255, 255, 255, 0.95);
+  color: #3730a3;
+  border-color: transparent;
+}
+
+.ldg-action--primary:hover {
+  background: #fff;
+  color: #3730a3;
+}
+
+.ldg-action .material-symbols-rounded {
+  font-size: 17px;
+}
+
+.ldg-hero-stats {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ldg-stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.ldg-stat-balance {
+  background: rgba(94, 234, 212, 0.14);
+  border-color: rgba(94, 234, 212, 0.35);
+}
+
+.ldg-stat-icon {
+  font-size: 22px;
+  color: #5eead4;
+}
+
+.ldg-stat-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.ldg-stat-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.ldg-stat-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.ldg-stat-value.ldg-bal-debit {
+  color: #fca5a5;
+}
+
+.ldg-stat-value.ldg-bal-credit {
+  color: #86efac;
+}
+
+/* ==================== CARD ==================== */
+.ldg-card {
+  box-shadow: 0 6px 22px rgba(43, 56, 110, 0.08);
+}
+
 .no-active-ledger {
   display: flex;
   flex-direction: column;
@@ -23,4 +226,225 @@
 .no-active-ledger p {
   margin: 0;
   font-size: 13px;
+}
+
+/* ==================== PERIOD SELECTOR ==================== */
+.period-selector {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px;
+  margin-bottom: 16px;
+  background: #f6f7fb;
+  border: 1px solid #e9ecf5;
+  border-radius: 12px;
+}
+
+.period-tab {
+  padding: 7px 14px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #5f677a;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.period-tab.active {
+  background: var(--sd-primary);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(114, 103, 239, 0.3);
+}
+
+.period-date-input {
+  padding: 7px 10px;
+  border: 1px solid #e3e6f2;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #2b2f3a;
+  background: #fff;
+  outline: none;
+}
+
+.period-sep {
+  color: #8a93a6;
+}
+
+/* ==================== LEDGER SUMMARY ==================== */
+.ledger-summary {
+  max-width: 420px;
+  margin: 20px auto 0;
+  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+  border: 1px solid #e0e7ff;
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.ledger-summary-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 13px;
+  color: #4338ca;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e0e7ff;
+}
+
+.ledger-summary-title .material-symbols-rounded {
+  font-size: 18px;
+}
+
+.ledger-summary-row {
+  display: flex;
+  align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px dashed #e0e7ff;
+  font-size: 14px;
+}
+
+.ledger-summary-row:last-child {
+  border-bottom: none;
+}
+
+.ledger-summary-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.ledger-summary-icon.credit {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.ledger-summary-icon.debit {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.ledger-summary-icon.balance-icon {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.ledger-summary-icon .material-symbols-rounded {
+  font-size: 18px;
+}
+
+.ledger-summary-label {
+  flex: 1;
+  color: #475569;
+  font-weight: 500;
+}
+
+.ledger-summary-value {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 14px;
+}
+
+.ledger-summary-row.credit-row .ledger-summary-value {
+  color: #15803d;
+}
+
+.ledger-summary-row.debit-row .ledger-summary-value {
+  color: #b91c1c;
+}
+
+.ledger-summary-row.balance {
+  background: #fff;
+  margin: 8px -6px -4px;
+  padding: 11px 12px;
+  border-radius: 8px;
+  border: 1px solid #c7d2fe;
+  border-bottom: 1px solid #c7d2fe;
+}
+
+.ledger-summary-row.balance .ledger-summary-label {
+  color: #4338ca;
+  font-weight: 700;
+}
+
+.ledger-summary-row.balance .ledger-summary-value {
+  color: #4338ca;
+  font-size: 15px;
+}
+
+.ledger-summary-row.balance.balance-debit .ledger-summary-value {
+  color: #b91c1c;
+}
+
+.ledger-summary-row.balance.balance-credit .ledger-summary-value {
+  color: #15803d;
+}
+
+.debit-breakdown {
+  font-size: 11px;
+  color: #64748b;
+  margin-right: 4px;
+  font-weight: 500;
+}
+
+/* ==================== ACCOUNT CHECK ADJUSTMENT ROW ==================== */
+.adj-row td {
+  background: #eef2ff;
+  color: #1e1b4b;
+}
+
+.adj-pill {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(67, 56, 202, 0.14);
+  border: 1px solid rgba(67, 56, 202, 0.28);
+  color: #4338ca;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .ldg-hero {
+    padding: 20px;
+  }
+
+  .ldg-hero-text h2 {
+    font-size: 18px;
+  }
+
+  .ldg-glyph {
+    font-size: 90px;
+  }
+
+  .ldg-avatar {
+    width: 46px;
+    height: 46px;
+    font-size: 16px;
+    border-radius: 12px;
+  }
+
+  .period-date-input {
+    flex: 1;
+    min-width: 120px;
+  }
 }

@@ -1,31 +1,67 @@
-<div class="card">
-  <div class="card-header">
-    <h3>{{ 'farmer.ledger.report.title' | i18n }}</h3>
+<div class="flr-hero">
+  <span class="flr-accent"></span>
+  <span class="flr-ring flr-ring-1"></span>
+  <span class="flr-ring flr-ring-2"></span>
+  <span class="flr-glyph material-symbols-rounded">account_balance</span>
+
+  <div class="flr-hero-id">
+    <div class="flr-hero-icon">
+      <span class="material-symbols-rounded">menu_book</span>
+    </div>
+    <div class="flr-hero-text">
+      <h2>{{ 'farmer.ledger.report.title' | i18n }}</h2>
+      <p>{{ 'farmer.ledger.report.sub' | i18n }}</p>
+    </div>
+  </div>
+</div>
+
+<div class="card rpt-card">
+  <div class="rpt-card-head">
+    <span class="rpt-chip material-symbols-rounded">group</span>
+    <h3>{{ 'farmer.ledger.report.grid.title' | i18n }}</h3>
+    @if (filteredEntries().length > 0) {
+      <span class="rpt-count">{{ filteredEntries().length }}</span>
+    }
   </div>
   <div class="card-body">
-    <div class="list-toolbar">
-      <input
-        type="text"
-        [(ngModel)]="search"
-        [placeholder]="'farmer.ledger.list.search.placeholder' | i18n"
-      />
+    <div class="list-toolbar rpt-searchbar">
+      <div class="rpt-search">
+        <span class="material-symbols-rounded rpt-search-icon">search</span>
+        <input
+          type="text"
+          [(ngModel)]="search"
+          [placeholder]="'farmer.ledger.list.search.placeholder' | i18n"
+        />
+      </div>
     </div>
+
+    @if (loading()) {
+      <div class="rpt-loader">
+        <div class="rpt-spinner"></div>
+      </div>
+    }
+
     <div class="table-container">
       <table class="report-table">
         <thead>
           <tr>
             <th style="width: 50px">{{ 'txn.sno' | i18n }}</th>
             <th>{{ 'ledger.list.col.farmer.name' | i18n }}</th>
-            <th style="width: 110px">{{ 'ledger.list.col.action' | i18n }}</th>
+            <th style="width: 110px" class="amount-col">{{ 'ledger.list.col.action' | i18n }}</th>
           </tr>
         </thead>
         <tbody>
           @for (entry of filteredEntries(); track entry.farmerId; let i = $index) {
             <tr>
-              <td>{{ i + 1 }}</td>
-              <td>{{ entry.farmerName }}</td>
+              <td class="rpt-sno">{{ i + 1 }}</td>
               <td>
-                <button type="button" class="btn btn-primary btn-sm btn-icon-only" [attr.title]="'btn.view' | i18n" [attr.aria-label]="'btn.view' | i18n" (click)="viewDetail(entry)">
+                <div class="rpt-name-cell">
+                  <span class="rpt-avatar">{{ initials(entry.farmerName) }}</span>
+                  <span class="rpt-name">{{ entry.farmerName }}</span>
+                </div>
+              </td>
+              <td class="amount-col">
+                <button type="button" class="rpt-view-btn" [attr.title]="'btn.view' | i18n" [attr.aria-label]="'btn.view' | i18n" (click)="viewDetail(entry)">
                   <span class="material-symbols-rounded">visibility</span>
                 </button>
               </td>
