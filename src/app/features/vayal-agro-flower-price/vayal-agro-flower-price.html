@@ -1,0 +1,281 @@
+<div class="va-hero">
+  <span class="va-accent"></span>
+  <span class="va-ring va-ring-1"></span>
+  <span class="va-ring va-ring-2"></span>
+  <span class="va-glyph material-symbols-rounded">local_florist</span>
+
+  <div class="va-hero-id">
+    <div class="va-hero-icon">
+      <span class="material-symbols-rounded">eco</span>
+    </div>
+    <div class="va-hero-text">
+      <h2>{{ 'vayal.agro.title' | i18n }}</h2>
+      <p>{{ 'vayal.agro.sub' | i18n }}</p>
+    </div>
+  </div>
+</div>
+
+<div class="card va-search-card">
+  <div class="card-body">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="vaDistrict">{{ 'vayal.agro.district' | i18n }} <span class="required">*</span></label>
+        <select id="vaDistrict" name="vaDistrict" [ngModel]="district()" (ngModelChange)="onDistrictChange($event)">
+          <option value="">{{ 'vayal.agro.select.district' | i18n }}</option>
+          @for (d of districts(); track d.marketId) {
+            <option [value]="d.marketId">{{ displayName(d.marketName, d.marketNameTn) }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="vaCity">{{ 'vayal.agro.city' | i18n }} <span class="required">*</span></label>
+        <select
+          id="vaCity"
+          name="vaCity"
+          [ngModel]="city()"
+          (ngModelChange)="city.set($event)"
+          [disabled]="!district() || citiesLoading()"
+        >
+          <option value="">{{ 'vayal.agro.select.city' | i18n }}</option>
+          @for (c of cities(); track c.marketPlaceId) {
+            <option [value]="c.marketPlaceId">{{ displayName(c.place, c.placeTn) }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="vaDate">{{ 'vayal.agro.sales.date' | i18n }} <span class="required">*</span></label>
+        <input
+          id="vaDate"
+          name="vaDate"
+          type="date"
+          [ngModel]="salesDate()"
+          (ngModelChange)="salesDate.set($event)"
+          [max]="todayStr"
+          required
+        />
+      </div>
+      <div class="form-group form-actions-inline">
+        <button type="button" class="btn btn-primary" [disabled]="!canSearch() || loading()" (click)="search()">
+          <span class="material-symbols-rounded">search</span>
+          {{ 'vayal.agro.search' | i18n }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card va-card">
+  <div class="va-card-head">
+    <span class="va-chip material-symbols-rounded">local_shipping</span>
+    <h3>{{ 'vayal.agro.title' | i18n }}</h3>
+    @if (rows().length > 0) {
+      <span class="va-count">{{ rows().length }}</span>
+    }
+  </div>
+
+  <div class="card-body">
+    @if (loading()) {
+      <div class="va-state">
+        <span class="va-spinner"></span>
+        <p>{{ 'vayal.agro.loading' | i18n }}</p>
+      </div>
+    } @else if (error()) {
+      <div class="va-state va-state-error">
+        <span class="material-symbols-rounded va-error-icon">error</span>
+        <p>{{ error() }}</p>
+        <button type="button" class="va-retry-btn" (click)="search()">
+          <span class="material-symbols-rounded">refresh</span>
+          {{ 'vayal.agro.retry' | i18n }}
+        </button>
+      </div>
+    } @else if (!searched()) {
+      <div class="va-state">
+        <span class="material-symbols-rounded va-empty-icon">search</span>
+        <p>{{ 'vayal.agro.search.hint' | i18n }}</p>
+      </div>
+    } @else if (rows().length === 0) {
+      <div class="va-state">
+        <span class="material-symbols-rounded va-empty-icon">inbox</span>
+        <p>{{ 'vayal.agro.empty' | i18n }}</p>
+      </div>
+    } @else {
+      <div class="va-table-wrap">
+        <table class="va-table">
+          <thead>
+            <tr>
+              <th class="va-col-sno">#</th>
+              <th>{{ 'vayal.agro.col.category' | i18n }}</th>
+              <th>{{ 'vayal.agro.col.district' | i18n }}</th>
+              <th>{{ 'vayal.agro.col.city' | i18n }}</th>
+              <th class="va-col-price">{{ 'vayal.agro.col.price' | i18n }}</th>
+              <th>{{ 'vayal.agro.col.units' | i18n }}</th>
+              <th class="va-col-action">{{ 'vayal.agro.col.action' | i18n }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of rows(); track $index) {
+              <tr>
+                <td class="va-col-sno">{{ $index + 1 }}</td>
+                <td>{{ displayName(row.category, row.categoryTn) }}</td>
+                <td>{{ displayName(row.district, row.districtTn) }}</td>
+                <td>{{ displayName(row.city, row.cityTn) }}</td>
+                <td class="va-col-price va-price">₹{{ row.price }}</td>
+                <td>{{ displayName(row.units, row.unitsTn) }}</td>
+                <td class="va-col-action">
+                  <button type="button" class="va-history-btn" (click)="openHistory(row)">
+                    <span class="material-symbols-rounded">history</span>
+                    {{ 'vayal.agro.view.history' | i18n }}
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="va-foot">
+        <span>{{ 'vayal.agro.fetched' | i18n }}: {{ fetchedDate() }}</span>
+        <span class="va-source">vayalagro.com</span>
+      </div>
+    }
+  </div>
+</div>
+
+@if (historyOpen()) {
+  <div class="report-popup-overlay" (click)="onOverlayClick($event)">
+    <div class="report-popup va-history-popup">
+      <div class="report-popup-header">
+        <div class="report-popup-title-col">
+          <h3>{{ historyTitle() || ('vayal.agro.view.history' | i18n) }}</h3>
+          <div class="report-popup-name">{{ historySubtitle() }}</div>
+        </div>
+        <button type="button" class="report-popup-close" (click)="closeHistory()">&times;</button>
+      </div>
+      <div class="report-popup-body">
+        <div class="va-tabs">
+          <button
+            type="button"
+            class="va-tab"
+            [class.active]="historyTab() === 'table'"
+            (click)="historyTab.set('table')"
+          >
+            <span class="material-symbols-rounded">table_view</span>
+            {{ 'vayal.agro.tab.table' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="va-tab"
+            [class.active]="historyTab() === 'graph'"
+            (click)="historyTab.set('graph')"
+          >
+            <span class="material-symbols-rounded">show_chart</span>
+            {{ 'vayal.agro.tab.graph' | i18n }}
+          </button>
+        </div>
+
+        @if (historyLoading()) {
+          <div class="va-state">
+            <span class="va-spinner"></span>
+            <p>{{ 'vayal.agro.loading' | i18n }}</p>
+          </div>
+        } @else if (historyError()) {
+          <div class="va-state va-state-error">
+            <span class="material-symbols-rounded va-error-icon">error</span>
+            <p>{{ historyError() }}</p>
+            <button type="button" class="va-retry-btn" (click)="closeHistory()">
+              <span class="material-symbols-rounded">close</span>
+              {{ 'vayal.agro.close' | i18n }}
+            </button>
+          </div>
+        } @else if (historyTab() === 'table') {
+          @if (historyTableRows().length > 0) {
+            <div class="va-table-wrap">
+              <table class="va-table">
+                <thead>
+                  <tr>
+                    <th class="va-col-sno">#</th>
+                    <th>{{ 'vayal.agro.col.date' | i18n }}</th>
+                    <th class="va-col-price">{{ 'vayal.agro.col.price' | i18n }}</th>
+                    <th>{{ 'vayal.agro.col.units' | i18n }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (point of historyTableRows(); track $index) {
+                    <tr>
+                      <td class="va-col-sno">{{ $index + 1 }}</td>
+                      <td>{{ point.date }}</td>
+                      <td class="va-col-price va-price">₹{{ point.price }}</td>
+                      <td>{{ displayName(point.units, point.unitsTn) }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <div class="va-state">
+              <span class="material-symbols-rounded va-empty-icon">inbox</span>
+              <p>{{ 'vayal.agro.history.empty' | i18n }}</p>
+            </div>
+          }
+        } @else {
+          <div class="va-range-toggle">
+            <button
+              type="button"
+              class="va-range-btn"
+              [class.active]="historyRange() === 'weekly'"
+              (click)="historyRange.set('weekly')"
+            >
+              {{ 'vayal.agro.range.weekly' | i18n }}
+            </button>
+            <button
+              type="button"
+              class="va-range-btn"
+              [class.active]="historyRange() === 'monthly'"
+              (click)="historyRange.set('monthly')"
+            >
+              {{ 'vayal.agro.range.monthly' | i18n }}
+            </button>
+          </div>
+          @if (graphPoints().length < 2) {
+            <div class="va-state">
+              <span class="material-symbols-rounded va-empty-icon">show_chart</span>
+              <p>{{ 'vayal.agro.history.not.enough' | i18n }}</p>
+            </div>
+          } @else {
+            <div class="va-chart-wrap">
+              <svg viewBox="0 0 100 50" preserveAspectRatio="none" class="va-chart-svg">
+                <defs>
+                  <linearGradient id="vaHistoryFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#1d4ed8" stop-opacity="0.38"></stop>
+                    <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0.02"></stop>
+                  </linearGradient>
+                </defs>
+                <path [attr.d]="graphAreaPath()" fill="url(#vaHistoryFill)"></path>
+                <path
+                  [attr.d]="graphLinePath()"
+                  fill="none"
+                  stroke="#1d4ed8"
+                  stroke-width="1.3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                ></path>
+              </svg>
+              @for (p of graphPoints(); track $index) {
+                <span
+                  class="va-chart-dot"
+                  [style.left.%]="p.x"
+                  [style.top.%]="p.y"
+                  [attr.title]="p.label + ' - ₹' + p.price"
+                ></span>
+              }
+            </div>
+            <div class="va-chart-labels">
+              @for (label of graphXLabels(); track $index) {
+                <span>{{ label }}</span>
+              }
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </div>
+}

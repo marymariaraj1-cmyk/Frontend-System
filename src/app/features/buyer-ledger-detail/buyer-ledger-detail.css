@@ -399,6 +399,26 @@
   color: #15803d;
 }
 
+/* ==================== SIDE-BY-SIDE SUMMARY CARDS ==================== */
+.ledger-summary-wrap {
+  display: flex;
+  gap: 16px;
+  margin-top: 20px;
+  align-items: stretch;
+}
+
+.ledger-summary-wrap .ledger-summary {
+  flex: 1;
+  max-width: none;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .ledger-summary-wrap {
+    flex-direction: column;
+  }
+}
+
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
   .ldg-hero {

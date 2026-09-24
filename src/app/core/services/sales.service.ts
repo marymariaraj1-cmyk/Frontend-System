@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { ApiResponse } from '../models/api-response';
-import { SalesMasterData, SalesRecord, SalesRequest } from '../models/sales';
+import { FlowerLootSaveRequest, SalesMasterData, SalesRecord, SalesRequest } from '../models/sales';
 import { ApiService } from './api.service';
 
 @Injectable({ providedIn: 'root' })
@@ -20,5 +20,9 @@ export class SalesService {
 
   save(request: SalesRequest): Observable<ApiResponse<SalesRecord[]>> {
     return this.api.post<SalesRecord[]>('/sales/save', request);
+  }
+
+  saveFlowerLoot(request: FlowerLootSaveRequest): Observable<ApiResponse<SalesRecord[]>> {
+    return this.api.post<SalesRecord[]>('/flower-loot-sale/save', request);
   }
 }

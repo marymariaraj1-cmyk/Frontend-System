@@ -2,18 +2,19 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { AutocompleteComponent } from '../../core/components/autocomplete/autocomplete.component';
+import { ReceiptPrintButtonsComponent } from '../../core/components/receipt-print-buttons/receipt-print-buttons.component';
+import { DraggableDirective } from '../../core/directives/draggable.directive';
 import { BagCountConfigRow } from '../../core/models/bag-count-config';
 import { SalesEditRowRequest, SalesMasterData } from '../../core/models/sales';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
-import { AuthService } from '../../core/services/auth.service';
 import { BagCountConfigService } from '../../core/services/bag-count-config.service';
 import { FarmerLedgerService } from '../../core/services/farmer-ledger.service';
 import { I18nService } from '../../core/services/i18n.service';
+import { ReceiptFormat, ReceiptService } from '../../core/services/receipt.service';
 import { SalesEditService } from '../../core/services/sales-edit.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatCurrency } from '../../core/utils/currency-format.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
-import { printHtml } from '../../core/utils/print.util';
 import { roundOff } from '../../core/utils/round-off.util';
 import { formatApiDate, isDecimal } from '../../core/utils/sales.util';
 
@@ -30,6 +31,7 @@ interface EditRow {
   amount: string;
   origAmount: string;
   customer: string;
+  origCustomer: string;
   enabled: boolean;
   edited: boolean;
   flowerInvalid: boolean;
@@ -38,7 +40,7 @@ interface EditRow {
 @Component({
   selector: 'app-sales-details-edit',
   standalone: true,
-  imports: [FormsModule, I18nPipe, AutocompleteComponent],
+  imports: [FormsModule, I18nPipe, AutocompleteComponent, DraggableDirective, ReceiptPrintButtonsComponent],
   templateUrl: './sales-details-edit.html',
   styleUrl: './sales-details-edit.css',
 })
@@ -47,8 +49,8 @@ export class SalesDetailsEditComponent implements OnInit {
   private readonly farmerLedgerService = inject(FarmerLedgerService);
   private readonly i18n = inject(I18nService);
   private readonly toast = inject(ToastService);
-  private readonly auth = inject(AuthService);
   private readonly bagCountConfigService = inject(BagCountConfigService);
+  private readonly receipt = inject(ReceiptService);
 
   protected readonly master = signal<SalesMasterData>({
     farmers: [],
@@ -66,6 +68,8 @@ export class SalesDetailsEditComponent implements OnInit {
   protected readonly saving = signal(false);
   protected readonly bagLimitsOpen = signal(false);
   protected readonly bagConfigs = signal<BagCountConfigRow[]>([]);
+  protected readonly deleting = signal(false);
+  protected readonly deleteTarget = signal<EditRow | null>(null);
 
   protected currentFarmer = '';
   protected currentDate = '';
@@ -73,15 +77,16 @@ export class SalesDetailsEditComponent implements OnInit {
 
   protected readonly formatCurrency = formatCurrency;
 
-  protected readonly bagLimits = computed(() =>
-    this.bagConfigs()
-      .filter(
-        (c) =>
-          c.salesDate === this.salesDate() &&
-          (c.bagCheck ?? 'E').toUpperCase() === 'E',
-      )
-      .sort((a, b) => a.flowerName.localeCompare(b.flowerName)),
-  );
+  protected readonly bagLimits = computed(() => {
+    const farmer = this.farmer().trim();
+    if (!farmer) return [];
+    const date = this.salesDate();
+    if (!date) return [];
+    const lower = farmer.toLowerCase();
+    return this.bagConfigs()
+      .filter((c) => c.salesDate === date && c.farmerName.trim().toLowerCase() === lower)
+      .sort((a, b) => a.flowerName.localeCompare(b.flowerName));
+  });
 
   protected readonly bagLimitNotice = computed(() => this.bagLimits().length > 0);
 
@@ -191,6 +196,7 @@ export class SalesDetailsEditComponent implements OnInit {
             amount: this.formatDecimal(entry.price),
             origAmount: this.formatDecimal(entry.price),
             customer: entry.customerName ?? '',
+            origCustomer: entry.customerName ?? '',
             enabled: false,
             edited: false,
             flowerInvalid: false,
@@ -234,7 +240,8 @@ export class SalesDetailsEditComponent implements OnInit {
       row.bag !== row.origBag ||
       row.weight !== row.origWeight ||
       row.rate !== row.origRate ||
-      row.amount !== row.origAmount;
+      row.amount !== row.origAmount ||
+      row.customer.trim() !== row.origCustomer.trim();
     this.updateRow(index, { enabled: false, edited });
   }
 
@@ -245,8 +252,50 @@ export class SalesDetailsEditComponent implements OnInit {
       row.bag !== row.origBag ||
       row.weight !== row.origWeight ||
       row.rate !== row.origRate ||
-      row.amount !== row.origAmount;
+      row.amount !== row.origAmount ||
+      row.customer.trim() !== row.origCustomer.trim();
     this.updateRow(index, { edited });
+  }
+
+  protected onDecimalKeydown(event: KeyboardEvent): void {
+    if (event.ctrlKey || event.metaKey || event.altKey) {
+      return;
+    }
+    const key = event.key;
+    if (
+      key.length !== 1 ||
+      key === 'Backspace' ||
+      key === 'Delete' ||
+      key === 'Tab' ||
+      key === 'Enter' ||
+      key === 'Escape' ||
+      key === 'ArrowLeft' ||
+      key === 'ArrowRight' ||
+      key === 'ArrowUp' ||
+      key === 'ArrowDown' ||
+      key === 'Home' ||
+      key === 'End'
+    ) {
+      return;
+    }
+    if (key === '.') {
+      if ((event.target as HTMLInputElement).value.includes('.')) {
+        event.preventDefault();
+      }
+      return;
+    }
+    if (!/[0-9]/.test(key)) {
+      event.preventDefault();
+    }
+  }
+
+  protected sanitizeDecimal(value: string): string {
+    const cleaned = value.replace(/[^0-9.]/g, '');
+    const firstDot = cleaned.indexOf('.');
+    if (firstDot === -1) {
+      return cleaned;
+    }
+    return cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, '');
   }
 
   protected onBagInput(index: number): void {
@@ -330,7 +379,48 @@ export class SalesDetailsEditComponent implements OnInit {
     this.noData.set(true);
   }
 
-  protected printReport(): void {
+  protected openDeleteConfirm(index: number): void {
+    const row = this.rows()[index];
+    if (row) {
+      this.deleteTarget.set(row);
+    }
+  }
+
+  protected closeDelete(): void {
+    this.deleteTarget.set(null);
+  }
+
+  protected onDeleteOverlayClick(event: Event): void {
+    if (event.target === event.currentTarget) {
+      this.closeDelete();
+    }
+  }
+
+  protected confirmDelete(): void {
+    const row = this.deleteTarget();
+    if (!row || this.deleting()) {
+      return;
+    }
+    this.deleting.set(true);
+    this.salesEditService.delete(row.salesId).subscribe({
+      next: (response) => {
+        this.deleting.set(false);
+        if (response.success) {
+          this.closeDelete();
+          this.toast.success(response.message);
+          this.fetchData();
+        } else {
+          this.toast.error(response.message);
+        }
+      },
+      error: (error) => {
+        this.deleting.set(false);
+        this.toast.error(extractErrorMessage(error, this.i18n.translate('sales.edit.error.delete.failed')));
+      },
+    });
+  }
+
+  protected async printReport(format: ReceiptFormat): Promise<void> {
     const farmer = this.farmer().trim();
     const date = this.salesDate();
     const rows = this.rows();
@@ -343,7 +433,6 @@ export class SalesDetailsEditComponent implements OnInit {
       return;
     }
 
-    const shopName = this.auth.user()?.shopName ?? '';
     const summary = this.summary();
     const t = this.i18n.translate.bind(this.i18n);
     const bagLimits = this.bagLimits();
@@ -361,62 +450,55 @@ export class SalesDetailsEditComponent implements OnInit {
         '</tr>';
     });
 
-    let bagLimitHtml = '';
+    const salesBagMap = new Map<string, number>();
+    rows.forEach((row) => {
+      const flower = (row.flower || '').trim();
+      if (!flower) return;
+      const lower = flower.toLowerCase();
+      salesBagMap.set(lower, (salesBagMap.get(lower) || 0) + (parseInt(row.bag) || 0));
+    });
+    let bagSideHtml = '';
     if (bagLimits.length > 0) {
-      let body = '';
-      bagLimits.forEach((config, i) => {
-        body +=
-          '<tr>' +
-          '<td class="left">' + (i + 1) + '</td>' +
-          '<td class="left">' + (config.flowerName || '-') + '</td>' +
-          '<td class="right">' + (config.bagCount ?? 0) + '</td>' +
-          '</tr>';
+      let bagSideBody = '';
+      bagLimits.forEach((config) => {
+        const flowerName: string = config.flowerName;
+        const lower = flowerName.trim().toLowerCase();
+        const salesBagCount = salesBagMap.get(lower) || 0;
+        const configuredDisplay =
+          config.bagCount != null && (config.bagCount as number) > 0 ? String(config.bagCount) : '—';
+        bagSideBody +=
+          '<div style="margin-bottom:4px;">' +
+          '<div style="font-weight:700; font-size:8px; text-transform:uppercase; letter-spacing:0.3px;">' +
+          flowerName +
+          '</div>' +
+          '<div style="font-size:7.5px; line-height:1.4;">' +
+          t('bag.limit.configured') +
+          ': ' +
+          configuredDisplay +
+          '</div>' +
+          '<div style="font-size:7.5px; line-height:1.4;">' +
+          t('bag.limit.sales.count') +
+          ': ' +
+          salesBagCount +
+          '</div>' +
+          '</div>';
       });
-      bagLimitHtml =
-        '<div class="divider"></div>' +
-        '<div class="bl-title">' + t('bag.limit.title') + '</div>' +
-        '<table>' +
-        '<colgroup><col style="width:12%"><col style="width:60%"><col style="width:28%"></colgroup>' +
-        '<thead><tr>' +
-        '<th class="left">#</th>' +
-        '<th class="left">' + t('sales.flower') + '</th>' +
-        '<th class="right">' + t('bag.limit.limit') + '</th>' +
-        '</tr></thead><tbody>' + body + '</tbody></table>';
+      bagSideHtml =
+        '<div style="min-width:90px; max-width:110px; text-align:left; border-left:1px dashed #000; padding-left:6px; margin-left:6px;">' +
+        '<div style="font-size:8px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; text-align:center; margin-bottom:3px;">' +
+        t('bag.limit.title') +
+        '</div>' +
+        bagSideBody +
+        '</div>';
     }
 
-    const reportHtml =
-      '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + t('print.receipt.title') + '</title>' +
-      '<style>' +
-      '@page{size:80mm auto;margin:3mm 2mm;}' +
-      'body{margin:0;padding:2mm 1mm;width:76mm;font-family:"Courier New",monospace;font-size:9px;line-height:1.4;color:#000;background:#fff;}' +
-      '.print-header{text-align:center;border-bottom:1px dashed #000;padding-bottom:5px;margin-bottom:5px;}' +
-      '.print-header h2{font-size:13px;margin:0 0 2px;font-weight:700;letter-spacing:0.5px;}' +
-      '.print-header p{font-size:8px;margin:1px 0;color:#333;}' +
-      '.print-info{margin-bottom:6px;font-size:8px;line-height:1.5;}' +
-      '.print-info span{display:block;}' +
-      '.print-info strong{font-size:8px;}' +
-      'table{width:100%;border-collapse:collapse;margin:0 0 6px;font-size:8.5px;table-layout:fixed;}' +
-      'th,td{padding:3px 2.5px;vertical-align:top;word-wrap:break-word;overflow-wrap:break-word;}' +
-      'th{border-bottom:1.5px solid #000;font-weight:700;font-size:8px;text-transform:uppercase;letter-spacing:0.3px;}' +
-      'th.left,td.left{text-align:left;}' +
-      'th.right,td.right{text-align:right;}' +
-      'tbody tr{border-bottom:0.5px dotted #ccc;}' +
-      'tbody tr:last-child{border-bottom:none;}' +
-      '.divider{border-top:1px dashed #000;margin:6px 0;}' +
-      '.bl-title{font-size:9px;font-weight:700;text-align:center;text-transform:uppercase;letter-spacing:0.4px;margin:0 0 3px;}' +
-      '.summary{margin:0 0 4px;}' +
-      '.summary p{display:flex;justify-content:flex-end;gap:8px;margin:2px 0;font-size:8px;line-height:1.4;}' +
-      '.summary p strong{min-width:40px;text-align:right;}' +
-      '.summary .final{font-size:10px;font-weight:700;border-top:1px solid #000;padding-top:4px;margin-top:4px;gap:10px;}' +
-      '.summary .final strong{min-width:45px;}' +
-      '.footer{text-align:center;margin-top:10px;font-size:7px;border-top:1px dashed #000;padding-top:5px;letter-spacing:0.5px;}' +
-      '</style></head><body>' +
-      '<div class="print-header">' +
-      '<h2>' + shopName + '</h2>' +
-      '</div>' +
+    const content =
+      '<div class="bl-head">' +
       '<div class="print-info">' +
       '<span><strong>' + t('report.farmer') + '</strong> ' + farmer + '</span>' +
       '<span><strong>' + t('report.date') + '</strong> ' + date + '</span>' +
+      '</div>' +
+      bagSideHtml +
       '</div>' +
       '<table>' +
       '<colgroup>' +
@@ -429,7 +511,7 @@ export class SalesDetailsEditComponent implements OnInit {
       '<th class="right">' + t('report.col.price') + '</th>' +
       '<th class="right">' + t('report.col.total') + '</th>' +
       '<th class="left">' + t('report.col.customer') + '</th>' +
-      '</tr></thead><tbody>' + rowsHtml + '</tbody></table>' + bagLimitHtml +
+      '</tr></thead><tbody>' + rowsHtml + '</tbody></table>' +
       '<div class="divider"></div>' +
       '<div class="summary">' +
       '<p><span>' + t('report.total') + '</span><strong>' + this.formatCurrency(summary.total) + '</strong></p>' +
@@ -437,12 +519,15 @@ export class SalesDetailsEditComponent implements OnInit {
       '<p><span>' + t('report.net.amount') + '</span><strong>' + this.formatCurrency(summary.net) + '</strong></p>' +
       '<p><span>' + t('report.debit') + '</span><strong>' + this.formatCurrency(summary.debit) + '</strong></p>' +
       '<p class="final"><span>' + t('report.final.total') + '</span><strong>' + this.formatCurrency(summary.final) + '</strong></p>' +
-      '</div>' +
-      '<div class="footer">' + t('print.thankyou') + '</div>' +
-      '</body></html>';
+      '</div>';
 
-    if (!printHtml(reportHtml)) {
-      this.toast.error(this.i18n.translate('sales.error.print.blocked'));
+    const result = await this.receipt.output(content, {
+      title: t('print.receipt.title'),
+      fileBase: 'sales-receipt',
+      format,
+    });
+    if (result.status !== 'ok') {
+      this.toast.error(result.message);
     }
   }
 
@@ -492,6 +577,17 @@ export class SalesDetailsEditComponent implements OnInit {
         this.toast.error(this.i18n.translate('sales.error.flower.notfound.row', i + 1));
         return;
       }
+      if (row.enabled) {
+        const customer = row.customer.trim();
+        if (!customer) {
+          this.toast.error(this.i18n.translate('sales.error.customer.required.row', i + 1));
+          return;
+        }
+        if (!this.matchesMaster(customer, this.master().buyers)) {
+          this.toast.error(this.i18n.translate('sales.error.buyer.notfound.row', i + 1));
+          return;
+        }
+      }
       if (weight !== '' && !isDecimal(weight)) {
         this.toast.error(this.i18n.translate('sales.error.weight.row', i + 1));
         return;
@@ -513,7 +609,7 @@ export class SalesDetailsEditComponent implements OnInit {
         return;
       }
 
-      editedRows.push({ salesId: row.salesId, flowerType: flower, bagCount: row.bag, totalWeight: weight, price: rate, amount });
+      editedRows.push({ salesId: row.salesId, flowerType: flower, bagCount: row.bag, totalWeight: weight, price: rate, amount, customerName: row.customer.trim() });
     }
 
     const debitValue = this.debit().trim();

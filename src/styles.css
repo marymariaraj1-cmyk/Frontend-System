@@ -1816,6 +1816,137 @@ table td[style*="text-align:right"] {
     border-bottom: none;
 }
 
+/* ============================================================
+   SHARED LEDGER LIST / REPORT TABLE SPEC
+   Applied via `.ldg-tbl` (+ `.tbl-indigo` / `.tbl-teal`) on the
+   four Farmer/Buyer ledger list & report screens so all four
+   share one column-width/alignment/striping definition.
+   ============================================================ */
+.ldg-tbl {
+    width: 75%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #e7eaf3;
+    border-radius: 12px;
+    overflow: hidden;
+    font-size: 13px;
+    --ldg-zebra: #f4f6ff;
+    --ldg-hover: #e9edff;
+}
+
+.ldg-tbl.tbl-teal {
+    --ldg-zebra: #f0fbf8;
+    --ldg-hover: #d6f4ee;
+}
+
+.ldg-tbl .col-no {
+    width: 60px;
+    min-width: 60px;
+}
+
+.ldg-tbl .col-outstanding {
+    width: 200px;
+    min-width: 200px;
+    text-align: left;
+}
+
+.ldg-tbl .col-action {
+    width: 110px;
+    min-width: 110px;
+    text-align: center;
+}
+
+.ldg-tbl thead th {
+    padding: 12px 14px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+}
+
+.ldg-tbl.tbl-indigo thead th {
+    background: linear-gradient(135deg, #eef2ff 0%, #ecfdf5 100%);
+    color: #3730a3;
+    border-bottom: 2px solid #c7d2fe;
+}
+
+.ldg-tbl.tbl-teal thead th {
+    background: linear-gradient(135deg, #ecfdf5 0%, #ecfeff 100%);
+    color: #0f766e;
+    border-bottom: 2px solid #99f6e4;
+}
+
+.ldg-tbl tbody th,
+.ldg-tbl tbody td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #f0f2f8;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.ldg-tbl tbody td.col-outstanding {
+    text-align: left;
+}
+
+.ldg-tbl tbody tr {
+    transition: background 0.15s;
+}
+
+.ldg-tbl tbody tr:nth-child(even) {
+    background: var(--ldg-zebra);
+}
+
+.ldg-tbl tbody tr:hover {
+    background: var(--ldg-hover);
+}
+
+.ldg-tbl tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Shared Action (view) button — Farmer indigo / Buyer teal */
+.ldg-act-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.ldg-act-btn .material-symbols-rounded {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.ldg-act-btn-indigo {
+    background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+    box-shadow: 0 3px 8px rgba(67, 56, 202, 0.3);
+}
+
+.ldg-act-btn-indigo:hover:not(:disabled) {
+    background: linear-gradient(135deg, #3730a3 0%, #5b21b6 100%);
+    box-shadow: 0 5px 14px rgba(67, 56, 202, 0.4);
+    transform: translateY(-1px);
+}
+
+.ldg-act-btn-teal {
+    background: linear-gradient(135deg, #0d9488 0%, #0891b2 100%);
+    box-shadow: 0 3px 8px rgba(8, 145, 178, 0.3);
+}
+
+.ldg-act-btn-teal:hover:not(:disabled) {
+    background: linear-gradient(135deg, #0f766e 0%, #0e7490 100%);
+    box-shadow: 0 5px 14px rgba(8, 145, 178, 0.4);
+    transform: translateY(-1px);
+}
+
 .report-footer-row {
     background: #edf1ff;
 }
@@ -1980,6 +2111,21 @@ table td[style*="text-align:right"] {
     align-items: center;
     gap: 8px;
     font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+.report-popup-title-col {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.report-popup-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
     letter-spacing: 0.3px;
 }
 

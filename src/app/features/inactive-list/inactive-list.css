@@ -110,28 +110,8 @@
     margin-top: 2px;
 }
 
-.ilf-table.report-table {
-    border-color: #eec4c4;
-}
-
-.ilf-table.report-table th {
-    background: linear-gradient(135deg, #fdf6f6 0%, #fbe7e5 100%);
-    border-color: #eec4c4;
-    color: #8e2a4b;
-}
-
-.ilf-table.report-table td {
-    border-color: #f3dede;
-}
-
-.ilf-table.report-table tbody tr:hover {
-    background: #fdf2f0;
-}
-
-.ilf-table.report-table th,
-.ilf-table.report-table td {
-    white-space: nowrap;
-}
+/* Table theming comes from shared .ldg-tbl spec in global styles.css
+   (.tbl-indigo for the farmer section, .tbl-teal for the buyer section). */
 
 .ilf-sno {
     color: #8a94a6;
@@ -141,11 +121,6 @@
 .ilf-name {
     font-weight: 600;
     color: #232c3b;
-}
-
-.ilf-table.report-table .amount-col {
-    text-align: right;
-    font-variant-numeric: tabular-nums;
 }
 
 .ilf-balance {

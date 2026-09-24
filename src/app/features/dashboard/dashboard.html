@@ -16,6 +16,7 @@
   </div>
 </div>
 
+<section class="dash-section" aria-label="{{ 'dashboard.quick.title' | i18n }}">
 <div class="dash-section-title">
   <span class="material-symbols-rounded">bolt</span>
   {{ 'dashboard.quick.title' | i18n }}
@@ -77,8 +78,14 @@
     <span class="material-symbols-rounded quick-tile-arrow">chevron_right</span>
   </a>
 </div>
+</section>
 
 @if (data(); as d) {
+  <section class="dash-section" aria-label="{{ 'dashboard.section.sales.overview' | i18n }}">
+  <div class="dash-section-title">
+    <span class="material-symbols-rounded">insights</span>
+    {{ 'dashboard.section.sales.overview' | i18n }}
+  </div>
   <div class="kpi-grid">
     <div class="kpi-card">
       <div class="kpi-tile kpi-tile-sales"><span class="material-symbols-rounded">payments</span></div>
@@ -113,13 +120,60 @@
     </div>
 
     <div class="kpi-card">
+      <div class="kpi-tile kpi-tile-pakki"><span class="material-symbols-rounded">account_balance</span></div>
+      <div class="kpi-body">
+        <div class="kpi-label">{{ 'dashboard.kpi.today.pakki' | i18n }}</div>
+        <div class="kpi-value">{{ formatCurrency(d.kpis.todayPakki) }}</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-tile kpi-tile-varavu"><span class="material-symbols-rounded">savings</span></div>
+      <div class="kpi-body">
+        <div class="kpi-label">{{ 'dashboard.kpi.today.varavu' | i18n }}</div>
+        <div class="kpi-value">{{ formatCurrency(d.kpis.todayVaravu) }}</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-tile kpi-tile-final"><span class="material-symbols-rounded">receipt_long</span></div>
+      <div class="kpi-body">
+        <div class="kpi-label">{{ 'dashboard.kpi.sales.with.deduction' | i18n }}</div>
+        <div class="kpi-value">{{ formatCurrency(d.kpis.salesWithDeduction) }}</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-tile kpi-tile-gross"><span class="material-symbols-rounded">sell</span></div>
+      <div class="kpi-body">
+        <div class="kpi-label">{{ 'dashboard.kpi.sales.without.deduction' | i18n }}</div>
+        <div class="kpi-value">{{ formatCurrency(d.kpis.salesWithoutDeduction) }}</div>
+      </div>
+    </div>
+  </div>
+  </section>
+
+  <section class="dash-section" aria-label="{{ 'dashboard.section.activity' | i18n }}">
+  <div class="dash-section-title">
+    <span class="material-symbols-rounded">group</span>
+    {{ 'dashboard.section.activity' | i18n }}
+  </div>
+  <div class="activity-grid">
+    <div class="kpi-card">
       <div class="kpi-tile kpi-tile-farmers"><span class="material-symbols-rounded">agriculture</span></div>
       <div class="kpi-body">
         <div class="kpi-label">{{ 'dashboard.kpi.active.farmers' | i18n }}</div>
         <div class="kpi-value">{{ d.kpis.activeFarmers }}</div>
       </div>
     </div>
-
+    <a class="master-count-card" routerLink="/inactive-list">
+      <span class="mc-tile mc-inactive-farmers"><span class="material-symbols-rounded">person_off</span></span>
+      <div>
+        <div class="master-count-value">{{ d.masterCounts.inactiveFarmers }}</div>
+        <div class="master-count-label">{{ 'dashboard.master.inactive.farmers' | i18n }}</div>
+      </div>
+      <span class="material-symbols-rounded mc-arrow">chevron_right</span>
+    </a>
     <div class="kpi-card">
       <div class="kpi-tile kpi-tile-buyers"><span class="material-symbols-rounded">shopping_cart</span></div>
       <div class="kpi-body">
@@ -127,8 +181,22 @@
         <div class="kpi-value">{{ d.kpis.activeBuyers }}</div>
       </div>
     </div>
+    <a class="master-count-card" routerLink="/inactive-list">
+      <span class="mc-tile mc-inactive-buyers"><span class="material-symbols-rounded">remove_shopping_cart</span></span>
+      <div>
+        <div class="master-count-value">{{ d.masterCounts.inactiveBuyers }}</div>
+        <div class="master-count-label">{{ 'dashboard.master.inactive.buyers' | i18n }}</div>
+      </div>
+      <span class="material-symbols-rounded mc-arrow">chevron_right</span>
+    </a>
   </div>
+  </section>
 
+  <section class="dash-section" aria-label="{{ 'dashboard.section.shop.totals' | i18n }}">
+  <div class="dash-section-title">
+    <span class="material-symbols-rounded">store</span>
+    {{ 'dashboard.section.shop.totals' | i18n }}
+  </div>
   <div class="master-count-grid">
     <a class="master-count-card" routerLink="/farmers">
       <span class="mc-tile mc-farmers"><span class="material-symbols-rounded">agriculture</span></span>
@@ -155,6 +223,54 @@
       <span class="material-symbols-rounded mc-arrow">chevron_right</span>
     </a>
   </div>
+  </section>
+
+  <section class="dash-section" aria-label="{{ 'dashboard.rates.title' | i18n }}">
+    <div class="dash-section-title">
+      <span class="material-symbols-rounded">local_florist</span>
+      {{ 'dashboard.rates.title' | i18n }}
+      <a class="dash-section-link" routerLink="/flower-market-price-config">
+        {{ 'dashboard.rates.view.all' | i18n }}
+        <span class="material-symbols-rounded">arrow_forward</span>
+      </a>
+    </div>
+    @if (todayRates().length > 0) {
+      <div class="table-container">
+        <table class="report-table dash-rates-table">
+          <thead>
+            <tr>
+              <th>{{ 'dashboard.rates.col.flower' | i18n }}</th>
+              <th class="amount-col">{{ 'dashboard.rates.col.today' | i18n }}</th>
+              <th class="amount-col">{{ 'dashboard.rates.col.previous' | i18n }}</th>
+              <th class="amount-col">{{ 'dashboard.rates.col.trend' | i18n }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (rate of todayRates(); track rate.flowerId) {
+              <tr>
+                <td>{{ rate.flowerName }}</td>
+                <td class="amount-col">{{ formatCurrency(rate.price) }}</td>
+                <td class="amount-col">{{ rate.previousPrice == null ? '—' : formatCurrency(rate.previousPrice) }}</td>
+                <td class="amount-col">
+                  <span
+                    class="dash-rate-trend"
+                    [class.trend-up]="rate.trend === 'up'"
+                    [class.trend-down]="rate.trend === 'down'"
+                    [class.trend-flat]="rate.trend === 'flat'"
+                  >
+                    <span aria-hidden="true">{{ rate.trend === 'up' ? '▲' : rate.trend === 'down' ? '▼' : '—' }}</span>
+                    <span>{{ rate.trend === 'up' ? ('dashboard.rates.trend.up' | i18n) : rate.trend === 'down' ? ('dashboard.rates.trend.down' | i18n) : ('dashboard.rates.trend.same' | i18n) }}</span>
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <div class="no-records">{{ 'dashboard.rates.empty' | i18n }}</div>
+    }
+  </section>
 
   <div class="dash-grid">
     <div class="card dash-card dash-card-wide">

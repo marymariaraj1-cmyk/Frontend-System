@@ -42,33 +42,39 @@
     }
 
     <div class="table-container">
-      <table class="report-table">
+      <table class="report-table ldg-tbl tbl-teal">
         <thead>
           <tr>
-            <th style="width: 50px">{{ 'txn.sno' | i18n }}</th>
-            <th>{{ 'ledger.list.col.buyer.name' | i18n }}</th>
-            <th style="width: 110px" class="amount-col">{{ 'ledger.list.col.action' | i18n }}</th>
+            <th class="col-no">{{ 'txn.sno' | i18n }}</th>
+            <th class="col-name">{{ 'ledger.list.col.buyer.name' | i18n }}</th>
+            <th class="col-outstanding">{{ 'ledger.list.col.outstanding.balance' | i18n }}</th>
+            <th class="col-action">{{ 'ledger.list.col.action' | i18n }}</th>
           </tr>
         </thead>
         <tbody>
           @for (entry of filteredEntries(); track entry.buyerId; let i = $index) {
             <tr>
-              <td class="rpt-sno">{{ i + 1 }}</td>
-              <td>
+              <td class="col-no rpt-sno">{{ i + 1 }}</td>
+              <td class="col-name">
                 <div class="rpt-name-cell">
                   <span class="rpt-avatar">{{ initials(entry.buyerName) }}</span>
                   <span class="rpt-name">{{ entry.buyerName }}</span>
                 </div>
               </td>
-              <td class="amount-col">
-                <button type="button" class="rpt-view-btn" [attr.title]="'btn.view' | i18n" [attr.aria-label]="'btn.view' | i18n" (click)="viewDetail(entry)">
+              <td class="col-outstanding">
+                <span class="rpt-balance" [class]="balanceClass(entry.outstandingBalance)">
+                  {{ formatCurrency(outstandingAbs(entry.outstandingBalance)) }}
+                </span>
+              </td>
+              <td class="col-action">
+                <button type="button" class="ldg-act-btn ldg-act-btn-teal" [attr.title]="'btn.view' | i18n" [attr.aria-label]="'btn.view' | i18n" (click)="viewDetail(entry)">
                   <span class="material-symbols-rounded">visibility</span>
                 </button>
               </td>
             </tr>
           } @empty {
             <tr>
-              <td colspan="3" class="no-records">
+              <td colspan="4" class="no-records">
                 {{ loaded() ? ('msg.no.records' | i18n) : '' }}
               </td>
             </tr>

@@ -1,22 +1,27 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
+import { FlowerPriceTickerComponent } from '../components/flower-price-ticker/flower-price-ticker.component';
 import { I18nPipe } from '../pipes/i18n.pipe';
 import { AuthService } from '../services/auth.service';
 import { I18nService, Language } from '../services/i18n.service';
+import { LedgerNavService } from '../services/ledger-nav.service';
+import { PaperSize, PaperSizeService } from '../services/paper-size.service';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, I18nPipe],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, I18nPipe, FlowerPriceTickerComponent],
   templateUrl: './layout.html',
   styleUrl: './layout.css',
 })
 export class LayoutComponent {
   protected readonly auth = inject(AuthService);
   protected readonly i18n = inject(I18nService);
+  protected readonly paper = inject(PaperSizeService);
 
   private readonly router = inject(Router);
+  private readonly ledgerNav = inject(LedgerNavService);
   private readonly openParents = new Set<string>();
 
   protected readonly collapsed = signal(
@@ -43,9 +48,13 @@ export class LayoutComponent {
     this.i18n.switchLang(lang);
   }
 
+  protected setPaperSize(size: PaperSize): void {
+    this.paper.setSize(size);
+  }
+
   protected logout(): void {
-    sessionStorage.removeItem('bb_farmer_ledger');
-    sessionStorage.removeItem('bb_buyer_ledger');
+    sessionStorage.removeItem('bb_last_route');
+    this.ledgerNav.clearAll();
     this.auth.logout();
     this.router.navigate(['/login']);
   }

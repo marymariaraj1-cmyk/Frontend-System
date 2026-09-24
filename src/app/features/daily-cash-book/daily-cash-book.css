@@ -1,0 +1,349 @@
+:host {
+  display: block;
+}
+
+/* ==================== HERO ==================== */
+.dcb-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  padding: 22px 28px;
+  margin-bottom: 18px;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 92% -20%, rgba(52, 211, 153, 0.32), transparent 42%),
+    radial-gradient(circle at -8% 130%, rgba(45, 212, 191, 0.38), transparent 48%),
+    linear-gradient(135deg, #042f2e 0%, #0f766e 52%, #059669 130%);
+  box-shadow: 0 14px 34px rgba(13, 148, 136, 0.3);
+}
+
+.dcb-accent {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 30%;
+  height: 100%;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.09) 60%, rgba(52, 211, 153, 0.22));
+  clip-path: polygon(30% 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.dcb-ring {
+  position: absolute;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 50%;
+}
+
+.dcb-ring-1 {
+  width: 170px;
+  height: 170px;
+  top: -60px;
+  right: 30%;
+}
+
+.dcb-ring-2 {
+  width: 110px;
+  height: 110px;
+  bottom: -44px;
+  left: 18%;
+}
+
+.dcb-glyph {
+  position: absolute;
+  right: 26px;
+  bottom: -22px;
+  font-size: 120px;
+  color: rgba(255, 255, 255, 0.07);
+}
+
+.dcb-hero-head {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  width: 100%;
+}
+
+.dcb-hero-id {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.dcb-hero-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.dcb-hero-icon .material-symbols-rounded {
+  font-size: 30px;
+  color: #fff;
+}
+
+.dcb-hero-text h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.dcb-hero-text p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.dcb-datebox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dcb-datebox label {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.dcb-datebox input[type="date"] {
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: 13px;
+  color-scheme: dark;
+}
+
+.dcb-date-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+}
+
+/* ==================== NOTICE / STATES ==================== */
+.dcb-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  border-radius: 10px;
+  background: #fef9c3;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.no-records {
+  text-align: center;
+  color: #8a93a6;
+  padding: 18px 0;
+}
+
+/* ==================== TWO-COLUMN BOOK ==================== */
+.dcb-cols {
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.dcb-col {
+  flex: 1;
+  border-radius: 12px;
+  padding: 14px 16px;
+  border: 1px solid #e5e7eb;
+}
+
+.dcb-col-debit {
+  background: linear-gradient(180deg, #fef2f2 0%, #fff 60%);
+  border-top: 4px solid #dc2626;
+}
+
+.dcb-col-credit {
+  background: linear-gradient(180deg, #ecfdf5 0%, #fff 60%);
+  border-top: 4px solid #059669;
+}
+
+.dcb-col-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 10px;
+  margin-bottom: 6px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.dcb-col-head h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.dcb-col-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 17px;
+  color: #fff;
+}
+
+.dcb-col-debit .dcb-col-chip {
+  background: #dc2626;
+}
+
+.dcb-col-credit .dcb-col-chip {
+  background: #059669;
+}
+
+.dcb-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px dashed #e5e7eb;
+  font-size: 13px;
+}
+
+.dcb-row:last-child {
+  border-bottom: none;
+}
+
+.dcb-label {
+  flex: 1;
+  color: #475569;
+  font-weight: 500;
+  overflow-wrap: break-word;
+}
+
+.dcb-input {
+  width: 130px;
+  max-width: 45%;
+  padding: 7px 10px;
+  border: 1px solid #dbe0e5;
+  border-radius: 8px;
+  font-size: 13px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.dcb-input:focus {
+  outline: none;
+  border-color: #0d9488;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+}
+
+.dcb-input[readonly] {
+  background: #f8fafc;
+  color: #475569;
+}
+
+.dcb-amt {
+  min-width: 130px;
+  text-align: right;
+  font-weight: 700;
+  color: #1e293b;
+  font-variant-numeric: tabular-nums;
+}
+
+.dcb-auto .dcb-amt {
+  color: #0f766e;
+}
+
+.dcb-row.dcb-total {
+  margin-top: 6px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #1e293b;
+  border-bottom: none;
+}
+
+.dcb-row.dcb-total .dcb-label,
+.dcb-row.dcb-total .dcb-amt {
+  color: #fff;
+  font-size: 14px;
+}
+
+/* ==================== REMAINING ==================== */
+.dcb-remaining {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0f766e 0%, #059669 100%);
+  box-shadow: 0 6px 18px rgba(13, 148, 136, 0.3);
+}
+
+.dcb-remaining .dcb-label {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.dcb-remaining .dcb-amt {
+  color: #fff;
+  font-size: 20px;
+}
+
+/* ==================== RECORD ONLY ==================== */
+.dcb-record {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+}
+
+.dcb-record-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dcb-record-head h4 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.dcb-record-head .material-symbols-rounded {
+  font-size: 18px;
+  color: #64748b;
+}
+
+.dcb-record-note {
+  margin: 6px 0 8px;
+  font-size: 12px;
+  color: #8a93a6;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .dcb-cols {
+    flex-direction: column;
+  }
+
+  .dcb-hero-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

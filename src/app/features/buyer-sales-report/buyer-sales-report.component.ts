@@ -2,14 +2,15 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { BuyerSalesReportItem, BuyerSalesReportRow } from '../../core/models/report';
+import { ReceiptPrintButtonsComponent } from '../../core/components/receipt-print-buttons/receipt-print-buttons.component';
 import { DraggableDirective } from '../../core/directives/draggable.directive';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
+import { ReceiptFormat, ReceiptService } from '../../core/services/receipt.service';
 import { SalesReportService } from '../../core/services/sales-report.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatCurrency } from '../../core/utils/currency-format.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
-import { openPrintWindow } from '../../core/utils/print.util';
 import { formatDecimal } from '../../core/utils/round-off.util';
 import { formatApiDate } from '../../core/utils/sales.util';
 
@@ -18,7 +19,7 @@ type ReportPeriod = 'daily' | 'monthly' | 'yearly' | 'custom';
 @Component({
   selector: 'app-buyer-sales-report',
   standalone: true,
-  imports: [FormsModule, DraggableDirective, I18nPipe],
+  imports: [FormsModule, DraggableDirective, I18nPipe, ReceiptPrintButtonsComponent],
   templateUrl: './buyer-sales-report.html',
   styleUrl: './buyer-sales-report.css',
 })
@@ -26,6 +27,7 @@ export class BuyerSalesReportComponent {
   private readonly service = inject(SalesReportService);
   private readonly i18n = inject(I18nService);
   private readonly toast = inject(ToastService);
+  private readonly receipt = inject(ReceiptService);
 
   protected readonly formatCurrency = formatCurrency;
   protected readonly formatDecimal = formatDecimal;
@@ -180,7 +182,7 @@ export class BuyerSalesReportComponent {
     return this.popupBuyer()?.totalAmount ?? 0;
   }
 
-  protected printPopup(): void {
+  protected async printPopup(format: ReceiptFormat): Promise<void> {
     const buyer = this.popupBuyer();
     if (!buyer) {
       return;
@@ -203,8 +205,7 @@ export class BuyerSalesReportComponent {
 
     const total = this.popupTotal();
 
-    const reportHtml =
-      this.printStyle('80mm auto', '76mm') +
+    const content =
       `<div class="print-header">` +
       `<h2>${this.escapeHtml(this.i18n.translate('buyer.sales.report.detail.buyer'))}: ${this.escapeHtml(buyer.buyerName || '')}</h2>` +
       `</div>` +
@@ -224,11 +225,16 @@ export class BuyerSalesReportComponent {
       `<div class="divider"></div>` +
       `<table class="summary-table">` +
       `<tr class="final"><td class="lbl">${this.escapeHtml(this.i18n.translate('buyer.sales.report.detail.total'))}</td><td class="amt">${this.formatNum(total)}</td></tr>` +
-      `</table>` +
-      `<div class="footer">${this.escapeHtml(this.i18n.translate('print.thankyou'))}</div>` +
-      `<script>window.onload=function(){window.print();}<\/script></body></html>`;
+      `</table>`;
 
-    openPrintWindow(reportHtml, 320, 600);
+    const result = await this.receipt.output(content, {
+      title: this.i18n.translate('buyer.sales.report.detail.buyer'),
+      fileBase: 'buyer-sales-report',
+      format,
+    });
+    if (result.status !== 'ok') {
+      this.toast.error(result.message);
+    }
   }
 
   private formatNum(value: number | null | undefined | string): string {
@@ -256,35 +262,6 @@ export class BuyerSalesReportComponent {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
-  }
-
-  private printStyle(pageSize: string, bodyWidth: string): string {
-    return (
-      `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>` +
-      `@page{size:${pageSize};margin:0;}` +
-      `body{margin:0;padding:2mm 1.5mm;width:${bodyWidth};box-sizing:border-box;font-family:"Courier New",monospace;font-size:9px;line-height:1.4;color:#000;background:#fff;}` +
-      `.print-header{text-align:center;border-bottom:1px dashed #000;padding-bottom:5px;margin-bottom:5px;}` +
-      `.print-header h2{font-size:12px;margin:0 0 2px;font-weight:700;letter-spacing:0.5px;}` +
-      `.print-header p{font-size:8px;margin:1px 0;color:#333;}` +
-      `.print-info{margin-bottom:6px;font-size:8px;line-height:1.5;}` +
-      `.print-info span{display:block;}` +
-      `.print-info strong{font-size:8px;}` +
-      `table{width:100%;border-collapse:collapse;margin:0 0 6px;font-size:8px;table-layout:fixed;}` +
-      `th,td{padding:3px 2px;vertical-align:top;word-wrap:break-word;overflow-wrap:break-word;}` +
-      `th{border-bottom:1.5px solid #000;font-weight:700;font-size:7.5px;text-transform:uppercase;letter-spacing:0.3px;}` +
-      `th.left,td.left{text-align:left;}` +
-      `th.right,td.right{text-align:right;}` +
-      `tbody tr{border-bottom:0.5px dotted #ccc;}` +
-      `tbody tr:last-child{border-bottom:none;}` +
-      `.divider{border-top:1px dashed #000;margin:6px 0;}` +
-      `.summary-table{width:100%;border-collapse:collapse;font-size:8px;margin:0 0 4px;}` +
-      `.summary-table td{padding:2px 2px;border:none;}` +
-      `.summary-table td.lbl{width:40%;text-align:left;}` +
-      `.summary-table td.amt{width:60%;text-align:right;}` +
-      `.summary-table tr.final td{font-size:10px;font-weight:700;border-top:1px solid #000;padding-top:4px;}` +
-      `.footer{text-align:center;margin-top:10px;font-size:7px;border-top:1px dashed #000;padding-top:5px;letter-spacing:0.5px;}` +
-      `</style></head><body>`
-    );
   }
 
   private daysAgo(days: number): Date {

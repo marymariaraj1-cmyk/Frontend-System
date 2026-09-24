@@ -20,6 +20,10 @@
         <button type="button" [class.active]="i18n.lang() === 'en'" (click)="switchLang('en')">EN</button>
         <button type="button" [class.active]="i18n.lang() === 'ta'" (click)="switchLang('ta')">த</button>
       </div>
+      <div class="sidebar-lang" [attr.title]="'print.paper.size' | i18n">
+        <button type="button" [class.active]="paper.size() === '3in'" (click)="setPaperSize('3in')">3 {{ 'print.paper.inch' | i18n }}</button>
+        <button type="button" [class.active]="paper.size() === '4in'" (click)="setPaperSize('4in')">4 {{ 'print.paper.inch' | i18n }}</button>
+      </div>
     </div>
     <div class="user-info-badge">
       @if (auth.user()?.role === 'ROLE_ADMIN') {
@@ -109,6 +113,17 @@
                   <span class="nav-label">{{ 'sidebar.bag.count.config' | i18n }}</span>
                 </a>
               </li>
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  routerLink="/flower-market-price-config"
+                  routerLinkActive="active"
+                  [attr.title]="collapsed() ? ('sidebar.flower.market.price.config' | i18n) : null"
+                >
+                  <span class="nav-icon material-symbols-rounded">payments</span>
+                  <span class="nav-label">{{ 'sidebar.flower.market.price.config' | i18n }}</span>
+                </a>
+              </li>
             }
             @if (auth.user()?.role === 'ROLE_ADMIN') {
               <li class="nav-item">
@@ -168,6 +183,28 @@
               >
                 <span class="nav-icon material-symbols-rounded">edit_note</span>
                 <span class="nav-label">{{ 'sidebar.sales.details.edit' | i18n }}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/flower-loot-sale"
+                routerLinkActive="active"
+                [attr.title]="collapsed() ? ('sidebar.flower.loot.sale' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">sell</span>
+                <span class="nav-label">{{ 'sidebar.flower.loot.sale' | i18n }}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/flower-loot-sale-edit"
+                routerLinkActive="active"
+                [attr.title]="collapsed() ? ('sidebar.flower.loot.sale.edit' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">edit_note</span>
+                <span class="nav-label">{{ 'sidebar.flower.loot.sale.edit' | i18n }}</span>
               </a>
             </li>
           </ul>
@@ -264,6 +301,17 @@
                 <span class="nav-label">{{ 'sidebar.buyer.transaction' | i18n }}</span>
               </a>
             </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/daily-cash-book"
+                routerLinkActive="active"
+                [attr.title]="collapsed() ? ('sidebar.daily.cash.book' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">book</span>
+                <span class="nav-label">{{ 'sidebar.daily.cash.book' | i18n }}</span>
+              </a>
+            </li>
           </ul>
         </div>
 
@@ -333,6 +381,17 @@
                 <span class="nav-label">{{ 'sidebar.current.day.total.commission' | i18n }}</span>
               </a>
             </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/tamilnadu-flower-price-report"
+                routerLinkActive="active"
+                [attr.title]="collapsed() ? ('sidebar.flower.price.vayal.agro' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">eco</span>
+                <span class="nav-label">{{ 'sidebar.flower.price.vayal.agro' | i18n }}</span>
+              </a>
+            </li>
           </ul>
         </div>
       </div>
@@ -347,6 +406,7 @@
   </aside>
 
   <div class="main-content">
+    <app-flower-price-ticker />
     <div class="content-area">
       <router-outlet />
     </div>

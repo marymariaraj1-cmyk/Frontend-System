@@ -1,0 +1,254 @@
+<div class="dcb-hero">
+  <span class="dcb-accent"></span>
+  <span class="dcb-ring dcb-ring-1"></span>
+  <span class="dcb-ring dcb-ring-2"></span>
+  <span class="dcb-glyph material-symbols-rounded">book</span>
+
+  <div class="dcb-hero-head">
+    <div class="dcb-hero-id">
+      <div class="dcb-hero-icon">
+        <span class="material-symbols-rounded">account_balance_wallet</span>
+      </div>
+      <div class="dcb-hero-text">
+        <h2>{{ 'dcb.title' | i18n }}</h2>
+        <p>{{ 'dcb.subtitle' | i18n }}</p>
+      </div>
+    </div>
+    <div class="dcb-datebox">
+      <label for="dcbBookDate">{{ 'dcb.book.date' | i18n }}</label>
+      <input
+        id="dcbBookDate"
+        type="date"
+        [ngModel]="bookDate()"
+        (ngModelChange)="onDateChange($event)"
+        [max]="todayStr"
+      />
+      <span class="dcb-date-label">{{ dateLabel() }}</span>
+    </div>
+  </div>
+</div>
+
+@if (!isToday()) {
+  <div class="dcb-notice">
+    <span class="material-symbols-rounded">lock</span>
+    {{ 'dcb.past.view.only' | i18n }}
+  </div>
+}
+
+@if (loaded() && !loading() && !isToday() && !saved()) {
+  <div class="card">
+    <div class="card-body">
+      <p class="no-records">{{ 'dcb.no.record' | i18n }}</p>
+    </div>
+  </div>
+}
+
+@if (loading()) {
+  <div class="card">
+    <div class="card-body">
+      <p class="no-records">...</p>
+    </div>
+  </div>
+}
+
+@if (loaded() && !loading() && (isToday() || saved())) {
+  <div class="card dcb-card">
+    <div class="card-body">
+      <div class="dcb-cols">
+        <div class="dcb-col dcb-col-debit">
+          <div class="dcb-col-head">
+            <span class="dcb-col-chip material-symbols-rounded">arrow_upward</span>
+            <h3>{{ 'dcb.debit.title' | i18n }}</h3>
+          </div>
+
+          <div class="dcb-row">
+            <span class="dcb-label">{{ 'dcb.rent' | i18n }}</span>
+            <input
+              class="dcb-input"
+              type="text"
+              inputmode="decimal"
+              [ngModel]="rent()"
+              (ngModelChange)="rent.set($event)"
+              (input)="sanitize('rent')"
+              [readonly]="!isToday()"
+            />
+          </div>
+          <div class="dcb-row">
+            <span class="dcb-label">{{ 'dcb.expense' | i18n }}</span>
+            <input
+              class="dcb-input"
+              type="text"
+              inputmode="decimal"
+              [ngModel]="expense()"
+              (ngModelChange)="expense.set($event)"
+              (input)="sanitize('expense')"
+              [readonly]="!isToday()"
+            />
+          </div>
+          <div class="dcb-row">
+            <span class="dcb-label">{{ 'dcb.chit' | i18n }}</span>
+            <input
+              class="dcb-input"
+              type="text"
+              inputmode="decimal"
+              [ngModel]="chit()"
+              (ngModelChange)="chit.set($event)"
+              (input)="sanitize('chit')"
+              [readonly]="!isToday()"
+            />
+          </div>
+          <div class="dcb-row">
+            <span class="dcb-label">{{ 'dcb.finance' | i18n }}</span>
+            <input
+              class="dcb-input"
+              type="text"
+              inputmode="decimal"
+              [ngModel]="finance()"
+              (ngModelChange)="finance.set($event)"
+              (input)="sanitize('finance')"
+              [readonly]="!isToday()"
+            />
+          </div>
+          <div class="dcb-row">
+            <span class="dcb-label">{{ 'dcb.note' | i18n }}</span>
+            <input
+              class="dcb-input"
+              type="text"
+              inputmode="decimal"
+              [ngModel]="note()"
+              (ngModelChange)="note.set($event)"
+              (input)="sanitize('note')"
+              [readonly]="!isToday()"
+            />
+          </div>
+          <div class="dcb-row">
+            <span class="dcb-label">{{ 'dcb.salary' | i18n }}</span>
+            <input
+              class="dcb-input"
+              type="text"
+              inputmode="decimal"
+              [ngModel]="salary()"
+              (ngModelChange)="salary.set($event)"
+              (input)="sanitize('salary')"
+              [readonly]="!isToday()"
+            />
+          </div>
+          <div class="dcb-row">
+            <span class="dcb-label">{{ 'dcb.coin' | i18n }}</span>
+            <input
+              class="dcb-input"
+              type="text"
+              inputmode="decimal"
+              [ngModel]="coin()"
+              (ngModelChange)="coin.set($event)"
+              (input)="sanitize('coin')"
+              [readonly]="!isToday()"
+            />
+          </div>
+
+          <div class="dcb-row dcb-auto">
+            <span class="dcb-label">{{ 'dcb.balance' | i18n }}</span>
+            <span class="dcb-amt">{{ formatCurrency(buyerPurchaseTotal()) }}</span>
+          </div>
+          @for (row of excessCashList(); track row.farmerId) {
+            <div class="dcb-row dcb-auto">
+              <span class="dcb-label">{{ row.farmerName }}</span>
+              <span class="dcb-amt">{{ formatCurrency(row.amount) }}</span>
+            </div>
+          }
+
+          <div class="dcb-row dcb-total">
+            <span class="dcb-label">{{ 'dcb.total.debit' | i18n }}</span>
+            <span class="dcb-amt">{{ formatCurrency(leftTotal()) }}</span>
+          </div>
+        </div>
+
+        <div class="dcb-col dcb-col-credit">
+          <div class="dcb-col-head">
+            <span class="dcb-col-chip material-symbols-rounded">arrow_downward</span>
+            <h3>{{ 'dcb.credit.title' | i18n }}</h3>
+          </div>
+
+          <div class="dcb-row">
+            <span class="dcb-label">{{ 'dcb.cash.in.hand' | i18n: shopName() }}</span>
+            <input
+              class="dcb-input"
+              type="text"
+              inputmode="decimal"
+              [ngModel]="cashInHand()"
+              (ngModelChange)="cashInHand.set($event)"
+              (input)="sanitize('cashInHand')"
+              [readonly]="!isToday()"
+            />
+          </div>
+          <div class="dcb-row">
+            <span class="dcb-label">{{ 'dcb.opening.balance' | i18n }}</span>
+            <input
+              class="dcb-input"
+              type="text"
+              inputmode="decimal"
+              [ngModel]="opening()"
+              (ngModelChange)="opening.set($event)"
+              (input)="sanitize('opening')"
+              [readonly]="!isToday()"
+            />
+          </div>
+
+          <div class="dcb-row dcb-auto">
+            <span class="dcb-label">{{ 'dcb.credit.balance' | i18n }}</span>
+            <span class="dcb-amt">{{ formatCurrency(buyerReceivedTotal()) }}</span>
+          </div>
+          <div class="dcb-row dcb-auto">
+            <span class="dcb-label">{{ 'dcb.commission' | i18n }}</span>
+            <span class="dcb-amt">{{ formatCurrency(commissionTotal()) }}</span>
+          </div>
+          <div class="dcb-row dcb-auto">
+            <span class="dcb-label">{{ 'dcb.installment' | i18n }}</span>
+            <span class="dcb-amt">{{ formatCurrency(installmentTotal()) }}</span>
+          </div>
+
+          <div class="dcb-row dcb-total">
+            <span class="dcb-label">{{ 'dcb.total.credit' | i18n }}</span>
+            <span class="dcb-amt">{{ formatCurrency(rightTotal()) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dcb-remaining">
+        <span class="dcb-label">{{ 'dcb.remaining' | i18n }}</span>
+        <span class="dcb-amt">{{ formatCurrency(remaining()) }}</span>
+      </div>
+
+      <div class="dcb-record">
+        <div class="dcb-record-head">
+          <span class="material-symbols-rounded">info</span>
+          <h4>{{ 'dcb.record.only.title' | i18n }}</h4>
+        </div>
+        <p class="dcb-record-note">{{ 'dcb.record.only.note' | i18n }}</p>
+        @for (row of nonCashList(); track row.farmerId) {
+          <div class="dcb-row">
+            <span class="dcb-label">{{ row.farmerName }}</span>
+            <span class="dcb-amt">{{ formatCurrency(row.amount) }}</span>
+          </div>
+        } @empty {
+          <p class="no-records">{{ 'msg.no.records' | i18n }}</p>
+        }
+      </div>
+
+      @if (isToday()) {
+        <div class="form-row">
+          <div class="form-group">
+            <label for="dcbRemarks">{{ 'dcb.remarks' | i18n }}</label>
+            <input id="dcbRemarks" type="text" [ngModel]="remarks()" (ngModelChange)="remarks.set($event)" />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="save()">
+            <span class="material-symbols-rounded">save</span>
+            {{ 'btn.save' | i18n }}
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}

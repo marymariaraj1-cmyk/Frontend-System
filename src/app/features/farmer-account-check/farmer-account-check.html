@@ -212,10 +212,7 @@
               <span class="material-symbols-rounded">save</span>
               {{ 'fac.update.ledger' | i18n }}
             </button>
-            <button type="button" class="btn btn-secondary" (click)="printReceipt()">
-              <span class="material-symbols-rounded">print</span>
-              {{ 'btn.print' | i18n }}
-            </button>
+            <app-receipt-print-buttons [cssClass]="'btn btn-secondary'" (print)="printReceipt($event)" />
           </div>
         }
       }

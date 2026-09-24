@@ -6,6 +6,7 @@ import { FarmerLedgerEntry } from '../../core/models/ledger';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
 import { FarmerLedgerService } from '../../core/services/farmer-ledger.service';
 import { I18nService } from '../../core/services/i18n.service';
+import { LedgerNavService } from '../../core/services/ledger-nav.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatCurrency } from '../../core/utils/currency-format.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
@@ -20,6 +21,7 @@ import { extractErrorMessage } from '../../core/utils/http-error.util';
 export class FarmerLedgerListComponent implements OnInit {
   private readonly service = inject(FarmerLedgerService);
   private readonly router = inject(Router);
+  private readonly ledgerNav = inject(LedgerNavService);
   private readonly i18n = inject(I18nService);
   private readonly toast = inject(ToastService);
 
@@ -78,14 +80,8 @@ export class FarmerLedgerListComponent implements OnInit {
   }
 
   protected viewDetail(entry: FarmerLedgerEntry): void {
-    this.router.navigate(['/farmer-ledger-detail'], {
-      queryParams: {
-        farmerId: entry.farmerId,
-        farmerName: entry.farmerName,
-        source: 'ledger'
-      },
-      queryParamsHandling: 'merge'
-    });
+    this.ledgerNav.setFarmer(entry.farmerId, entry.farmerName, 'ledger');
+    this.router.navigate(['/farmer-ledger-detail']);
   }
 
   private loadList(): void {

@@ -1,0 +1,356 @@
+<div class="se-page">
+  <div class="se-header">
+    <span class="se-accent"></span>
+    <span class="se-ring se-ring-1"></span>
+    <span class="se-ring se-ring-2"></span>
+    <span class="material-symbols-rounded se-glyph">edit_note</span>
+    <div class="se-head-main">
+      <div class="se-header-icon">
+        <span class="material-symbols-rounded">edit_note</span>
+      </div>
+      <div class="se-header-text">
+        <h2>{{ 'fls.edit.title' | i18n }}</h2>
+        <p class="se-subtitle">{{ 'fls.edit.subtitle' | i18n }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="se-card-head">
+      <span class="se-chip material-symbols-rounded">search</span>
+      <h3>{{ 'fls.header' | i18n }}</h3>
+    </div>
+    <div class="card-body se-farmer-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="flowerName">{{ 'flower.name' | i18n }} <span class="required">*</span></label>
+          <app-autocomplete
+            [items]="master().flowers"
+            [invalid]="flowerInvalid()"
+            [(value)]="flowerName"
+            (onSelect)="flowerName.set($event)"
+            (blur)="validateFlower()"
+          />
+          @if (flowerInvalid()) {
+            <span class="field-error">{{ 'sales.error.flower.notfound' | i18n }}</span>
+          }
+        </div>
+        <div class="form-group">
+          <label for="salesDate">{{ 'sales.date' | i18n }} <span class="required">*</span></label>
+          <input id="salesDate" name="salesDate" type="date" [(ngModel)]="salesDate" required />
+        </div>
+        <div class="form-group form-group-actions">
+          <button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="fetching()"
+            (click)="fetchData()"
+          >
+            <span class="material-symbols-rounded">search</span>
+            {{ 'sales.edit.fetch' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="se-card-head">
+      <span class="se-chip se-chip-pink material-symbols-rounded">shopping_cart</span>
+      <h3>{{ 'fls.buyer.purchase' | i18n }}</h3>
+      <span class="se-head-count">{{ buyerRows().length }}</span>
+    </div>
+    <div class="card-body">
+      <div class="table-container">
+        <table class="sales-grid-table">
+          <colgroup>
+            <col class="c-sno" />
+            <col class="c-bag" />
+            <col class="c-name" />
+            <col class="c-qty" />
+            <col class="c-rate" />
+            <col class="c-amount" />
+            <col class="c-actions" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th style="width: 50px">{{ 'flower.sno' | i18n }}</th>
+              <th style="width: 60px">{{ 'sales.bag' | i18n }}</th>
+              <th>{{ 'fls.buyer.name' | i18n }}</th>
+              <th>{{ 'sales.qty' | i18n }}</th>
+              <th>{{ 'sales.rate' | i18n }}</th>
+              <th>{{ 'sales.amount' | i18n }}</th>
+              <th style="width: 90px">{{ 'flower.actions' | i18n }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (noData() && buyerRows().length === 0 && farmerRows().length === 0) {
+              <tr>
+                <td colspan="7" class="text-center">{{ 'sales.edit.no.data' | i18n }}</td>
+              </tr>
+            }
+            @for (row of buyerRows(); track row.salesId; let i = $index) {
+              <tr [class.row-editing]="row.enabled" [class.row-edited]="row.edited">
+                <td class="row-index text-center">{{ i + 1 }}</td>
+                <td><div class="grid-display">{{ row.bag }}</div></td>
+                @if (row.enabled) {
+                  <td>
+                    <app-autocomplete
+                      [items]="master().buyers"
+                      [invalid]="row.nameInvalid"
+                      [value]="row.name"
+                      (valueChange)="updateBuyerRow(i, { name: $event, nameInvalid: false }); markEdited('buyer', i)"
+                      (onSelect)="updateBuyerRow(i, { name: $event, nameInvalid: false }); markEdited('buyer', i)"
+                      (blur)="validateName('buyer', i)"
+                    />
+                    @if (row.nameInvalid) {
+                      <span class="field-error">{{ 'sales.error.buyer.notfound.row' | i18n: (i + 1) }}</span>
+                    }
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      class="grid-input"
+                      [ngModel]="row.qty"
+                      (ngModelChange)="updateBuyerRow(i, { qty: sanitizeDecimal($event) }); onQtyChange('buyer', i); markEdited('buyer', i)"
+                      (keydown)="onDecimalKeydown($event)"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      class="grid-input"
+                      [ngModel]="row.rate"
+                      (ngModelChange)="updateBuyerRow(i, { rate: sanitizeDecimal($event) })"
+                      (input)="recalcRowAmount('buyer', i)"
+                      (keydown)="onDecimalKeydown($event)"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      class="grid-input"
+                      [ngModel]="row.amount"
+                      (ngModelChange)="updateBuyerRow(i, { amount: sanitizeDecimal($event) }); recalcRowRate('buyer', i)"
+                      (keydown)="onDecimalKeydown($event)"
+                    />
+                  </td>
+                  <td class="text-center action-cell">
+                    <span
+                      class="action-icon delete-row-icon"
+                      [title]="'btn.delete' | i18n"
+                      (click)="openDeleteConfirm('buyer', i)"
+                    >
+                      <span class="material-symbols-rounded">delete</span>
+                    </span>
+                    <span
+                      class="action-icon edit-row-icon"
+                      [title]="'sales.edit.disable' | i18n"
+                      (click)="toggleRowEdit('buyer', i)"
+                    >
+                      <span class="material-symbols-rounded">lock</span>
+                    </span>
+                  </td>
+                } @else {
+                  <td><div class="grid-display">{{ row.name }}</div></td>
+                  <td><div class="grid-display">{{ row.qty }}</div></td>
+                  <td><div class="grid-display">{{ row.rate }}</div></td>
+                  <td><div class="grid-display">{{ row.amount }}</div></td>
+                  <td class="text-center action-cell">
+                    <span
+                      class="action-icon delete-row-icon"
+                      [title]="'btn.delete' | i18n"
+                      (click)="openDeleteConfirm('buyer', i)"
+                    >
+                      <span class="material-symbols-rounded">delete</span>
+                    </span>
+                    <span
+                      class="action-icon edit-row-icon"
+                      [title]="'sales.edit.enable' | i18n"
+                      (click)="toggleRowEdit('buyer', i)"
+                    >
+                      <span class="material-symbols-rounded">edit</span>
+                    </span>
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="se-card-head">
+      <span class="se-chip se-chip-green material-symbols-rounded">yard</span>
+      <h3>{{ 'fls.farmer.sale' | i18n }}</h3>
+      <span class="se-head-count">{{ farmerRows().length }}</span>
+    </div>
+    <div class="card-body">
+      <div class="table-container">
+        <table class="sales-grid-table">
+          <colgroup>
+            <col class="c-sno" />
+            <col class="c-bag" />
+            <col class="c-name" />
+            <col class="c-qty" />
+            <col class="c-rate" />
+            <col class="c-amount" />
+            <col class="c-actions" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th style="width: 50px">{{ 'flower.sno' | i18n }}</th>
+              <th style="width: 60px">{{ 'sales.bag' | i18n }}</th>
+              <th>{{ 'farmer.name' | i18n }}</th>
+              <th>{{ 'sales.qty' | i18n }}</th>
+              <th>{{ 'sales.rate' | i18n }}</th>
+              <th>{{ 'sales.amount' | i18n }}</th>
+              <th style="width: 90px">{{ 'flower.actions' | i18n }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of farmerRows(); track row.salesId; let i = $index) {
+              <tr [class.row-editing]="row.enabled" [class.row-edited]="row.edited">
+                <td class="row-index text-center">{{ i + 1 }}</td>
+                <td><div class="grid-display">{{ row.bag }}</div></td>
+                @if (row.enabled) {
+                  <td>
+                    <app-autocomplete
+                      [items]="master().farmers"
+                      [invalid]="row.nameInvalid"
+                      [value]="row.name"
+                      (valueChange)="updateFarmerRow(i, { name: $event, nameInvalid: false }); markEdited('farmer', i)"
+                      (onSelect)="updateFarmerRow(i, { name: $event, nameInvalid: false }); markEdited('farmer', i)"
+                      (blur)="validateName('farmer', i)"
+                    />
+                    @if (row.nameInvalid) {
+                      <span class="field-error">{{ 'fls.edit.error.farmer.notfound.row' | i18n: (i + 1) }}</span>
+                    }
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      class="grid-input"
+                      [ngModel]="row.qty"
+                      (ngModelChange)="updateFarmerRow(i, { qty: sanitizeDecimal($event) }); onQtyChange('farmer', i); markEdited('farmer', i)"
+                      (keydown)="onDecimalKeydown($event)"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      class="grid-input"
+                      [ngModel]="row.rate"
+                      (ngModelChange)="updateFarmerRow(i, { rate: sanitizeDecimal($event) })"
+                      (input)="recalcRowAmount('farmer', i)"
+                      (keydown)="onDecimalKeydown($event)"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      class="grid-input"
+                      [ngModel]="row.amount"
+                      (ngModelChange)="updateFarmerRow(i, { amount: sanitizeDecimal($event) }); recalcRowRate('farmer', i)"
+                      (keydown)="onDecimalKeydown($event)"
+                    />
+                  </td>
+                  <td class="text-center action-cell">
+                    <span
+                      class="action-icon delete-row-icon"
+                      [title]="'btn.delete' | i18n"
+                      (click)="openDeleteConfirm('farmer', i)"
+                    >
+                      <span class="material-symbols-rounded">delete</span>
+                    </span>
+                    <span
+                      class="action-icon edit-row-icon"
+                      [title]="'sales.edit.disable' | i18n"
+                      (click)="toggleRowEdit('farmer', i)"
+                    >
+                      <span class="material-symbols-rounded">lock</span>
+                    </span>
+                  </td>
+                } @else {
+                  <td><div class="grid-display">{{ row.name }}</div></td>
+                  <td><div class="grid-display">{{ row.qty }}</div></td>
+                  <td><div class="grid-display">{{ row.rate }}</div></td>
+                  <td><div class="grid-display">{{ row.amount }}</div></td>
+                  <td class="text-center action-cell">
+                    <span
+                      class="action-icon delete-row-icon"
+                      [title]="'btn.delete' | i18n"
+                      (click)="openDeleteConfirm('farmer', i)"
+                    >
+                      <span class="material-symbols-rounded">delete</span>
+                    </span>
+                    <span
+                      class="action-icon edit-row-icon"
+                      [title]="'sales.edit.enable' | i18n"
+                      (click)="toggleRowEdit('farmer', i)"
+                    >
+                      <span class="material-symbols-rounded">edit</span>
+                    </span>
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn btn-primary"
+          [disabled]="saving()"
+          (click)="save()"
+        >
+          <span class="material-symbols-rounded">save</span>
+          {{ 'btn.save' | i18n }}
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="clearForm()">
+          <span class="material-symbols-rounded">cleaning_services</span>
+          {{ 'btn.clear' | i18n }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+@if (deleteTarget()) {
+  <div class="report-popup-overlay" (click)="onDeleteOverlayClick($event)">
+    <div class="report-popup" appDraggable>
+      <div class="report-popup-header">
+        <div class="report-popup-title-col">
+          <h3>{{ 'btn.delete' | i18n }}</h3>
+          <div class="report-popup-name">{{ deleteTarget()?.name }}</div>
+        </div>
+        <button class="report-popup-close" (click)="closeDelete()">&times;</button>
+      </div>
+      <div class="report-popup-body">
+        <div class="confirm-text">{{ 'msg.confirm.delete' | i18n }}</div>
+        <div class="confirm-actions">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            [disabled]="deleting()"
+            (click)="closeDelete()"
+          >
+            {{ 'btn.cancel' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="btn btn-danger"
+            [disabled]="deleting()"
+            (click)="confirmDelete()"
+          >
+            {{ 'btn.delete' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

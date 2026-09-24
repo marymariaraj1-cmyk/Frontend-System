@@ -14,8 +14,9 @@ import { ApiService } from './api.service';
 export class BuyerLedgerService {
   private readonly api = inject(ApiService);
 
-  getBuyerList(): Observable<ApiResponse<BuyerLedgerEntry[]>> {
-    return this.api.get<BuyerLedgerEntry[]>('/buyer-ledger-list/data');
+  getBuyerList(includeExcluded?: boolean): Observable<ApiResponse<BuyerLedgerEntry[]>> {
+    const suffix = includeExcluded ? '?includeExcluded=true' : '';
+    return this.api.get<BuyerLedgerEntry[]>(`/buyer-ledger-list/data${suffix}`);
   }
 
   getBuyerDetail(

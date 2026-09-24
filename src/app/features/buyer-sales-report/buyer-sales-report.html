@@ -206,10 +206,7 @@
           </table>
         </div>
         <div class="form-actions">
-          <button type="button" class="btn btn-secondary" (click)="printPopup()">
-            <span class="material-symbols-rounded">print</span>
-            {{ 'buyer.sales.report.detail.print' | i18n }}
-          </button>
+          <app-receipt-print-buttons [cssClass]="'btn btn-secondary'" (print)="printPopup($event)" />
         </div>
       </div>
     </div>

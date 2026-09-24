@@ -186,54 +186,7 @@
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.14);
 }
 
-/* ==================== TABLE ==================== */
-.table-container {
-  overflow-x: auto;
-  margin-top: 12px;
-  border: 1px solid #e4ecf2;
-  border-radius: 12px;
-}
-
-.report-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-.report-table th,
-.report-table td {
-  padding: 10px 12px;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.report-table th {
-  background: linear-gradient(135deg, #eef2ff 0%, #ecfdf5 100%);
-  font-weight: 700;
-  color: #3730a3;
-  white-space: nowrap;
-  border-bottom: 2px solid #c7d2fe;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-}
-
-.report-table .amount-col {
-  text-align: right;
-  font-weight: 600;
-}
-
-.report-table tbody tr {
-  transition: background 0.15s;
-}
-
-.report-table tbody tr:hover {
-  background: #f5f8ff;
-}
-
-.report-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
+/* ==================== TABLE (shared spec in global styles.css → .ldg-tbl) ==================== */
 .rpt-sno {
   font-weight: 600;
   color: #8a93a6;
@@ -280,29 +233,27 @@
   color: #2b2f3a;
 }
 
-/* ==================== VIEW BUTTON ==================== */
-.rpt-view-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border: none;
-  border-radius: 10px;
-  color: #fff;
-  background: linear-gradient(135deg, #4338ca, #0d9488);
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 3px 8px rgba(67, 56, 202, 0.25);
+.rpt-balance {
+  display: inline-block;
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 20px;
 }
 
-.rpt-view-btn .material-symbols-rounded {
-  font-size: 18px;
+.rpt-balance.credit {
+  color: #059669;
+  background: rgba(16, 185, 129, 0.1);
 }
 
-.rpt-view-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 14px rgba(67, 56, 202, 0.35);
+.rpt-balance.debit {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.09);
+}
+
+.rpt-balance.settled {
+  color: #5f677a;
+  background: rgba(100, 116, 139, 0.12);
 }
 
 /* ==================== LOADER ==================== */

@@ -66,21 +66,9 @@
       <span class="se-chip material-symbols-rounded">local_florist</span>
       <h3>{{ 'sales.list' | i18n }}</h3>
       <span class="se-head-count">{{ rows().length }}</span>
-      @if (bagLimitNotice()) {
-        <button
-          type="button"
-          class="se-baglimit-toggle"
-          [class.active]="bagLimitsOpen()"
-          (click)="bagLimitsOpen.set(!bagLimitsOpen())"
-        >
-          <span class="material-symbols-rounded">shopping_basket</span>
-          {{ 'bag.limit.title' | i18n }}
-          <span class="bag-limit-count-badge">{{ bagLimits().length }}</span>
-        </button>
-      }
     </div>
     <div class="card-body">
-      @if (bagLimitNotice() && bagLimitsOpen()) {
+      @if (bagLimitNotice()) {
         <div class="bag-limit-panel">
           <div class="bag-limit-panel-head">
             <span class="bag-limit-head-left">
@@ -94,7 +82,7 @@
               <thead>
                 <tr>
                   <th class="bag-limit-flower">{{ 'sales.flower' | i18n }}</th>
-                  <th class="bag-limit-num">{{ 'sales.bag' | i18n }}</th>
+                  <th class="bag-limit-num">{{ 'bag.limit.limit' | i18n }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -155,7 +143,8 @@
                   type="text"
                   class="grid-input"
                   [ngModel]="row.totalWeight"
-                  (ngModelChange)="updateRow(i, { totalWeight: $event }); onQtyChange(i)"
+                  (ngModelChange)="updateRow(i, { totalWeight: sanitizeDecimal($event) }); onQtyChange(i)"
+                  (keydown)="onDecimalKeydown($event)"
                 />
               </td>
               <td>
@@ -163,8 +152,9 @@
                   type="text"
                   class="grid-input"
                   [ngModel]="row.price"
-                  (ngModelChange)="updateRow(i, { price: $event })"
+                  (ngModelChange)="updateRow(i, { price: sanitizeDecimal($event) })"
                   (input)="recalcRowAmount(i)"
+                  (keydown)="onDecimalKeydown($event)"
                 />
               </td>
               <td>
@@ -172,7 +162,8 @@
                   type="text"
                   class="grid-input"
                   [ngModel]="row.amount"
-                  (ngModelChange)="updateRow(i, { amount: $event }); recalcRowRate(i)"
+                  (ngModelChange)="updateRow(i, { amount: sanitizeDecimal($event) }); recalcRowRate(i)"
+                  (keydown)="onDecimalKeydown($event)"
                 />
               </td>
               <td>
@@ -237,9 +228,7 @@
         <span class="material-symbols-rounded">save</span>
         {{ 'btn.save' | i18n }}
       </button>
-      <button type="button" class="btn btn-secondary" (click)="printReport()">
-        <span class="material-symbols-rounded">print</span> {{ 'sales.print' | i18n }}
-      </button>
+      <app-receipt-print-buttons [cssClass]="'btn btn-secondary'" (print)="printReport($event)" />
       <button type="button" class="btn btn-secondary" (click)="shareReport()">
         <span class="material-symbols-rounded">share</span> {{ 'sales.share' | i18n }}
       </button>

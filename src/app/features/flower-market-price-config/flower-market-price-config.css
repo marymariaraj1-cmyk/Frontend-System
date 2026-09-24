@@ -1,0 +1,460 @@
+:host {
+  display: block;
+}
+
+/* ==================== TICKER (stock-market band) ==================== */
+.fmpc-ticker {
+  width: 100%;
+  overflow: hidden;
+  height: 40px;
+  background:
+    radial-gradient(circle at 88% -10%, rgba(251, 191, 36, 0.14), transparent 40%),
+    linear-gradient(90deg, #0f172a 0%, #1e293b 55%, #334155 100%);
+  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.18);
+}
+
+.fmpc-ticker-track {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  white-space: nowrap;
+  padding-left: 16px;
+  animation: fmpc-marquee 32s linear infinite;
+  will-change: transform;
+}
+
+.fmpc-ticker-track.paused {
+  animation-play-state: paused;
+}
+
+@keyframes fmpc-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.fmpc-ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.fmpc-ticker-icon {
+  font-size: 16px;
+  color: #fbbf24;
+  line-height: 1;
+}
+
+.fmpc-ticker-name {
+  color: #fff;
+}
+
+.fmpc-ticker-price {
+  color: #fde68a;
+}
+
+.fmpc-trend {
+  font-size: 11px;
+  line-height: 1;
+}
+
+.fmpc-trend.trend-up {
+  color: #22c55e;
+}
+
+.fmpc-trend.trend-down {
+  color: #ef4444;
+}
+
+.fmpc-trend.trend-flat {
+  color: #94a3b8;
+}
+
+/* ==================== HERO (heroband) ==================== */
+.mst-header {
+  background:
+    radial-gradient(circle at 92% -20%, rgba(255, 255, 255, 0.14), transparent 42%),
+    radial-gradient(circle at -8% 130%, rgba(251, 146, 60, 0.35), transparent 48%),
+    linear-gradient(135deg, #1e1b4b 0%, #7c2d12 55%, #ea580c 130%);
+  box-shadow: 0 14px 34px rgba(124, 45, 18, 0.42);
+}
+
+/* ---------- Common controls ---------- */
+.fmpc-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.fmpc-date-input {
+  padding: 9px 12px;
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius-md);
+  font-size: 14px;
+  background: #fff;
+  min-width: 180px;
+}
+
+.fmpc-date-input:focus {
+  outline: none;
+  border-color: var(--sd-primary);
+  box-shadow: 0 0 0 3px rgba(114, 103, 239, 0.15);
+}
+
+.fmpc-fetch-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ---------- Compact table wrapper ---------- */
+.fmpc-table-wrap.table-container {
+  max-width: 520px;
+  margin: 0;
+  padding: 0;
+}
+
+.fmpc-table-wrap .report-table {
+  min-width: 0;
+}
+
+.fmpc-table-wrap.mst-table-wrap .report-table th {
+  padding: 7px 8px;
+  font-size: 11px;
+}
+
+.fmpc-table-wrap.mst-table-wrap .report-table td {
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
+.fmpc-table-wrap .fmpc-actions .action-icon {
+  width: 28px;
+  height: 28px;
+  font-size: 15px;
+}
+
+/* ---------- Column widths (compact) ---------- */
+.fmpc-col-sno {
+  width: 44px;
+  text-align: center;
+}
+
+.fmpc-col-flower {
+  width: 150px;
+  min-width: 0;
+}
+
+.fmpc-col-price {
+  width: 110px;
+  text-align: center;
+}
+
+.fmpc-col-action {
+  width: 90px;
+  text-align: center;
+}
+
+/* Flower cell */
+.fmpc-flower-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fmpc-flower-icon {
+  font-size: 16px;
+  color: var(--sd-primary);
+  flex: 0 0 auto;
+}
+
+.fmpc-flower-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: #2c3350;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.3;
+}
+
+/* Price input */
+.fmpc-price-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.fmpc-input {
+  padding: 6px 8px;
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius-md);
+  font-size: 13px;
+  background: #fff;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.fmpc-input:focus {
+  outline: none;
+  border-color: var(--sd-primary);
+  box-shadow: 0 0 0 3px rgba(114, 103, 239, 0.15);
+}
+
+.fmpc-price-input {
+  width: 90px;
+  text-align: right;
+}
+
+.fmpc-input-error {
+  border-color: #e74c3c !important;
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.15) !important;
+}
+
+.fmpc-error-text {
+  font-size: 12px;
+  color: #e74c3c;
+  line-height: 1.2;
+  text-align: center;
+}
+
+/* Price chip (read-only view) */
+.fmpc-limit-value {
+  display: inline-block;
+  min-width: 38px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #eef1fb;
+  color: #3f5ef0;
+  font-weight: 700;
+  font-size: 13px;
+  text-align: center;
+}
+
+/* Save button row */
+.fmpc-save-row {
+  display: flex;
+  justify-content: center;
+  max-width: 520px;
+  margin-top: 16px;
+}
+
+/* Row actions */
+.fmpc-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.delete-row-icon {
+  color: #e74c3c;
+}
+
+.delete-row-icon:hover {
+  background: #fdecea;
+}
+
+/* Trends */
+.fmpc-trends-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-end;
+  margin-bottom: 16px;
+}
+
+.fmpc-trend-range {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.fmpc-range-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border: 1px solid #e1e6f0;
+  border-radius: 999px;
+  background: #fff;
+  color: #5c667a;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+  transition: all 0.22s;
+}
+
+.fmpc-range-btn .material-symbols-rounded {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.fmpc-range-btn:hover {
+  border-color: #c7d2fe;
+  background: #eef2ff;
+  color: #4338ca;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(99, 102, 241, 0.14);
+}
+
+.fmpc-range-btn.active {
+  background: linear-gradient(135deg, #1e1b4b 0%, #4338ca 55%, #7c3aed 100%);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 6px 16px rgba(76, 29, 149, 0.32);
+}
+
+.fmpc-trend-dates {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.fmpc-charts-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .fmpc-charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fmpc-line-wrap {
+  position: relative;
+  height: 180px;
+  border: 1px solid #eef1f6;
+  border-radius: 10px;
+  padding: 8px;
+  background: #fff;
+}
+
+.fmpc-line-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.fmpc-dot {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2.5px solid #7267ef;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 2px 6px rgba(114, 103, 239, 0.35);
+}
+
+.fmpc-xlabels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 11px;
+  color: #94a3b8;
+  overflow-x: auto;
+  gap: 6px;
+}
+
+.fmpc-donut-wrap {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.fmpc-donut {
+  width: 140px;
+  height: 140px;
+  flex: 0 0 auto;
+}
+
+.fmpc-chart-card {
+  background: #fff;
+  border: 1px solid #eef1f6;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(20, 24, 40, 0.06);
+}
+
+.fmpc-chart-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid #eef1f6;
+  font-weight: 700;
+  font-size: 14px;
+  color: #2c3e50;
+}
+
+.fmpc-chart-body {
+  padding: 16px;
+}
+
+.fmpc-donut-legend {
+  flex: 1;
+  min-width: 160px;
+}
+
+.fmpc-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.fmpc-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.fmpc-legend-name {
+  flex: 1;
+  color: #2c3e50;
+}
+
+.fmpc-legend-price {
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.fmpc-legend-pct {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+/* Delete confirmation popup body */
+.confirm-text {
+  margin-bottom: 18px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #4c5468;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.confirm-actions .btn {
+  min-width: 100px;
+}
