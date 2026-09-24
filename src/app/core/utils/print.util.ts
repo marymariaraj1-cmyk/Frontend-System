@@ -12,8 +12,8 @@ function ensurePrintTrigger(html: string): string {
   return html.slice(0, closeBody) + PRINT_SCRIPT + html.slice(closeBody);
 }
 
-export function printHtml(html: string): boolean {
-  const win = window.open('', '_blank', 'width=320,height=600');
+export function printHtml(html: string, width = 320, height = 600): boolean {
+  const win = window.open('', '_blank', `width=${width},height=${height}`);
   if (!win) {
     return false;
   }

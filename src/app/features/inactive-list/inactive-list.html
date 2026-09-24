@@ -76,25 +76,25 @@
         />
       </div>
       <div class="table-container ilf-table-wrap">
-        <table class="report-table ilf-table">
+        <table class="report-table ilf-table ldg-tbl tbl-indigo">
           <thead>
             <tr>
-              <th style="width: 70px">{{ 'common.sno' | i18n }}</th>
-              <th>{{ 'farmer.name' | i18n }}</th>
-              <th class="amount-col">{{ 'ledger.list.col.outstanding.balance' | i18n }}</th>
+              <th class="col-no">{{ 'common.sno' | i18n }}</th>
+              <th class="col-name">{{ 'farmer.name' | i18n }}</th>
+              <th class="col-outstanding">{{ 'ledger.list.col.outstanding.balance' | i18n }}</th>
             </tr>
           </thead>
           <tbody>
             @for (row of filteredFarmers(); track row.farmerId; let i = $index) {
               <tr>
-                <td class="ilf-sno">{{ i + 1 }}</td>
-                <td>
+                <td class="col-no ilf-sno">{{ i + 1 }}</td>
+                <td class="col-name">
                   <div class="mst-name-cell">
                     <span class="row-avatar">{{ initials(row.farmerName) }}</span>
                     <span class="ilf-name">{{ row.farmerName }}</span>
                   </div>
                 </td>
-                <td class="amount-col">
+                <td class="col-outstanding">
                   <span class="ilf-balance" [class]="balanceClass(row.outstandingBalance)">
                     {{ formatCurrency(outstandingAbs(row.outstandingBalance)) }}
                   </span>
@@ -125,25 +125,25 @@
         />
       </div>
       <div class="table-container ilf-table-wrap">
-        <table class="report-table ilf-table">
+        <table class="report-table ilf-table ldg-tbl tbl-teal">
           <thead>
             <tr>
-              <th style="width: 70px">{{ 'common.sno' | i18n }}</th>
-              <th>{{ 'buyer.name' | i18n }}</th>
-              <th class="amount-col">{{ 'ledger.list.col.outstanding.balance' | i18n }}</th>
+              <th class="col-no">{{ 'common.sno' | i18n }}</th>
+              <th class="col-name">{{ 'buyer.name' | i18n }}</th>
+              <th class="col-outstanding">{{ 'ledger.list.col.outstanding.balance' | i18n }}</th>
             </tr>
           </thead>
           <tbody>
             @for (row of filteredBuyers(); track row.buyerId; let i = $index) {
               <tr>
-                <td class="ilf-sno">{{ i + 1 }}</td>
-                <td>
+                <td class="col-no ilf-sno">{{ i + 1 }}</td>
+                <td class="col-name">
                   <div class="mst-name-cell">
                     <span class="row-avatar">{{ initials(row.buyerName) }}</span>
                     <span class="ilf-name">{{ row.buyerName }}</span>
                   </div>
                 </td>
-                <td class="amount-col">
+                <td class="col-outstanding">
                   <span class="ilf-balance" [class]="balanceClass(row.outstandingBalance)">
                     {{ formatCurrency(outstandingAbs(row.outstandingBalance)) }}
                   </span>

@@ -23,34 +23,45 @@
         <span class="material-symbols-rounded">arrow_back</span>
         {{ 'btn.back.to.buyers' | i18n }}
       </button>
-      <button type="button" class="btn btn-sm ldg-action ldg-action--primary" (click)="printDetail()">
-        <span class="material-symbols-rounded">print</span>
-        {{ 'btn.print' | i18n }}
-      </button>
+      <app-receipt-print-buttons [cssClass]="'btn btn-sm ldg-action ldg-action--primary'" (print)="printDetail($event)" />
     </div>
   </div>
 
-  @if (loaded()) {
+  @if (loaded() && !isReport()) {
     <div class="ldg-hero-stats">
       <div class="ldg-stat-chip">
         <span class="ldg-stat-icon material-symbols-rounded">flag</span>
         <div class="ldg-stat-meta">
           <span class="ldg-stat-label">{{ 'ledger.detail.col.opening.balance' | i18n }}</span>
-          <span class="ldg-stat-value">{{ formatCurrency(totalOpening()) }}</span>
+          <span class="ldg-stat-value">{{ formatCurrency(startOpening()) }}</span>
         </div>
       </div>
       <div class="ldg-stat-chip">
         <span class="ldg-stat-icon material-symbols-rounded">shopping_bag</span>
         <div class="ldg-stat-meta">
-          <span class="ldg-stat-label">{{ 'buyer.ledger.detail.col.purchase' | i18n }}</span>
+          <span class="ldg-stat-label">{{ 'buyer.ledger.detail.col.total.purchase' | i18n }}</span>
           <span class="ldg-stat-value">{{ formatCurrency(totalPurchase()) }}</span>
         </div>
       </div>
       <div class="ldg-stat-chip">
         <span class="ldg-stat-icon material-symbols-rounded">payments</span>
         <div class="ldg-stat-meta">
-          <span class="ldg-stat-label">{{ 'buyer.ledger.detail.col.cash' | i18n }}</span>
+          <span class="ldg-stat-label">{{ 'buyer.ledger.detail.col.total.cash' | i18n }}</span>
           <span class="ldg-stat-value">{{ formatCurrency(totalCash()) }}</span>
+        </div>
+      </div>
+      <div class="ldg-stat-chip">
+        <span class="ldg-stat-icon material-symbols-rounded">today</span>
+        <div class="ldg-stat-meta">
+          <span class="ldg-stat-label">{{ 'buyer.ledger.detail.col.day.purchase' | i18n }}</span>
+          <span class="ldg-stat-value">{{ formatCurrency(currentDayPurchase()) }}</span>
+        </div>
+      </div>
+      <div class="ldg-stat-chip">
+        <span class="ldg-stat-icon material-symbols-rounded">today</span>
+        <div class="ldg-stat-meta">
+          <span class="ldg-stat-label">{{ 'buyer.ledger.detail.col.day.cash' | i18n }}</span>
+          <span class="ldg-stat-value">{{ formatCurrency(currentDayCash()) }}</span>
         </div>
       </div>
       <div class="ldg-stat-chip ldg-stat-balance">
@@ -125,8 +136,8 @@
             <th style="width: 50px">{{ 'txn.sno' | i18n }}</th>
             <th>{{ 'ledger.report.col.sales.date' | i18n }}</th>
             @if (isReport()) {
-              <th class="amount-col">{{ 'ledger.report.col.debit.amt' | i18n }}</th>
               <th class="amount-col">{{ 'ledger.report.col.credit.amt' | i18n }}</th>
+              <th class="amount-col">{{ 'ledger.report.col.debit.amt' | i18n }}</th>
             } @else {
               <th class="amount-col">{{ 'ledger.detail.col.opening.balance' | i18n }}</th>
               <th class="amount-col">{{ 'buyer.ledger.detail.col.purchase' | i18n }}</th>
@@ -142,6 +153,16 @@
               <td>{{ row.salesDate }}</td>
               @if (isReport()) {
                 <td class="amount-col">
+                  <span class="amt-credit">
+                    {{ formatCurrency(row.cash) }}
+                    @if (isPaymentBuyer() && row.cash > 0) {
+                      <a class="view-link" (click)="openPopup(row.salesDate, row.ledgerActive)" title="View">
+                        <span class="material-symbols-rounded view-icon">visibility</span>
+                      </a>
+                    }
+                  </span>
+                </td>
+                <td class="amount-col">
                   <span class="amt-debit">
                     {{ formatCurrency(row.purchase) }}
                     @if (row.purchase > 0) {
@@ -151,7 +172,6 @@
                     }
                   </span>
                 </td>
-                <td class="amount-col"><span class="amt-credit">{{ formatCurrency(row.cash) }}</span></td>
               } @else {
                 <td class="amount-col">{{ formatCurrency(row.openingBalance) }}</td>
                 <td class="amount-col">
@@ -201,8 +221,8 @@
             @if (isReport()) {
               <tr class="report-total-row">
                 <td colspan="2" class="amount-col">{{ 'report.total' | i18n }}</td>
-                <td class="amount-col"><span class="amt-debit">{{ formatCurrency(totalPurchase()) }}</span></td>
                 <td class="amount-col"><span class="amt-credit">{{ formatCurrency(totalCash()) }}</span></td>
+                <td class="amount-col"><span class="amt-debit">{{ formatCurrency(totalPurchase()) }}</span></td>
               </tr>
             } @else {
               <tr class="report-total-row">
@@ -217,26 +237,55 @@
         }
       </table>
     </div>
-    @if (displayRows().length > 0) {
-      <div class="ledger-summary">
-        <div class="ledger-summary-title">
-          <span class="material-symbols-rounded">receipt_long</span> {{ 'ledger.summary.title' | i18n }}
+    @if (!isReport() && displayRows().length > 0) {
+      <div class="ledger-summary-wrap">
+        <div class="ledger-summary">
+          <div class="ledger-summary-title">
+            <span class="material-symbols-rounded">receipt_long</span> {{ 'ledger.summary.title' | i18n }}
+          </div>
+          <div class="ledger-summary-row debit-row">
+            <span class="ledger-summary-icon credit"><span class="material-symbols-rounded">shopping_bag</span></span>
+            <span class="ledger-summary-label">{{ 'ledger.summary.flower.purchase' | i18n }}</span>
+            <span class="ledger-summary-value">{{ formatCurrency(totalPurchase()) }}</span>
+          </div>
+          <div class="ledger-summary-row credit-row">
+            <span class="ledger-summary-icon debit"><span class="material-symbols-rounded">payments</span></span>
+            <span class="ledger-summary-label">{{ 'ledger.summary.cash.received' | i18n }}</span>
+            <span class="ledger-summary-value">{{ formatCurrency(totalCash()) }}</span>
+          </div>
+          <div class="ledger-summary-row balance" [class.balance-debit]="balanceIsDebit()" [class.balance-credit]="balanceIsCredit()">
+            <span class="ledger-summary-icon balance-icon"><span class="material-symbols-rounded">account_balance_wallet</span></span>
+            <span class="ledger-summary-label">{{ balanceLabel() }}</span>
+            <span class="ledger-summary-value">{{ formatCurrency(balanceAbs()) }}</span>
+          </div>
         </div>
-        <div class="ledger-summary-row debit-row">
-          <span class="ledger-summary-icon credit"><span class="material-symbols-rounded">shopping_bag</span></span>
-          <span class="ledger-summary-label">{{ 'ledger.summary.flower.purchase' | i18n }}</span>
-          <span class="ledger-summary-value">{{ formatCurrency(totalPurchase()) }}</span>
-        </div>
-        <div class="ledger-summary-row credit-row">
-          <span class="ledger-summary-icon debit"><span class="material-symbols-rounded">payments</span></span>
-          <span class="ledger-summary-label">{{ 'ledger.summary.cash.received' | i18n }}</span>
-          <span class="ledger-summary-value">{{ formatCurrency(totalCash()) }}</span>
-        </div>
-        <div class="ledger-summary-row balance" [class.balance-debit]="balanceIsDebit()" [class.balance-credit]="balanceIsCredit()">
-          <span class="ledger-summary-icon balance-icon"><span class="material-symbols-rounded">account_balance_wallet</span></span>
-          <span class="ledger-summary-label">{{ balanceLabel() }}</span>
-          <span class="ledger-summary-value">{{ formatCurrency(balanceAbs()) }}</span>
-        </div>
+        @if (latestEntry(); as last) {
+          <div class="ledger-summary">
+            <div class="ledger-summary-title">
+              <span class="material-symbols-rounded">history</span> {{ 'ledger.summary.latest.title' | i18n }}
+            </div>
+            <div class="ledger-summary-row">
+              <span class="ledger-summary-icon date"><span class="material-symbols-rounded">event</span></span>
+              <span class="ledger-summary-label">{{ 'ledger.report.col.sales.date' | i18n }}</span>
+              <span class="ledger-summary-value">{{ last.salesDate }}</span>
+            </div>
+            <div class="ledger-summary-row debit-row">
+              <span class="ledger-summary-icon credit"><span class="material-symbols-rounded">shopping_bag</span></span>
+              <span class="ledger-summary-label">{{ 'ledger.summary.flower.purchase' | i18n }}</span>
+              <span class="ledger-summary-value">{{ formatCurrency(last.purchase) }}</span>
+            </div>
+            <div class="ledger-summary-row credit-row">
+              <span class="ledger-summary-icon debit"><span class="material-symbols-rounded">payments</span></span>
+              <span class="ledger-summary-label">{{ 'ledger.summary.cash.received' | i18n }}</span>
+              <span class="ledger-summary-value">{{ formatCurrency(last.cash) }}</span>
+            </div>
+            <div class="ledger-summary-row balance">
+              <span class="ledger-summary-icon balance-icon"><span class="material-symbols-rounded">account_balance_wallet</span></span>
+              <span class="ledger-summary-label">{{ 'ledger.detail.col.closing.balance' | i18n }}</span>
+              <span class="ledger-summary-value">{{ formatCurrency(last.closingBalance) }}</span>
+            </div>
+          </div>
+        }
       </div>
     }
   </div>
@@ -246,7 +295,10 @@
   <div class="report-popup-overlay" (click)="onOverlayClick($event)">
     <div class="report-popup" appDraggable>
       <div class="report-popup-header">
-        <h3>{{ popupTitle() }}</h3>
+        <div class="report-popup-title-col">
+          <h3>{{ popupTitle() }}</h3>
+          <div class="report-popup-name">{{ buyerName() }}</div>
+        </div>
         <button class="report-popup-close" (click)="closePopup()">&times;</button>
       </div>
       <div class="report-popup-body">
@@ -307,10 +359,7 @@
           </table>
         </div>
         <div class="form-actions">
-          <button type="button" class="btn btn-secondary" (click)="printPopup()">
-            <span class="material-symbols-rounded">print</span>
-            {{ 'buyer.sales.report.detail.print' | i18n }}
-          </button>
+          <app-receipt-print-buttons [cssClass]="'btn btn-secondary'" (print)="printPopup($event)" />
         </div>
       </div>
     </div>

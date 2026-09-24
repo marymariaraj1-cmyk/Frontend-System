@@ -2,12 +2,15 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { DashboardData } from '../../core/models/dashboard-data';
+import { FlowerPriceTickerEntry } from '../../core/models/flower-price-config';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
 import { AuthService } from '../../core/services/auth.service';
 import { DashboardService } from '../../core/services/dashboard.service';
+import { FlowerPriceConfigService } from '../../core/services/flower-price-config.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatCurrency } from '../../core/utils/currency-format.util';
 import { formatDecimal } from '../../core/utils/round-off.util';
+import { formatApiDate } from '../../core/utils/sales.util';
 
 @Component({
   selector: 'app-dashboard',
@@ -20,9 +23,11 @@ export class DashboardComponent implements OnInit {
   protected readonly auth = inject(AuthService);
 
   private readonly dashboardService = inject(DashboardService);
+  private readonly flowerPriceService = inject(FlowerPriceConfigService);
   private readonly toast = inject(ToastService);
 
   protected readonly data = signal<DashboardData | null>(null);
+  protected readonly flowerRates = signal<FlowerPriceTickerEntry[]>([]);
 
   protected readonly trendRange = signal<'week' | 'month'>('week');
 
@@ -31,6 +36,7 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
+    this.loadFlowerRates();
   }
 
   protected setTrendRange(range: 'week' | 'month'): void {
@@ -42,6 +48,34 @@ export class DashboardComponent implements OnInit {
       next: (dashboardData) => this.data.set(dashboardData),
       error: () => this.toast.error('Failed to fetch dashboard data'),
     });
+  }
+
+  private loadFlowerRates(): void {
+    this.flowerPriceService.getTicker().subscribe({
+      next: (res) => {
+        if (res.success) this.flowerRates.set(res.data ?? []);
+      },
+      error: () => {},
+    });
+  }
+
+  protected todayRates(): FlowerPriceTickerEntry[] {
+    const today = formatApiDate(new Date());
+    return this.flowerRates().filter((rate) => this.rateDateKey(rate.priceDate) === today);
+  }
+
+  private rateDateKey(value: string | number[] | null | undefined): string {
+    if (!value) {
+      return '';
+    }
+    if (Array.isArray(value)) {
+      const [year, month, day] = value;
+      if (!year || !month || !day) {
+        return '';
+      }
+      return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    }
+    return String(value).slice(0, 10);
   }
 
   protected activeTrend(): DashboardData['trend'] {

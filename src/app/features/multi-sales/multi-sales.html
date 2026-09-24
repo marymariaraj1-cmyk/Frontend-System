@@ -38,49 +38,8 @@
       <span class="ms-chip material-symbols-rounded">view_list</span>
       <h3>{{ 'multi.sales.grid.title' | i18n }}</h3>
       <span class="ms-head-count">{{ rows().length }}</span>
-      @if (bagLimitNotice()) {
-        <button
-          type="button"
-          class="ms-baglimit-toggle"
-          [class.active]="bagLimitsOpen()"
-          (click)="bagLimitsOpen.set(!bagLimitsOpen())"
-        >
-          <span class="material-symbols-rounded">shopping_basket</span>
-          {{ 'bag.limit.title' | i18n }}
-          <span class="bag-limit-count-badge">{{ bagLimits().length }}</span>
-        </button>
-      }
     </div>
     <div class="card-body">
-      @if (bagLimitNotice() && bagLimitsOpen()) {
-        <div class="bag-limit-panel">
-          <div class="bag-limit-panel-head">
-            <span class="bag-limit-head-left">
-              <span class="material-symbols-rounded">shopping_basket</span>
-              <span>{{ 'bag.limit.title' | i18n }}</span>
-            </span>
-            <span class="bag-limit-count-badge">{{ bagLimits().length }}</span>
-          </div>
-          <div class="bag-limit-table-wrap">
-            <table class="bag-limit-table" style="width: 100%;">
-              <thead>
-                <tr>
-                  <th class="bag-limit-flower">{{ 'sales.flower' | i18n }}</th>
-                  <th class="bag-limit-num">{{ 'sales.bag' | i18n }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (config of bagLimits(); track config.configId) {
-                  <tr>
-                    <td class="bag-limit-flower">{{ config.flowerName }}</td>
-                    <td class="bag-limit-num">{{ config.bagCount ?? 0 }}</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
-      }
       <div class="table-container">
         <table id="salesTable" class="sales-grid-table">
           <thead>
@@ -153,7 +112,8 @@
                     type="text"
                     class="grid-input"
                     [ngModel]="row.totalWeight"
-                    (ngModelChange)="updateRow(i, { totalWeight: $event }); onQtyChange(i)"
+                    (ngModelChange)="updateRow(i, { totalWeight: sanitizeDecimal($event) }); onQtyChange(i)"
+                    (keydown)="onDecimalKeydown($event)"
                   />
                 </td>
                 <td>
@@ -161,8 +121,9 @@
                     type="text"
                     class="grid-input"
                     [ngModel]="row.price"
-                    (ngModelChange)="updateRow(i, { price: $event })"
+                    (ngModelChange)="updateRow(i, { price: sanitizeDecimal($event) })"
                     (input)="recalcRowAmount(i)"
+                    (keydown)="onDecimalKeydown($event)"
                   />
                 </td>
                 <td>
@@ -170,7 +131,8 @@
                   type="text"
                   class="grid-input"
                   [ngModel]="row.amount"
-                  (ngModelChange)="updateRow(i, { amount: $event }); recalcRowRate(i)"
+                  (ngModelChange)="updateRow(i, { amount: sanitizeDecimal($event) }); recalcRowRate(i)"
+                  (keydown)="onDecimalKeydown($event)"
                 />
                 </td>
                 <td>
@@ -230,9 +192,7 @@
         <span class="material-symbols-rounded">save</span>
         {{ 'btn.save' | i18n }}
       </button>
-      <button type="button" class="btn btn-secondary" (click)="printReport()">
-        <span class="material-symbols-rounded">print</span> {{ 'sales.print' | i18n }}
-      </button>
+      <app-receipt-print-buttons [cssClass]="'btn btn-secondary'" (print)="printReport($event)" />
       <button type="button" class="btn btn-secondary" (click)="shareReport()">
         <span class="material-symbols-rounded">share</span> {{ 'sales.share' | i18n }}
       </button>

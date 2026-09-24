@@ -25,4 +25,8 @@ export class SalesEditService {
   save(request: SalesEditRequest): Observable<ApiResponse<{ updatedRows: number }>> {
     return this.api.post<{ updatedRows: number }>('/sales-edit/save', request);
   }
+
+  delete(salesId: number): Observable<ApiResponse<{ deletedSalesId: number; remainingRows: number }>> {
+    return this.api.post<{ deletedSalesId: number; remainingRows: number }>('/sales-edit/delete', { salesId });
+  }
 }

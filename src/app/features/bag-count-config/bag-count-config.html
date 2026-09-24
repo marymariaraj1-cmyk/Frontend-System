@@ -13,190 +13,316 @@
     </div>
   </div>
 
-  <div class="mst-search">
-    <span class="material-symbols-rounded mst-search-icon">search</span>
-    <input
-      class="mst-search-input"
-      type="text"
-      placeholder="{{ 'bag.count.config.search' | i18n }}"
-      [(ngModel)]="search"
-    />
-  </div>
-
   <div class="card">
-    <div class="card-header">
-      <h3>
-        <span class="material-symbols-rounded mst-card-icon">style</span>
-        {{ 'bag.count.config.limits.title' | i18n }}
-      </h3>
-    </div>
     <div class="card-body">
-      <div class="table-container mst-table-wrap">
-        <table class="report-table mst-table">
-          <thead>
-            <tr>
-              <th class="bcl-col-sno">{{ 'common.sno' | i18n }}</th>
-              <th class="bcl-col-flower">{{ 'bag.count.config.flower' | i18n }}</th>
-              <th class="bcl-col-limit">{{ 'bag.count.config.bag.count' | i18n }}</th>
-              <th class="bcl-col-date">{{ 'bag.count.config.date' | i18n }}</th>
-              <th class="bcl-col-check">{{ 'bag.count.config.check' | i18n }}</th>
-              <th class="bcl-col-action">{{ 'bag.count.config.action' | i18n }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (flower of filteredFlowers(); track flower.flowerId; let i = $index) {
-              <tr>
-                <td class="bcl-col-sno">{{ i + 1 }}</td>
-                <td class="bcl-col-flower">
-                  <div class="bcl-flower-cell">
-                    <span class="material-symbols-rounded bcl-flower-icon">local_florist</span>
-                    <span class="bcl-flower-name">{{ flower.flowerName }}</span>
-                  </div>
-                </td>
-                <td class="bcl-col-limit">
-                  <div class="bcl-limit-input-wrap">
-                    <span class="material-symbols-rounded bcl-field-icon">package_2</span>
-                    <input
-                      class="bcl-input bcl-input-limit"
-                      type="text"
-                      inputmode="numeric"
-                      [value]="bagCountEdits[flower.flowerId]"
-                      (input)="onBagInput($event, flower.flowerId)"
-                    />
-                  </div>
-                </td>
-                <td class="bcl-col-date">
-                  <input
-                    class="bcl-input bcl-date-input"
-                    type="date"
-                    [value]="dateEdits[flower.flowerId]"
-                    (change)="dateEdits[flower.flowerId] = ($any($event.target).value)"
-                  />
-                </td>
-                <td class="bcl-col-check">
-                  <div class="bcl-toggle" [class.bcl-toggle-on]="bagCheckEdits[flower.flowerId] === 'E'">
-                    <button
-                      type="button"
-                      class="bcl-toggle-btn bcl-toggle-enable"
-                      [class.active]="bagCheckEdits[flower.flowerId] === 'E'"
-                      (click)="setCheck(flower.flowerId, 'E')"
-                      [attr.aria-pressed]="bagCheckEdits[flower.flowerId] === 'E'"
-                    >
-                      {{ 'bag.count.config.enable.short' | i18n }}
-                    </button>
-                    <button
-                      type="button"
-                      class="bcl-toggle-btn bcl-toggle-disable"
-                      [class.active]="bagCheckEdits[flower.flowerId] !== 'E'"
-                      (click)="setCheck(flower.flowerId, 'D')"
-                      [attr.aria-pressed]="bagCheckEdits[flower.flowerId] !== 'E'"
-                    >
-                      {{ 'bag.count.config.disable.short' | i18n }}
-                    </button>
-                  </div>
-                </td>
-                <td class="bcl-col-action">
-                  <div class="bcl-row">
-                    <button
-                      type="button"
-                      class="icon-btn icon-btn-primary icon-btn-sm"
-                      [disabled]="savingFlowerId === flower.flowerId"
-                      [title]="'bag.count.config.save' | i18n"
-                      [attr.aria-label]="'bag.count.config.save' | i18n"
-                      (click)="saveConfig(flower)"
-                    >
-                      <span class="material-symbols-rounded">save</span>
-                    </button>
-                    <button
-                      type="button"
-                      class="icon-btn icon-btn-secondary icon-btn-sm"
-                      title="{{ 'bag.count.config.reset' | i18n }}"
-                      (click)="applyDefault(flower.flowerId)"
-                    >
-                      <span class="material-symbols-rounded">restart_alt</span>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="6" class="no-records">{{ 'common.no.records' | i18n }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
+      <div class="mst-tabs">
+        <button
+          type="button"
+          class="mst-tab"
+          [class.active]="section() === 'setup'"
+          (click)="switchSection('setup')"
+        >
+          <span class="material-symbols-rounded">tune</span>
+          {{ 'bag.count.config.tab.setup' | i18n }}
+        </button>
+        <button
+          type="button"
+          class="mst-tab"
+          [class.active]="section() === 'view'"
+          (click)="switchSection('view')"
+        >
+          <span class="material-symbols-rounded">list_alt</span>
+          {{ 'bag.count.config.tab.view' | i18n }}
+        </button>
       </div>
-    </div>
-  </div>
 
-  <div class="card">
-    <div class="card-header">
-      <h3>
-        <span class="material-symbols-rounded mst-card-icon">history</span>
-        {{ 'bag.count.config.saved.configs' | i18n }}
-      </h3>
-    </div>
-    <div class="card-body">
-      @if (configs().length > 0) {
+      @if (section() === 'setup') {
+        <div class="mst-search">
+          <span class="material-symbols-rounded mst-search-icon">search</span>
+          <input
+            class="mst-search-input"
+            type="text"
+            placeholder="{{ 'bag.count.config.search' | i18n }}"
+            [(ngModel)]="search"
+          />
+        </div>
+
         <div class="table-container mst-table-wrap">
           <table class="report-table mst-table">
             <thead>
               <tr>
                 <th class="bcl-col-sno">{{ 'common.sno' | i18n }}</th>
                 <th class="bcl-col-flower">{{ 'bag.count.config.flower' | i18n }}</th>
+                <th class="bcl-col-farmer">{{ 'farmer.name' | i18n }}</th>
                 <th class="bcl-col-limit">{{ 'bag.count.config.bag.count' | i18n }}</th>
                 <th class="bcl-col-date">{{ 'bag.count.config.date' | i18n }}</th>
-                <th class="bcl-col-check">{{ 'bag.count.config.status' | i18n }}</th>
                 <th class="bcl-col-action">{{ 'bag.count.config.action' | i18n }}</th>
               </tr>
             </thead>
             <tbody>
-              @for (row of configs(); track row.configId; let i = $index) {
+              @for (flower of filteredFlowers(); track flower.flowerId; let i = $index) {
                 <tr>
                   <td class="bcl-col-sno">{{ i + 1 }}</td>
                   <td class="bcl-col-flower">
                     <div class="bcl-flower-cell">
                       <span class="material-symbols-rounded bcl-flower-icon">local_florist</span>
-                      <span class="bcl-flower-name">{{ row.flowerName }}</span>
+                      <span class="bcl-flower-name">{{ flower.flowerName }}</span>
                     </div>
                   </td>
-                  <td class="bcl-col-limit">
-                    <span class="bcl-limit-value">{{ row.bagCount }}</span>
+                  <td class="bcl-col-farmer">
+                    <app-autocomplete
+                      [items]="farmerNames()"
+                      [invalid]="farmerInvalidByFlower[flower.flowerId] ?? false"
+                      [value]="farmerEdits[flower.flowerId] ?? ''"
+                      (valueChange)="onFarmerValueChange(flower.flowerId, $event)"
+                      (onSelect)="onFarmerSelectedForFlower(flower.flowerId, $event)"
+                      (blur)="validateFarmerForFlower(flower.flowerId)"
+                      [placeholder]="'opening.balance.config.farmer.placeholder' | i18n"
+                    />
                   </td>
-                  <td class="bcl-col-date">{{ row.salesDate }}</td>
-                  <td class="bcl-col-check">
-                    <span
-                      class="bcl-status-badge"
-                      [class.bcl-status-enabled]="isEnable(row)"
-                      [class.bcl-status-disabled]="!isEnable(row)"
-                    >
-                      <span class="material-symbols-rounded bcl-status-icon">
-                        {{ isEnable(row) ? 'check_circle' : 'block' }}
-                      </span>
-                      {{ (isEnable(row) ? 'bag.count.config.enabled' : 'bag.count.config.disabled') | i18n }}
-                    </span>
+                  <td class="bcl-col-limit">
+                    <div class="bcl-limit-input-wrap">
+                      <span class="material-symbols-rounded bcl-field-icon">package_2</span>
+                      <input
+                        class="bcl-input bcl-input-limit"
+                        type="text"
+                        inputmode="numeric"
+                        [value]="bagCountEdits[flower.flowerId]"
+                        (input)="onBagInput($event, flower.flowerId)"
+                      />
+                    </div>
+                  </td>
+                  <td class="bcl-col-date">
+                    <input
+                      class="bcl-input bcl-date-input"
+                      type="date"
+                      [value]="dateEdits[flower.flowerId]"
+                      (change)="dateEdits[flower.flowerId] = ($any($event.target).value)"
+                    />
                   </td>
                   <td class="bcl-col-action">
-                    <button
-                      type="button"
-                      class="icon-btn icon-btn-danger icon-btn-sm"
-                      title="{{ 'bag.count.config.delete' | i18n }}"
-                      (click)="deleteConfig(row)"
-                    >
-                      <span class="material-symbols-rounded">delete</span>
-                    </button>
+                    <div class="bcl-row">
+                      <button
+                        type="button"
+                        class="icon-btn icon-btn-primary icon-btn-sm"
+                        [disabled]="savingFlowerId === flower.flowerId"
+                        [title]="'bag.count.config.save' | i18n"
+                        [attr.aria-label]="'bag.count.config.save' | i18n"
+                        (click)="saveConfig(flower)"
+                      >
+                        <span class="material-symbols-rounded">save</span>
+                      </button>
+                      <button
+                        type="button"
+                        class="icon-btn icon-btn-secondary icon-btn-sm"
+                        title="{{ 'bag.count.config.reset' | i18n }}"
+                        (click)="applyDefault(flower.flowerId)"
+                      >
+                        <span class="material-symbols-rounded">restart_alt</span>
+                      </button>
+                    </div>
                   </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="6" class="no-records">{{ 'common.no.records' | i18n }}</td>
                 </tr>
               }
             </tbody>
           </table>
         </div>
-      } @else {
-        <p class="bcl-empty">
-          <span class="material-symbols-rounded bcl-empty-icon">inventory_2</span>
-          {{ 'bag.count.config.no.configs' | i18n }}
-        </p>
+      }
+
+      @if (section() === 'view') {
+        @if (!viewSelectedFarmer()) {
+          <div class="mst-search">
+            <span class="material-symbols-rounded mst-search-icon">search</span>
+            <input
+              class="mst-search-input"
+              type="text"
+              placeholder="{{ 'bag.count.config.search.farmer' | i18n }}"
+              [value]="viewFarmerFilter()"
+              (input)="viewFarmerFilter.set($any($event.target).value)"
+            />
+          </div>
+
+
+
+          <div class="table-container mst-table-wrap bcl-farmer-list-wrap">
+            <table class="report-table mst-table">
+              <thead>
+                <tr>
+                  <th class="bcl-col-sno">{{ 'common.sno' | i18n }}</th>
+                  <th class="bcl-col-flower">{{ 'farmer.name' | i18n }}</th>
+                  <th class="bcl-col-action">{{ 'bag.count.config.action' | i18n }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (farmer of filteredConfiguredFarmers(); track farmer.farmerId; let i = $index) {
+                  <tr>
+                    <td class="bcl-col-sno">{{ i + 1 }}</td>
+                    <td class="bcl-col-flower">
+                      <div class="bcl-flower-cell">
+                        <span class="material-symbols-rounded bcl-flower-icon">person</span>
+                        <span class="bcl-flower-name">{{ farmer.farmerName }}</span>
+                      </div>
+                    </td>
+                    <td class="bcl-col-action">
+                      <div class="bcl-row">
+                        <button
+                          type="button"
+                          class="icon-btn icon-btn-primary icon-btn-sm"
+                          [title]="'common.view' | i18n"
+                          (click)="openFarmerDetail(farmer)"
+                        >
+                          <span class="material-symbols-rounded">visibility</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="3" class="no-records">{{ 'common.no.records' | i18n }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <div class="bcc-detail-header">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="backToFarmerList()">
+              <span class="material-symbols-rounded">arrow_back</span>
+              {{ 'btn.back' | i18n }}
+            </button>
+            <span class="bcc-detail-title">{{ viewSelectedFarmer()?.farmerName }}</span>
+          </div>
+
+          <div class="bcc-report-controls">
+            <div class="bcc-period-buttons">
+              <button
+                type="button"
+                class="bcc-period-btn"
+                [class.active]="period() === 'daily'"
+                (click)="setPeriod('daily')"
+              >
+                {{ 'report.period.daily' | i18n }}
+              </button>
+              <button
+                type="button"
+                class="bcc-period-btn"
+                [class.active]="period() === 'monthly'"
+                (click)="setPeriod('monthly')"
+              >
+                {{ 'report.period.monthly' | i18n }}
+              </button>
+              <button
+                type="button"
+                class="bcc-period-btn"
+                [class.active]="period() === 'yearly'"
+                (click)="setPeriod('yearly')"
+              >
+                {{ 'report.period.yearly' | i18n }}
+              </button>
+            </div>
+            <div class="bcc-date-row">
+              <div class="form-group">
+                <label>{{ 'txn.from.date' | i18n }}</label>
+                <input
+                  class="bcc-date-input"
+                  type="date"
+                  [value]="fromDate()"
+                  (change)="onFromDateChange($any($event.target).value)"
+                />
+              </div>
+              <div class="form-group">
+                <label>{{ 'txn.to.date' | i18n }}</label>
+                <input
+                  class="bcc-date-input"
+                  type="date"
+                  [value]="toDate()"
+                  (change)="onToDateChange($any($event.target).value)"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="table-container mst-table-wrap bcl-detail-wrap">
+            <table class="report-table mst-table">
+              <thead>
+                <tr>
+                  <th class="bcl-col-sno">{{ 'common.sno' | i18n }}</th>
+                  <th class="bcl-col-date">{{ 'bag.count.config.date' | i18n }}</th>
+                  <th class="bcl-col-flower">{{ 'bag.count.config.flower' | i18n }}</th>
+                  <th class="bcl-col-limit">{{ 'bag.count.config.bag.count' | i18n }}</th>
+                  <th class="bcl-col-action">{{ 'bag.count.config.action' | i18n }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of filteredDetailRows(); track row.configId; let i = $index) {
+                  <tr>
+                    <td class="bcl-col-sno">{{ i + 1 }}</td>
+                    <td class="bcl-col-date">{{ row.salesDate }}</td>
+                    <td class="bcl-col-flower">
+                      <div class="bcl-flower-cell">
+                        <span class="material-symbols-rounded bcl-flower-icon">local_florist</span>
+                        <span class="bcl-flower-name">{{ row.flowerName }}</span>
+                      </div>
+                    </td>
+                    <td class="bcl-col-limit">
+                      <span class="bcl-limit-value">{{ row.bagCount }}</span>
+                    </td>
+                    <td class="bcl-col-action">
+                      <div class="bcl-row">
+                        <button
+                          type="button"
+                          class="icon-btn icon-btn-danger icon-btn-sm"
+                          [title]="'bag.count.config.delete' | i18n"
+                          (click)="deleteDetailRow(row)"
+                        >
+                          <span class="material-symbols-rounded">delete</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="5" class="no-records">{{ 'common.no.records' | i18n }}</td>
+                  </tr>
+                }
+                <tr class="bcl-total-row">
+                  <td class="bcl-col-sno"></td>
+                  <td class="bcl-col-date" colspan="2">{{ 'bag.count.config.total' | i18n }}</td>
+                  <td class="bcl-col-limit"><strong>{{ detailTotal() }}</strong></td>
+                  <td class="bcl-col-action"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        }
       }
     </div>
   </div>
+
+  @if (deleteTarget()) {
+    <div class="report-popup-overlay" (click)="onDeleteOverlayClick($event)">
+      <div class="report-popup bcl-popup" appDraggable>
+        <div class="report-popup-header bcl-popup-hero">
+          <div class="report-popup-title-col">
+            <h3>{{ 'bag.count.config.delete' | i18n }}</h3>
+            <div class="report-popup-name">{{ deleteTarget()?.farmerName }} — {{ deleteTarget()?.flowerName }}</div>
+          </div>
+          <button class="report-popup-close" (click)="closeDelete()">&times;</button>
+        </div>
+        <div class="report-popup-body">
+          <div class="confirm-text">{{ deleteConfirmText() }}</div>
+          <div class="confirm-actions">
+            <button class="btn btn-secondary" (click)="closeDelete()">{{ 'btn.cancel' | i18n }}</button>
+            <button class="btn btn-danger" [disabled]="deleting()" (click)="confirmDelete()">
+              {{ 'btn.delete' | i18n }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
 </div>

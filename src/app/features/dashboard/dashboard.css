@@ -136,6 +136,33 @@
   color: var(--sd-primary);
 }
 
+.dash-section {
+  background: #fff;
+  border: 1px solid #eef1f6;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(20, 24, 40, 0.05);
+  padding: 18px 20px;
+  margin-bottom: 26px;
+}
+
+.activity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.activity-grid .kpi-card,
+.activity-grid .master-count-card {
+  height: 100%;
+}
+
+.dash-section .quick-grid:last-child,
+.dash-section .kpi-grid:last-child,
+.dash-section .master-count-grid:last-child,
+.dash-section .activity-grid:last-child {
+  margin-bottom: 0;
+}
+
 /* ==================== QUICK ACTIONS ==================== */
 .quick-grid {
   display: grid;
@@ -254,6 +281,10 @@
 .kpi-tile-comm   { background: linear-gradient(135deg, #f59e0b, #d97706); }
 .kpi-tile-farmers { background: linear-gradient(135deg, #0ea5e9, #2563eb); }
 .kpi-tile-buyers { background: linear-gradient(135deg, #ec4899, #db2777); }
+.kpi-tile-pakki  { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+.kpi-tile-varavu { background: linear-gradient(135deg, #14b8a6, #0f766e); }
+.kpi-tile-final  { background: linear-gradient(135deg, #f43f5e, #be123c); }
+.kpi-tile-gross  { background: linear-gradient(135deg, #6366f1, #4338ca); }
 
 .kpi-body {
   min-width: 0;
@@ -340,6 +371,8 @@
 .mc-farmers { background: linear-gradient(135deg, #0ea5e9, #2563eb); }
 .mc-buyers  { background: linear-gradient(135deg, #ec4899, #db2777); }
 .mc-flowers { background: linear-gradient(135deg, #7267ef, #4f46e5); }
+.mc-inactive-farmers { background: linear-gradient(135deg, #64748b, #475569); }
+.mc-inactive-buyers { background: linear-gradient(135deg, #f59e0b, #b45309); }
 
 .mc-arrow {
   margin-left: auto;
@@ -355,6 +388,55 @@
 
 .master-count-value {
   font-size: 20px;
+}
+
+/* ==================== FLOWER RATES TABLE ==================== */
+.dash-section-link {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sd-primary);
+  text-decoration: none;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.dash-section-link:hover {
+  text-decoration: underline;
+}
+
+.dash-section-link .material-symbols-rounded {
+  font-size: 16px;
+}
+
+.dash-rates-table .amount-col {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.dash-rate-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.dash-rate-trend.trend-up {
+  color: #059669;
+}
+
+.dash-rate-trend.trend-down {
+  color: #e11d48;
+}
+
+.dash-rate-trend.trend-flat {
+  color: #94a3b8;
 }
 
 /* ==================== TREND CHART ==================== */
@@ -622,6 +704,13 @@
 
   .trend-chart-wrap {
     height: 150px;
+  }
+}
+
+@media (max-width: 640px) {
+  .dash-rates-chips {
+    flex-wrap: wrap;
+    overflow: visible;
   }
 }
 

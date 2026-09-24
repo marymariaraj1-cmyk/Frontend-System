@@ -1,0 +1,24 @@
+@if (visible()) {
+  <div
+    class="fmpc-ticker global-ticker"
+    (mouseenter)="tickerPaused.set(true)"
+    (mouseleave)="tickerPaused.set(false)"
+  >
+    <div class="fmpc-ticker-track" [class.paused]="tickerPaused()">
+      @for (entry of tickerDuplicated(); track $index) {
+        <span class="fmpc-ticker-item">
+          <span class="material-symbols-rounded fmpc-ticker-icon">local_florist</span>
+          <span class="fmpc-ticker-name">{{ entry.flowerName }}</span>
+          <span class="fmpc-ticker-price">₹{{ entry.price }}</span>
+          <span
+            class="fmpc-trend"
+            [class.trend-up]="entry.trend === 'up'"
+            [class.trend-down]="entry.trend === 'down'"
+            [class.trend-flat]="entry.trend === 'flat'"
+            >{{ entry.trend === 'up' ? '▲' : entry.trend === 'down' ? '▼' : '—' }}</span
+          >
+        </span>
+      }
+    </div>
+  </div>
+}

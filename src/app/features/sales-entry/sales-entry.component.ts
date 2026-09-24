@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { AutocompleteComponent } from '../../core/components/autocomplete/autocomplete.component';
+import { ReceiptPrintButtonsComponent } from '../../core/components/receipt-print-buttons/receipt-print-buttons.component';
 import { BagCountConfigRow } from '../../core/models/bag-count-config';
 import { SalesLineInput, SalesMasterData } from '../../core/models/sales';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
@@ -9,13 +10,13 @@ import { AuthService } from '../../core/services/auth.service';
 import { BagCountConfigService } from '../../core/services/bag-count-config.service';
 import { FarmerLedgerService } from '../../core/services/farmer-ledger.service';
 import { I18nService } from '../../core/services/i18n.service';
+import { ReceiptFormat, ReceiptService } from '../../core/services/receipt.service';
 import { SalesService } from '../../core/services/sales.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatCurrency } from '../../core/utils/currency-format.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
 import { roundOff } from '../../core/utils/round-off.util';
 import { formatApiDate, isDecimal } from '../../core/utils/sales.util';
-import { printHtml } from '../../core/utils/print.util';
 
 interface SalesRow {
   flowerType: string;
@@ -31,7 +32,7 @@ interface SalesRow {
 @Component({
   selector: 'app-sales-entry',
   standalone: true,
-  imports: [FormsModule, I18nPipe, AutocompleteComponent],
+  imports: [FormsModule, I18nPipe, AutocompleteComponent, ReceiptPrintButtonsComponent],
   templateUrl: './sales-entry.html',
   styleUrl: './sales-entry.css',
 })
@@ -42,6 +43,7 @@ export class SalesEntryComponent implements OnInit {
   private readonly i18n = inject(I18nService);
   private readonly toast = inject(ToastService);
   private readonly bagCountConfigService = inject(BagCountConfigService);
+  private readonly receipt = inject(ReceiptService);
 
   protected readonly master = signal<SalesMasterData>({
     farmers: [],
@@ -60,11 +62,16 @@ export class SalesEntryComponent implements OnInit {
 
   protected readonly formatCurrency = formatCurrency;
 
-  protected readonly bagLimits = computed(() =>
-    this.bagConfigs()
-      .filter((c) => c.salesDate === this.salesDate() && (c.bagCheck ?? 'E').toUpperCase() === 'E')
-      .sort((a, b) => a.flowerName.localeCompare(b.flowerName)),
-  );
+  protected readonly bagLimits = computed(() => {
+    const farmer = this.farmer().trim();
+    if (!farmer) return [];
+    const date = this.salesDate();
+    if (!date) return [];
+    const lower = farmer.toLowerCase();
+    return this.bagConfigs()
+      .filter((c) => c.salesDate === date && c.farmerName.trim().toLowerCase() === lower)
+      .sort((a, b) => a.flowerName.localeCompare(b.flowerName));
+  });
 
   protected readonly bagLimitNotice = computed(() => this.bagLimits().length > 0);
 
@@ -154,6 +161,47 @@ export class SalesEntryComponent implements OnInit {
       flowerInvalid: false,
       customerInvalid: false,
     };
+  }
+
+  protected onDecimalKeydown(event: KeyboardEvent): void {
+    if (event.ctrlKey || event.metaKey || event.altKey) {
+      return;
+    }
+    const key = event.key;
+    if (
+      key.length !== 1 ||
+      key === 'Backspace' ||
+      key === 'Delete' ||
+      key === 'Tab' ||
+      key === 'Enter' ||
+      key === 'Escape' ||
+      key === 'ArrowLeft' ||
+      key === 'ArrowRight' ||
+      key === 'ArrowUp' ||
+      key === 'ArrowDown' ||
+      key === 'Home' ||
+      key === 'End'
+    ) {
+      return;
+    }
+    if (key === '.') {
+      if ((event.target as HTMLInputElement).value.includes('.')) {
+        event.preventDefault();
+      }
+      return;
+    }
+    if (!/[0-9]/.test(key)) {
+      event.preventDefault();
+    }
+  }
+
+  protected sanitizeDecimal(value: string): string {
+    const cleaned = value.replace(/[^0-9.]/g, '');
+    const firstDot = cleaned.indexOf('.');
+    if (firstDot === -1) {
+      return cleaned;
+    }
+    return cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, '');
   }
 
   protected onBagInput(index: number): void {
@@ -394,7 +442,7 @@ export class SalesEntryComponent implements OnInit {
     });
   }
 
-  protected printReport(): void {
+  protected async printReport(format: ReceiptFormat): Promise<void> {
     if (!this.farmer().trim()) {
       this.toast.error(this.i18n.translate('sales.error.enter.farmer.print'));
       return;
@@ -406,8 +454,6 @@ export class SalesEntryComponent implements OnInit {
     }
 
     const bagLimits = this.bagLimits();
-
-    const shopName = this.auth.user()?.shopName ?? '';
     const summary = this.summary();
     const t = this.i18n.translate.bind(this.i18n);
 
@@ -423,62 +469,55 @@ export class SalesEntryComponent implements OnInit {
         '</tr>';
     });
 
-    let bagLimitHtml = '';
+    const salesBagMap = new Map<string, number>();
+    rows.forEach((row) => {
+      const flower = (row.flowerType || '').trim();
+      if (!flower) return;
+      const lower = flower.toLowerCase();
+      salesBagMap.set(lower, (salesBagMap.get(lower) || 0) + (parseInt(row.bagCount) || 0));
+    });
+    let bagSideHtml = '';
     if (bagLimits.length > 0) {
-      let body = '';
-      bagLimits.forEach((config, i) => {
-        body +=
-          '<tr>' +
-          '<td class="left">' + (i + 1) + '</td>' +
-          '<td class="left">' + (config.flowerName || '-') + '</td>' +
-          '<td class="right">' + (config.bagCount ?? 0) + '</td>' +
-          '</tr>';
+      let bagSideBody = '';
+      bagLimits.forEach((config) => {
+        const flowerName: string = config.flowerName;
+        const lower = flowerName.trim().toLowerCase();
+        const salesBagCount = salesBagMap.get(lower) || 0;
+        const configuredDisplay =
+          config.bagCount != null && (config.bagCount as number) > 0 ? String(config.bagCount) : '—';
+        bagSideBody +=
+          '<div style="margin-bottom:4px;">' +
+          '<div style="font-weight:700; font-size:8px; text-transform:uppercase; letter-spacing:0.3px;">' +
+          flowerName +
+          '</div>' +
+          '<div style="font-size:7.5px; line-height:1.4;">' +
+          t('bag.limit.configured') +
+          ': ' +
+          configuredDisplay +
+          '</div>' +
+          '<div style="font-size:7.5px; line-height:1.4;">' +
+          t('bag.limit.sales.count') +
+          ': ' +
+          salesBagCount +
+          '</div>' +
+          '</div>';
       });
-      bagLimitHtml =
-        '<div class="divider"></div>' +
-        '<div class="bl-title">' + t('bag.limit.title') + '</div>' +
-        '<table>' +
-        '<colgroup><col style="width:12%"><col style="width:60%"><col style="width:28%"></colgroup>' +
-        '<thead><tr>' +
-        '<th class="left">#</th>' +
-        '<th class="left">' + t('sales.flower') + '</th>' +
-        '<th class="right">' + t('bag.limit.limit') + '</th>' +
-        '</tr></thead><tbody>' + body + '</tbody></table>';
+      bagSideHtml =
+        '<div style="min-width:90px; max-width:110px; text-align:left; border-left:1px dashed #000; padding-left:6px; margin-left:6px;">' +
+        '<div style="font-size:8px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; text-align:center; margin-bottom:3px;">' +
+        t('bag.limit.title') +
+        '</div>' +
+        bagSideBody +
+        '</div>';
     }
 
-    const reportHtml =
-      '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + t('print.receipt.title') + '</title>' +
-      '<style>' +
-      '@page{size:80mm auto;margin:3mm 2mm;}' +
-      'body{margin:0;padding:2mm 1mm;width:76mm;font-family:"Courier New",monospace;font-size:9px;line-height:1.4;color:#000;background:#fff;}' +
-      '.print-header{text-align:center;border-bottom:1px dashed #000;padding-bottom:5px;margin-bottom:5px;}' +
-      '.print-header h2{font-size:13px;margin:0 0 2px;font-weight:700;letter-spacing:0.5px;}' +
-      '.print-header p{font-size:8px;margin:1px 0;color:#333;}' +
-      '.print-info{margin-bottom:6px;font-size:8px;line-height:1.5;}' +
-      '.print-info span{display:block;}' +
-      '.print-info strong{font-size:8px;}' +
-      'table{width:100%;border-collapse:collapse;margin:0 0 6px;font-size:8.5px;table-layout:fixed;}' +
-      'th,td{padding:3px 2.5px;vertical-align:top;word-wrap:break-word;overflow-wrap:break-word;}' +
-      'th{border-bottom:1.5px solid #000;font-weight:700;font-size:8px;text-transform:uppercase;letter-spacing:0.3px;}' +
-      'th.left,td.left{text-align:left;}' +
-      'th.right,td.right{text-align:right;}' +
-      'tbody tr{border-bottom:0.5px dotted #ccc;}' +
-      'tbody tr:last-child{border-bottom:none;}' +
-      '.divider{border-top:1px dashed #000;margin:6px 0;}' +
-      '.bl-title{font-size:9px;font-weight:700;text-align:center;text-transform:uppercase;letter-spacing:0.4px;margin:0 0 3px;}' +
-      '.summary{margin:0 0 4px;}' +
-      '.summary p{display:flex;justify-content:flex-end;gap:8px;margin:2px 0;font-size:8px;line-height:1.4;}' +
-      '.summary p strong{min-width:40px;text-align:right;}' +
-      '.summary .final{font-size:10px;font-weight:700;border-top:1px solid #000;padding-top:4px;margin-top:4px;gap:10px;}' +
-      '.summary .final strong{min-width:45px;}' +
-      '.footer{text-align:center;margin-top:10px;font-size:7px;border-top:1px dashed #000;padding-top:5px;letter-spacing:0.5px;}' +
-      '</style></head><body>' +
-      '<div class="print-header">' +
-      '<h2>' + shopName + '</h2>' +
-      '</div>' +
+    const content =
+      '<div class="bl-head">' +
       '<div class="print-info">' +
       '<span><strong>' + t('report.farmer') + '</strong> ' + this.farmer() + '</span>' +
       '<span><strong>' + t('report.date') + '</strong> ' + this.salesDate() + '</span>' +
+      '</div>' +
+      bagSideHtml +
       '</div>' +
       '<table>' +
       '<colgroup>' +
@@ -490,7 +529,7 @@ export class SalesEntryComponent implements OnInit {
       '<th class="right">' + t('report.col.weight') + '</th>' +
       '<th class="right">' + t('report.col.price') + '</th>' +
       '<th class="right">' + t('report.col.total') + '</th>' +
-      '</tr></thead><tbody>' + rowsHtml + '</tbody></table>' + bagLimitHtml +
+      '</tr></thead><tbody>' + rowsHtml + '</tbody></table>' +
       '<div class="divider"></div>' +
       '<div class="summary">' +
       '<p><span>' + t('report.total') + '</span><strong>' + this.formatCurrency(summary.total) + '</strong></p>' +
@@ -498,12 +537,15 @@ export class SalesEntryComponent implements OnInit {
       '<p><span>' + t('report.net.amount') + '</span><strong>' + this.formatCurrency(summary.net) + '</strong></p>' +
       '<p><span>' + t('report.debit') + '</span><strong>' + this.formatCurrency(summary.debit) + '</strong></p>' +
       '<p class="final"><span>' + t('report.final.total') + '</span><strong>' + this.formatCurrency(summary.final) + '</strong></p>' +
-      '</div>' +
-      '<div class="footer">' + t('print.thankyou') + '</div>' +
-      '</body></html>';
+      '</div>';
 
-    if (!printHtml(reportHtml)) {
-      this.toast.error(this.i18n.translate('sales.error.print.blocked'));
+    const result = await this.receipt.output(content, {
+      title: t('print.receipt.title'),
+      fileBase: 'sales-receipt',
+      format,
+    });
+    if (result.status !== 'ok') {
+      this.toast.error(result.message);
     }
   }
 

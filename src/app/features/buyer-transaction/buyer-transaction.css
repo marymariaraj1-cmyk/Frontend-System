@@ -358,7 +358,9 @@
   background: linear-gradient(135deg, #faf9ff 0%, #fdf4ff 100%);
   font-weight: 700;
   color: #5b21b6;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: break-word;
+  vertical-align: middle;
   border-bottom: 2px solid #e9d5ff;
   font-size: 12px;
   text-transform: uppercase;

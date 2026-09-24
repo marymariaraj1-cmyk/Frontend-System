@@ -1,0 +1,319 @@
+<div class="se-page">
+  <div class="se-header">
+    <span class="se-accent"></span>
+    <span class="se-ring se-ring-1"></span>
+    <span class="se-ring se-ring-2"></span>
+    <span class="material-symbols-rounded se-glyph">sell</span>
+    <div class="se-head-main">
+      <div class="se-header-icon">
+        <span class="material-symbols-rounded">sell</span>
+      </div>
+      <div class="se-header-text">
+        <h2>{{ 'fls.title' | i18n }}</h2>
+        <p class="se-subtitle">{{ 'fls.subtitle' | i18n }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="se-card-head">
+      <span class="se-chip material-symbols-rounded">local_florist</span>
+      <h3>{{ 'fls.header' | i18n }}</h3>
+    </div>
+    <div class="card-body se-farmer-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="flowerName">{{ 'flower.name' | i18n }} <span class="required">*</span></label>
+          <app-autocomplete
+            [items]="master().flowers"
+            [invalid]="flowerInvalid()"
+            [(value)]="flowerName"
+            (onSelect)="flowerName.set($event)"
+            (blur)="validateFlower()"
+          />
+          @if (flowerInvalid()) {
+            <span class="field-error">{{ 'sales.error.flower.notfound' | i18n }}</span>
+          }
+        </div>
+        <div class="form-group">
+          <label for="salesDate">{{ 'sales.date' | i18n }} <span class="required">*</span></label>
+          <input id="salesDate" name="salesDate" type="date" [(ngModel)]="salesDate" required />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="se-card-head">
+      <span class="se-chip se-chip-pink material-symbols-rounded">shopping_cart</span>
+      <h3>{{ 'fls.buyer.purchase' | i18n }}</h3>
+      <span class="se-head-count">{{ buyerRows().length }}</span>
+    </div>
+    <div class="card-body">
+      <div class="table-container">
+        <table class="sales-grid-table">
+          <colgroup>
+            <col class="c-sno" />
+            <col class="c-bag" />
+            <col class="c-name" />
+            <col class="c-qty" />
+            <col class="c-rate" />
+            <col class="c-amount" />
+            <col class="c-actions" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th style="width: 50px">{{ 'flower.sno' | i18n }}</th>
+              <th style="width: 60px">{{ 'sales.bag' | i18n }}</th>
+              <th>{{ 'fls.buyer.name' | i18n }}</th>
+              <th>{{ 'sales.qty' | i18n }}</th>
+              <th>{{ 'sales.rate' | i18n }}</th>
+              <th>{{ 'sales.amount' | i18n }}</th>
+              <th style="width: 90px">{{ 'flower.actions' | i18n }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of buyerRows(); track $index; let i = $index) {
+              <tr>
+                <td class="row-index text-center">{{ i + 1 }}</td>
+                <td>
+                  <input
+                    type="text"
+                    inputmode="numeric"
+                    class="grid-input bag-input"
+                    [ngModel]="row.bag"
+                    (ngModelChange)="updateBuyerRow(i, { bag: $event }); onBagInput('buyer', i)"
+                  />
+                </td>
+                <td>
+                  <app-autocomplete
+                    [items]="master().buyers"
+                    [invalid]="row.buyerInvalid"
+                    [value]="row.buyerName"
+                    (valueChange)="updateBuyerRow(i, { buyerName: $event, buyerInvalid: false })"
+                    (onSelect)="updateBuyerRow(i, { buyerName: $event, buyerInvalid: false })"
+                    (blur)="validateBuyer(i)"
+                  />
+                  @if (row.buyerInvalid) {
+                    <span class="field-error">{{ 'sales.error.buyer.notfound' | i18n }}</span>
+                  }
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    class="grid-input"
+                    [ngModel]="row.qty"
+                    (ngModelChange)="updateBuyerRow(i, { qty: sanitizeDecimal($event) }); onQtyChange('buyer', i)"
+                    (keydown)="onDecimalKeydown($event)"
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    class="grid-input"
+                    [ngModel]="row.rate"
+                    (ngModelChange)="updateBuyerRow(i, { rate: sanitizeDecimal($event) })"
+                    (input)="recalcBuyerRowAmount(i)"
+                    (keydown)="onDecimalKeydown($event)"
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    class="grid-input"
+                    [ngModel]="row.amount"
+                    (ngModelChange)="updateBuyerRow(i, { amount: sanitizeDecimal($event) }); onBuyerAmountInput(i)"
+                    (keydown.enter)="onBuyerAmountEnter(i)"
+                    (keydown)="onDecimalKeydown($event)"
+                  />
+                </td>
+                <td class="text-center action-cell">
+                  <span class="action-icon add-row-icon" title="{{ 'sales.add.row' | i18n }}" (click)="addBuyerRowBelow(i)">+</span>
+                  <span
+                    class="action-icon remove-row-icon"
+                    title="{{ 'sales.remove.row' | i18n }}"
+                    [class.disabled-icon]="buyerRows().length <= 1"
+                    (click)="removeBuyerRow(i)"
+                    >&times;</span
+                  >
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="se-card-head">
+      <span class="se-chip se-chip-green material-symbols-rounded">yard</span>
+      <h3>{{ 'fls.farmer.sale' | i18n }}</h3>
+      <span class="se-head-count">{{ farmerRows().length }}</span>
+    </div>
+    <div class="card-body">
+      <div class="table-container">
+<table class="sales-grid-table">
+          <colgroup>
+            <col class="c-sno" />
+            <col class="c-bag" />
+            <col class="c-name" />
+            <col class="c-qty" />
+            <col class="c-rate" />
+            <col class="c-amount" />
+            <col class="c-actions" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th style="width: 50px">{{ 'flower.sno' | i18n }}</th>
+              <th style="width: 60px">{{ 'sales.bag' | i18n }}</th>
+              <th>{{ 'farmer.name' | i18n }}</th>
+              <th>{{ 'sales.qty' | i18n }}</th>
+              <th>{{ 'sales.rate' | i18n }}</th>
+              <th>{{ 'sales.amount' | i18n }}</th>
+              <th style="width: 80px">{{ 'flower.actions' | i18n }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of farmerRows(); track $index; let i = $index) {
+              <tr>
+                <td class="row-index text-center">{{ i + 1 }}</td>
+                <td>
+                  <input
+                    type="text"
+                    inputmode="numeric"
+                    class="grid-input bag-input"
+                    [ngModel]="row.bag"
+                    (ngModelChange)="updateFarmerRow(i, { bag: $event }); onBagInput('farmer', i)"
+                  />
+                </td>
+                <td>
+                  <app-autocomplete
+                    [items]="master().farmers"
+                    [invalid]="row.farmerInvalid"
+                    [value]="row.farmerName"
+                    (valueChange)="updateFarmerRow(i, { farmerName: $event, farmerInvalid: false })"
+                    (onSelect)="updateFarmerRow(i, { farmerName: $event, farmerInvalid: false })"
+                    (blur)="validateFarmer(i)"
+                  />
+                  @if (row.farmerInvalid) {
+                    <span class="field-error">{{ 'sales.error.farmer.notfound' | i18n }}</span>
+                  }
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    class="grid-input"
+                    [ngModel]="row.qty"
+                    (ngModelChange)="updateFarmerRow(i, { qty: sanitizeDecimal($event) }); onQtyChange('farmer', i)"
+                    (keydown)="onDecimalKeydown($event)"
+                    (keydown.enter)="onFarmerQtyEnter(i)"
+                  />
+                </td>
+                <td>
+                  <input type="text" class="grid-input" [value]="row.rate" readonly />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    class="grid-input"
+                    [value]="row.amount"
+                    readonly
+                    (keydown.enter)="onFarmerAmountEnter(i)"
+                  />
+                </td>
+                <td class="text-center action-cell">
+                  <span class="action-icon add-row-icon" title="{{ 'sales.add.row' | i18n }}" (click)="addFarmerRowBelow(i)">+</span>
+                  <span
+                    class="action-icon remove-row-icon"
+                    title="{{ 'sales.remove.row' | i18n }}"
+                    [class.disabled-icon]="farmerRows().length <= 1"
+                    (click)="removeFarmerRow(i)"
+                    >&times;</span
+                  >
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="fls-actions">
+        <button
+          type="button"
+          class="fls-calc-btn"
+          [disabled]="!canCalculate()"
+          (click)="calculateAverage()"
+        >
+          <span class="material-symbols-rounded">calculate</span>
+          {{ 'fls.calc.avg.rate' | i18n }}
+        </button>
+        <button type="button" class="btn btn-primary fls-action-btn" [disabled]="saving()" (click)="save()">
+          <span class="material-symbols-rounded">save</span>
+          {{ 'btn.save' | i18n }}
+        </button>
+        <app-receipt-print-buttons [cssClass]="'btn btn-secondary fls-action-btn'" (print)="printReport($event)" />
+      </div>
+    </div>
+  </div>
+</div>
+
+@if (avgDialogOpen()) {
+  <div class="report-popup-overlay" (click)="onAvgOverlayClick($event)">
+    <div class="report-popup" appDraggable>
+      <div class="report-popup-header">
+        <div class="report-popup-title-col">
+          <h3>{{ 'fls.calc.avg.rate' | i18n }}</h3>
+        </div>
+        <button class="report-popup-close" (click)="avgDialogOpen.set(false)">&times;</button>
+      </div>
+      <div class="report-popup-body">
+        <div class="confirm-text">
+          {{ 'fls.avg.rate.confirm' | i18n: formatRateParam(avgRate()) }}
+        </div>
+        <div class="confirm-actions">
+          <button type="button" class="btn btn-primary" (click)="useThisRate()">
+            {{ 'fls.use.this.rate' | i18n }}
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="openRateDialog()">
+            {{ 'fls.enter.different.rate' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+@if (rateDialogOpen()) {
+  <div class="report-popup-overlay" (click)="onRateOverlayClick($event)">
+    <div class="report-popup" appDraggable>
+      <div class="report-popup-header">
+        <div class="report-popup-title-col">
+          <h3>{{ 'fls.enter.rate' | i18n }}</h3>
+        </div>
+        <button class="report-popup-close" (click)="closeRateDialog()">&times;</button>
+      </div>
+      <div class="report-popup-body">
+        <div class="confirm-text">
+          <label for="customRate">{{ 'fls.enter.rate' | i18n }}</label>
+          <input
+            id="customRate"
+            name="customRate"
+            type="text"
+            inputmode="decimal"
+            class="grid-input fls-rate-input"
+            [(ngModel)]="customRate"
+            autocomplete="off"
+          />
+        </div>
+        <div class="confirm-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeRateDialog()">
+            {{ 'btn.cancel' | i18n }}
+          </button>
+          <button type="button" class="btn btn-primary" (click)="confirmCustomRate()">
+            {{ 'fls.confirm' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

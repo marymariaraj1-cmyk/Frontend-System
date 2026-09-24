@@ -6,7 +6,9 @@ import { BuyerLedgerEntry } from '../../core/models/ledger';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
 import { BuyerLedgerService } from '../../core/services/buyer-ledger.service';
 import { I18nService } from '../../core/services/i18n.service';
+import { LedgerNavService } from '../../core/services/ledger-nav.service';
 import { ToastService } from '../../core/services/toast.service';
+import { formatCurrency } from '../../core/utils/currency-format.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
 
 @Component({
@@ -19,6 +21,7 @@ import { extractErrorMessage } from '../../core/utils/http-error.util';
 export class BuyerLedgerReportComponent implements OnInit {
   private readonly service = inject(BuyerLedgerService);
   private readonly router = inject(Router);
+  private readonly ledgerNav = inject(LedgerNavService);
   private readonly i18n = inject(I18nService);
   private readonly toast = inject(ToastService);
 
@@ -26,6 +29,8 @@ export class BuyerLedgerReportComponent implements OnInit {
   protected readonly search = signal('');
   protected readonly loading = signal(false);
   protected readonly loaded = signal(false);
+
+  protected readonly formatCurrency = formatCurrency;
 
   ngOnInit(): void {
     this.loadList();
@@ -40,11 +45,8 @@ export class BuyerLedgerReportComponent implements OnInit {
   }
 
   protected viewDetail(entry: BuyerLedgerEntry): void {
-    sessionStorage.setItem(
-      'bb_buyer_ledger',
-      JSON.stringify({ buyerId: entry.buyerId, buyerName: entry.buyerName }),
-    );
-    this.router.navigate(['/buyer-ledger-detail'], { queryParams: { source: 'report' } });
+    this.ledgerNav.setBuyer(entry.buyerId, entry.buyerName, 'report');
+    this.router.navigate(['/buyer-ledger-detail']);
   }
 
   protected initials(name: string | undefined): string {
@@ -57,9 +59,24 @@ export class BuyerLedgerReportComponent implements OnInit {
     return (first + last).toUpperCase();
   }
 
+  protected outstandingAbs(value: number): number {
+    return Math.abs(value);
+  }
+
+  protected balanceClass(value: number): string {
+    if (value > 0) {
+      return 'debit';
+    }
+    if (value < 0) {
+      return 'credit';
+    }
+    return 'settled';
+  }
+
   private loadList(): void {
     this.loading.set(true);
-    this.service.getBuyerList().subscribe({
+    // Buyer ledger report alone includes Cash / UPI payment buyers.
+    this.service.getBuyerList(true).subscribe({
       next: (response) => {
         this.loading.set(false);
         this.loaded.set(true);

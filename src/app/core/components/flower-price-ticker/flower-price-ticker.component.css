@@ -1,0 +1,87 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.global-ticker {
+  margin-bottom: 14px;
+}
+
+.fmpc-ticker {
+  width: 100%;
+  overflow: hidden;
+  height: 40px;
+  background:
+    radial-gradient(circle at 88% -10%, rgba(251, 191, 36, 0.14), transparent 40%),
+    linear-gradient(90deg, #0f172a 0%, #1e293b 55%, #334155 100%);
+  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.18);
+}
+
+.fmpc-ticker-track {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  white-space: nowrap;
+  padding-left: 16px;
+  animation: fmpc-marquee 32s linear infinite;
+  will-change: transform;
+}
+
+.fmpc-ticker-track.paused {
+  animation-play-state: paused;
+}
+
+@keyframes fmpc-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.fmpc-ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.fmpc-ticker-icon {
+  font-size: 16px;
+  color: #fbbf24;
+  line-height: 1;
+}
+
+.fmpc-ticker-name {
+  color: #fff;
+}
+
+.fmpc-ticker-price {
+  color: #fde68a;
+}
+
+.fmpc-trend {
+  font-size: 11px;
+  line-height: 1;
+}
+
+.fmpc-trend.trend-up {
+  color: #22c55e;
+}
+
+.fmpc-trend.trend-down {
+  color: #ef4444;
+}
+
+.fmpc-trend.trend-flat {
+  color: #94a3b8;
+}

@@ -44,6 +44,9 @@
         <h3>{{ 'farmer.ledger.list.title' | i18n }}</h3>
         <span class="lgr-count-badge">{{ filteredEntries().length }}</span>
       </div>
+    </div>
+
+    <div class="lgr-searchbar">
       <div class="lgr-search">
         <span class="material-symbols-rounded">search</span>
         <input
@@ -61,32 +64,32 @@
     }
 
     <div class="table-container">
-      <table class="report-table lgr-table">
+      <table class="report-table lgr-table ldg-tbl tbl-indigo">
         <thead>
           <tr>
-            <th style="width: 60px">{{ 'txn.sno' | i18n }}</th>
-            <th>{{ 'ledger.list.col.farmer.name' | i18n }}</th>
-            <th class="amount-col">{{ 'ledger.list.col.outstanding.balance' | i18n }}</th>
-            <th style="width: 110px">{{ 'ledger.list.col.action' | i18n }}</th>
+            <th class="col-no">{{ 'txn.sno' | i18n }}</th>
+            <th class="col-name">{{ 'ledger.list.col.farmer.name' | i18n }}</th>
+            <th class="col-outstanding">{{ 'ledger.list.col.outstanding.balance' | i18n }}</th>
+            <th class="col-action">{{ 'ledger.list.col.action' | i18n }}</th>
           </tr>
         </thead>
         <tbody>
           @for (entry of filteredEntries(); track entry.farmerId; let i = $index) {
             <tr>
-              <td class="lgr-sno">{{ i + 1 }}</td>
-              <td>
+              <td class="col-no lgr-sno">{{ i + 1 }}</td>
+              <td class="col-name">
                 <div class="lgr-name-cell">
                   <span class="lgr-avatar">{{ initials(entry.farmerName) }}</span>
                   <span class="lgr-name">{{ entry.farmerName }}</span>
                 </div>
               </td>
-              <td class="amount-col">
+              <td class="col-outstanding">
                 <span class="lgr-balance" [class]="balanceClass(entry.outstandingBalance)">
                   {{ formatCurrency(outstandingAbs(entry.outstandingBalance)) }}
                 </span>
               </td>
-              <td>
-                <button type="button" class="btn btn-primary btn-sm btn-icon-only" [attr.title]="'btn.view' | i18n" [attr.aria-label]="'btn.view' | i18n" (click)="viewDetail(entry)">
+              <td class="col-action">
+                <button type="button" class="ldg-act-btn ldg-act-btn-indigo" [attr.title]="'btn.view' | i18n" [attr.aria-label]="'btn.view' | i18n" (click)="viewDetail(entry)">
                   <span class="material-symbols-rounded">visibility</span>
                 </button>
               </td>

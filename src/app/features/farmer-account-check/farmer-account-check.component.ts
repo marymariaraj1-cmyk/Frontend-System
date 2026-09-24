@@ -2,15 +2,16 @@ import { Component, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { AutocompleteComponent } from '../../core/components/autocomplete/autocomplete.component';
+import { ReceiptPrintButtonsComponent } from '../../core/components/receipt-print-buttons/receipt-print-buttons.component';
 import { ActiveLedgerRow } from '../../core/models/ledger';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
 import { FarmerAccountCheckService } from '../../core/services/farmer-account-check.service';
 import { FarmerLedgerService } from '../../core/services/farmer-ledger.service';
 import { I18nService } from '../../core/services/i18n.service';
+import { ReceiptFormat, ReceiptService } from '../../core/services/receipt.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatCurrency } from '../../core/utils/currency-format.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
-import { openPrintWindow } from '../../core/utils/print.util';
 
 type CalcModel = 'model1' | 'model2' | 'model3' | null;
 
@@ -26,7 +27,7 @@ interface ModelResult {
 @Component({
   selector: 'app-farmer-account-check',
   standalone: true,
-  imports: [FormsModule, I18nPipe, AutocompleteComponent],
+  imports: [FormsModule, I18nPipe, AutocompleteComponent, ReceiptPrintButtonsComponent],
   templateUrl: './farmer-account-check.html',
   styleUrl: './farmer-account-check.css',
 })
@@ -35,6 +36,7 @@ export class FarmerAccountCheckComponent {
   private readonly ledgerService = inject(FarmerLedgerService);
   private readonly i18n = inject(I18nService);
   private readonly toast = inject(ToastService);
+  private readonly receipt = inject(ReceiptService);
 
   protected readonly formatCurrency = formatCurrency;
 
@@ -198,8 +200,8 @@ export class FarmerAccountCheckComponent {
         model: 'model1',
         label: this.i18n.translate('fac.model.1.label'),
         lines: [
-          { label: this.i18n.translate('fac.farmer.advance'), value: sumDebit, desc: this.i18n.translate('fac.desc.total.farmer.advance') },
           { label: this.i18n.translate('fac.total.sale'), value: sumCredit, desc: this.i18n.translate('fac.desc.total.credit.sale') },
+          { label: this.i18n.translate('fac.farmer.advance'), value: sumDebit, desc: this.i18n.translate('fac.desc.total.farmer.advance') },
           { label: this.i18n.translate('fac.actual.amount'), value: actual, desc: this.i18n.translate('fac.desc.total.sale.minus.advance'), sign: true },
           { label: this.i18n.translate('fac.interest.10'), value: interest, desc: this.i18n.translate('fac.desc.interest.10.100days'), sign: true },
         ],
@@ -307,7 +309,7 @@ export class FarmerAccountCheckComponent {
     });
   }
 
-  protected printReceipt(): void {
+  protected async printReceipt(format: ReceiptFormat): Promise<void> {
     const rows = this.activeRows();
     const result = this.modelResult();
     if (rows.length === 0) {
@@ -351,8 +353,7 @@ export class FarmerAccountCheckComponent {
         `</table>`;
     }
 
-    const html =
-      this.printStyle() +
+    const content =
       `<div class="print-header">` +
       `<h2>${this.escapeHtml(this.i18n.translate('fac.print.title'))}</h2>` +
       `<p>${this.escapeHtml(this.farmer())}</p>` +
@@ -364,11 +365,16 @@ export class FarmerAccountCheckComponent {
       `<th class="right">${this.escapeHtml(this.i18n.translate('ledger.report.col.credit.amt'))}</th>` +
       `<th class="right">${this.escapeHtml(this.i18n.translate('ledger.report.col.debit.amt'))}</th>` +
       `</tr></thead><tbody>${rowsHtml}${totalRow}</tbody></table>` +
-      calcHtml +
-      `<div class="footer">${this.escapeHtml(this.i18n.translate('print.thankyou'))}</div>` +
-      `<script>window.onload=function(){window.print();}<\/script></body></html>`;
+      calcHtml;
 
-    openPrintWindow(html, 320, 600);
+    const output = await this.receipt.output(content, {
+      title: this.i18n.translate('fac.print.title'),
+      fileBase: 'farmer-account-check',
+      format,
+    });
+    if (output.status !== 'ok') {
+      this.toast.error(output.message);
+    }
   }
 
   private formatNum(value: number | null | undefined): string {
@@ -385,33 +391,5 @@ export class FarmerAccountCheckComponent {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
-  }
-
-  private printStyle(): string {
-    return (
-      `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>` +
-      `@page{size:3in auto;margin:0;}` +
-      `body{margin:0;padding:2mm 1.5mm;width:3in;box-sizing:border-box;font-family:"Courier New",monospace;font-size:9px;line-height:1.4;color:#000;background:#fff;}` +
-      `.print-header{text-align:center;border-bottom:1px dashed #000;padding-bottom:5px;margin-bottom:5px;}` +
-      `.print-header h2{font-size:12px;margin:0 0 2px;font-weight:700;letter-spacing:0.5px;}` +
-      `.print-header p{font-size:8px;margin:1px 0;color:#333;}` +
-      `table{width:100%;border-collapse:collapse;margin:0 0 6px;font-size:8px;table-layout:fixed;}` +
-      `th,td{padding:3px 2px;vertical-align:top;word-wrap:break-word;overflow-wrap:break-word;}` +
-      `th{border-bottom:1.5px solid #000;font-weight:700;font-size:7.5px;text-transform:uppercase;letter-spacing:0.3px;}` +
-      `th.left,td.left{text-align:left;}` +
-      `th.right,td.right{text-align:right;}` +
-      `tbody tr{border-bottom:0.5px dotted #ccc;}` +
-      `tbody tr:last-child{border-bottom:none;}` +
-      `.total-row td{border-top:1px solid #000;padding-top:3px;}` +
-      `.divider{border-top:1px dashed #000;margin:6px 0;}` +
-      `.summary-table{width:100%;border-collapse:collapse;font-size:8px;margin:0 0 4px;}` +
-      `.summary-table td{padding:2px 2px;border:none;}` +
-      `.summary-table td.lbl{width:32%;text-align:left;}` +
-      `.summary-table td.amt{width:22%;text-align:right;}` +
-      `.summary-table td.desc{width:46%;text-align:left;font-size:7px;color:#555;}` +
-      `.summary-table tr.final td{font-size:10px;font-weight:700;border-top:1px solid #000;padding-top:4px;}` +
-      `.footer{text-align:center;margin-top:10px;font-size:7px;border-top:1px dashed #000;padding-top:5px;letter-spacing:0.5px;}` +
-      `</style></head><body>`
-    );
   }
 }

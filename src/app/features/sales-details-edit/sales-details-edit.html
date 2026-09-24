@@ -72,21 +72,9 @@
       <span class="sde-chip material-symbols-rounded">grid_on</span>
       <h3>{{ 'sales.edit.grid' | i18n }}</h3>
       <span class="sde-head-count">{{ rows().length }}</span>
-      @if (bagLimitNotice()) {
-        <button
-          type="button"
-          class="sde-baglimit-toggle"
-          [class.active]="bagLimitsOpen()"
-          (click)="bagLimitsOpen.set(!bagLimitsOpen())"
-        >
-          <span class="material-symbols-rounded">shopping_basket</span>
-          {{ 'bag.limit.title' | i18n }}
-          <span class="bag-limit-count-badge">{{ bagLimits().length }}</span>
-        </button>
-      }
     </div>
     <div class="card-body">
-    @if (bagLimitNotice() && bagLimitsOpen()) {
+    @if (bagLimitNotice()) {
       <div class="bag-limit-panel">
         <div class="bag-limit-panel-head">
           <span class="bag-limit-head-left">
@@ -100,7 +88,7 @@
             <thead>
               <tr>
                 <th class="bag-limit-flower">{{ 'sales.flower' | i18n }}</th>
-                <th class="bag-limit-num">{{ 'sales.bag' | i18n }}</th>
+                <th class="bag-limit-num">{{ 'bag.limit.limit' | i18n }}</th>
               </tr>
             </thead>
             <tbody>
@@ -166,7 +154,8 @@
                     type="text"
                     class="grid-input"
                     [ngModel]="row.weight"
-                    (ngModelChange)="updateRow(i, { weight: $event }); onQtyChange(i); markEdited(i)"
+                    (ngModelChange)="updateRow(i, { weight: sanitizeDecimal($event) }); onQtyChange(i); markEdited(i)"
+                    (keydown)="onDecimalKeydown($event)"
                   />
                 </td>
                 <td>
@@ -174,8 +163,9 @@
                     type="text"
                     class="grid-input"
                     [ngModel]="row.rate"
-                    (ngModelChange)="updateRow(i, { rate: $event })"
+                    (ngModelChange)="updateRow(i, { rate: sanitizeDecimal($event) })"
                     (input)="recalcRowAmount(i)"
+                    (keydown)="onDecimalKeydown($event)"
                   />
                 </td>
                 <td>
@@ -183,11 +173,26 @@
                   type="text"
                   class="grid-input"
                   [ngModel]="row.amount"
-                  (ngModelChange)="updateRow(i, { amount: $event }); recalcRowRate(i)"
+                  (ngModelChange)="updateRow(i, { amount: sanitizeDecimal($event) }); recalcRowRate(i)"
+                  (keydown)="onDecimalKeydown($event)"
                 />
                 </td>
-                <td><div class="grid-display">{{ row.customer }}</div></td>
+                <td>
+                  <app-autocomplete
+                    [items]="master().buyers"
+                    [value]="row.customer"
+                    (valueChange)="updateRow(i, { customer: $event }); markEdited(i)"
+                    (onSelect)="updateRow(i, { customer: $event }); markEdited(i)"
+                  />
+                </td>
                 <td class="text-center action-cell">
+                  <span
+                    class="action-icon delete-row-icon"
+                    [title]="'btn.delete' | i18n"
+                    (click)="openDeleteConfirm(i)"
+                  >
+                    <span class="material-symbols-rounded">delete</span>
+                  </span>
                   <span
                     class="action-icon edit-row-icon"
                     [title]="'sales.edit.disable' | i18n"
@@ -204,6 +209,13 @@
                 <td><div class="grid-display">{{ row.amount }}</div></td>
                 <td><div class="grid-display">{{ row.customer }}</div></td>
                 <td class="text-center action-cell">
+                  <span
+                    class="action-icon delete-row-icon"
+                    [title]="'btn.delete' | i18n"
+                    (click)="openDeleteConfirm(i)"
+                  >
+                    <span class="material-symbols-rounded">delete</span>
+                  </span>
                   <span
                     class="action-icon edit-row-icon"
                     [title]="'sales.edit.enable' | i18n"
@@ -256,15 +268,11 @@
         <span class="material-symbols-rounded">save</span>
         {{ 'btn.save' | i18n }}
       </button>
-      <button
-        type="button"
-        class="btn btn-secondary"
+      <app-receipt-print-buttons
+        [cssClass]="'btn btn-secondary'"
         [disabled]="rows().length === 0"
-        (click)="printReport()"
-      >
-        <span class="material-symbols-rounded">print</span>
-        {{ 'btn.print' | i18n }}
-      </button>
+        (print)="printReport($event)"
+      />
       <button type="button" class="btn btn-secondary" (click)="clearForm()">
         <span class="material-symbols-rounded">cleaning_services</span>
         {{ 'btn.clear' | i18n }}
@@ -272,4 +280,25 @@
     </div>
   </div>
 </div>
+
+@if (deleteTarget()) {
+  <div class="report-popup-overlay" (click)="onDeleteOverlayClick($event)">
+    <div class="report-popup" appDraggable>
+      <div class="report-popup-header">
+        <div class="report-popup-title-col">
+          <h3>{{ 'btn.delete' | i18n }}</h3>
+          <div class="report-popup-name">{{ deleteTarget()?.customer }}</div>
+        </div>
+        <button class="report-popup-close" (click)="closeDelete()">&times;</button>
+      </div>
+      <div class="report-popup-body">
+        <div class="confirm-text">{{ 'msg.confirm.delete' | i18n }}</div>
+        <div class="confirm-actions">
+          <button type="button" class="btn btn-secondary" [disabled]="deleting()" (click)="closeDelete()">{{ 'btn.cancel' | i18n }}</button>
+          <button type="button" class="btn btn-danger" [disabled]="deleting()" (click)="confirmDelete()">{{ 'btn.delete' | i18n }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
 </div>

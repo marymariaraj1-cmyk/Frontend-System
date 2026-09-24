@@ -6,12 +6,18 @@ export interface DashboardKpis {
   activeBuyers: number;
   yesterdaySales: number;
   yesterdayCommission: number;
+  todayPakki: number;
+  todayVaravu: number;
+  salesWithDeduction: number;
+  salesWithoutDeduction: number;
 }
 
 export interface DashboardMasterCounts {
   farmers: number;
   buyers: number;
   flowers: number;
+  inactiveFarmers: number;
+  inactiveBuyers: number;
 }
 
 export interface DashboardTrendRow {

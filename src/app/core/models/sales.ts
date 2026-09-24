@@ -77,6 +77,7 @@ export interface SalesEditRowRequest {
   totalWeight: string;
   price: string;
   amount: string;
+  customerName?: string;
 }
 
 export interface SalesEditRequest {
@@ -119,4 +120,42 @@ export interface TodayEntry {
   amount: number;
   customerName: string;
   saleSlotId: string;
+}
+
+export interface FlowerLootRow {
+  bag: string;
+  name: string;
+  qty: string;
+  rate: string;
+  amount: string;
+}
+
+export interface FlowerLootSaveRequest {
+  flowerName: string;
+  salesDate: string;
+  buyerRows: FlowerLootRow[];
+  farmerRows: FlowerLootRow[];
+}
+
+export interface FlowerLootSaleEditRow {
+  salesId: number;
+  bag?: string;
+  name: string;
+  qty: string;
+  rate: string;
+  amount: string;
+}
+
+export interface FlowerLootSaleEditFetchData {
+  flowerName: string;
+  salesDate: string;
+  buyerRows: FlowerLootSaleEditRow[];
+  farmerRows: FlowerLootSaleEditRow[];
+}
+
+export interface FlowerLootSaleEditRequest {
+  flowerName: string;
+  salesDate: string;
+  buyerRows: FlowerLootSaleEditRow[];
+  farmerRows: FlowerLootSaleEditRow[];
 }

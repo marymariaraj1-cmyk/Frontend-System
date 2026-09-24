@@ -455,16 +455,22 @@
   font-weight: 700;
   text-align: left !important;
 }
+.bag-limit-farmer {
+  text-align: left !important;
+  width: 34%;
+  color: #1e40af !important;
+  font-weight: 600;
+}
 .bag-limit-flower {
   text-align: left !important;
-  width: 40%;
+  width: 33%;
   padding-right: 10px !important;
   color: #4c1d95 !important;
   font-weight: 600;
 }
 .bag-limit-num {
   text-align: left !important;
-  width: 60%;
+  width: 33%;
   font-weight: 700;
   color: #be185d !important;
 }

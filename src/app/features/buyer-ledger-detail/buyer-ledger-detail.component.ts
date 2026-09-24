@@ -1,31 +1,34 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
 import { BuyerLedgerDetailRow, BuyerSalesItem } from '../../core/models/ledger';
+import { ReceiptPrintButtonsComponent } from '../../core/components/receipt-print-buttons/receipt-print-buttons.component';
 import { DraggableDirective } from '../../core/directives/draggable.directive';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
 import { BuyerLedgerService } from '../../core/services/buyer-ledger.service';
 import { I18nService } from '../../core/services/i18n.service';
+import { LedgerNavService } from '../../core/services/ledger-nav.service';
+import { ReceiptFormat, ReceiptService } from '../../core/services/receipt.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatCurrency } from '../../core/utils/currency-format.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
-import { openPrintWindow } from '../../core/utils/print.util';
 import { formatDecimal } from '../../core/utils/round-off.util';
 
 @Component({
   selector: 'app-buyer-ledger-detail',
   standalone: true,
-  imports: [I18nPipe, DraggableDirective, FormsModule],
+  imports: [I18nPipe, DraggableDirective, FormsModule, ReceiptPrintButtonsComponent],
   templateUrl: './buyer-ledger-detail.html',
   styleUrl: './buyer-ledger-detail.css',
 })
 export class BuyerLedgerDetailComponent implements OnInit {
   private readonly service = inject(BuyerLedgerService);
-  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly ledgerNav = inject(LedgerNavService);
   private readonly i18n = inject(I18nService);
   private readonly toast = inject(ToastService);
+  private readonly receipt = inject(ReceiptService);
 
   protected readonly formatCurrency = formatCurrency;
   protected readonly formatDecimal = formatDecimal;
@@ -50,20 +53,24 @@ export class BuyerLedgerDetailComponent implements OnInit {
   private applyingPeriod = false;
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe((params) => {
-      this.buyerId.set(params['buyerId'] ?? '');
-      this.buyerName.set(params['buyerName'] ?? '');
-      this.source.set(params['source'] === 'report' ? 'report' : 'ledger');
-    });
-    // Fallback to sessionStorage if coming from report view (no buyerId in queryParams)
-    const stored = sessionStorage.getItem('bb_buyer_ledger');
-    if (!this.buyerId() && stored) {
-      try {
-        const parsed = JSON.parse(stored) as { buyerId?: string; buyerName?: string };
-        this.buyerId.set(parsed.buyerId ?? '');
-        this.buyerName.set(parsed.buyerName ?? '');
-      } catch {
-        // ignore
+    const ctx = this.ledgerNav.buyer();
+    if (ctx) {
+      this.buyerId.set(ctx.id);
+      this.buyerName.set(ctx.name);
+      this.source.set(ctx.source);
+    }
+    // Fallback to sessionStorage so a refreshed page (no in-memory context) still restores correctly.
+    if (!this.buyerId() && !ctx) {
+      const stored = sessionStorage.getItem('bb_buyer_ledger');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored) as { buyerId?: string; buyerName?: string; source?: string };
+          this.buyerId.set(parsed.buyerId ?? '');
+          this.buyerName.set(parsed.buyerName ?? '');
+          this.source.set(parsed.source === 'report' ? 'report' : 'ledger');
+        } catch {
+          // ignore
+        }
       }
     }
     if (this.buyerId()) {
@@ -73,6 +80,16 @@ export class BuyerLedgerDetailComponent implements OnInit {
 
   protected isReport(): boolean {
     return this.source() === 'report';
+  }
+
+  // Cash / UPI payment buyers (credit-only entries) shown in the buyer ledger report alone.
+  protected isPaymentBuyer(): boolean {
+    const name = (this.buyerName() ?? '').trim().toLowerCase();
+    if (!name) {
+      return false;
+    }
+    const excluded = ['cash', 'upi', 'google pay', 'gpay', 'phonepe', 'paytm', 'online', 'card', 'neft', 'rtgs', 'imps'];
+    return excluded.some((ex) => name.includes(ex));
   }
 
   protected toggleClosed(): void {
@@ -135,13 +152,6 @@ export class BuyerLedgerDetailComponent implements OnInit {
   protected applyCustom(): void {
     this.period.set('custom');
     this.loadDetail();
-  }
-
-  private readFromRoute(): void {
-    this.route.queryParams.subscribe((params) => {
-      this.buyerId.set(params['buyerId'] ?? '');
-      this.buyerName.set(params['buyerName'] ?? '');
-    });
   }
 
   protected goBack(): void {
@@ -207,7 +217,7 @@ export class BuyerLedgerDetailComponent implements OnInit {
     return this.popupTotal() - this.popupDiscount();
   }
 
-  protected printDetail(): void {
+  protected async printDetail(format: ReceiptFormat): Promise<void> {
     const currentRows = this.rows();
     if (!currentRows || currentRows.length === 0) {
       this.toast.error(this.i18n.translate('msg.no.records'));
@@ -228,8 +238,8 @@ export class BuyerLedgerDetailComponent implements OnInit {
           `<td class="left">${idx + 1}</td>` +
           `<td class="left">${this.escapeHtml(row.salesDate)}</td>`;
         const body = report
-          ? `<td class="right"><span style="color:#b91c1c;">${this.formatNum(row.purchase)}</span></td>` +
-            `<td class="right"><span style="color:#15803d;">${this.formatNum(row.cash)}</span></td>`
+          ? `<td class="right"><span style="color:#15803d;">${this.formatNum(row.cash)}</span></td>` +
+            `<td class="right"><span style="color:#b91c1c;">${this.formatNum(row.purchase)}</span></td>`
           : `<td class="right">${this.formatNum(row.openingBalance)}</td>` +
             `<td class="right"><span style="color:#b91c1c;">${this.formatNum(row.purchase)}</span></td>` +
             `<td class="right"><span style="color:#15803d;">${this.formatNum(row.cash)}</span></td>` +
@@ -241,8 +251,8 @@ export class BuyerLedgerDetailComponent implements OnInit {
     const headers = report
       ? `<th class="left">#</th>` +
         `<th class="left">${this.escapeHtml(this.i18n.translate('ledger.report.col.sales.date'))}</th>` +
-        `<th class="right">${this.escapeHtml(this.i18n.translate('ledger.report.col.debit.amt'))}</th>` +
-        `<th class="right">${this.escapeHtml(this.i18n.translate('ledger.report.col.credit.amt'))}</th>`
+        `<th class="right">${this.escapeHtml(this.i18n.translate('ledger.report.col.credit.amt'))}</th>` +
+        `<th class="right">${this.escapeHtml(this.i18n.translate('ledger.report.col.debit.amt'))}</th>`
       : `<th class="left">#</th>` +
         `<th class="left">${this.escapeHtml(this.i18n.translate('ledger.report.col.sales.date'))}</th>` +
         `<th class="right">${this.escapeHtml(this.i18n.translate('ledger.detail.col.opening.balance'))}</th>` +
@@ -270,8 +280,7 @@ export class BuyerLedgerDetailComponent implements OnInit {
       `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 8px;margin-top:6px;background:#fff;border:1px solid #c7d2fe;border-radius:6px;font-size:9px;font-weight:700;"><span style="color:${balancePrintColor};">&#9670; ${this.escapeHtml(balancePrintLabel)}</span><span style="color:${balancePrintColor};">${this.formatNum(balancePrintAbs)}</span></div>` +
       `</div>`;
 
-    const reportHtml =
-      this.printStyle('80mm auto', '76mm') +
+    const content =
       `<div class="print-header">` +
       `<h2>${this.escapeHtml(this.i18n.translate('buyer.ledger.detail.title'))}</h2>` +
       `<p>${this.escapeHtml(this.buyerName() || '')}</p>` +
@@ -281,14 +290,19 @@ export class BuyerLedgerDetailComponent implements OnInit {
       summaryHtml +
       (report
         ? ``
-        : `<div class="summary-line"><strong>${this.escapeHtml(this.i18n.translate('ledger.detail.col.closing.balance'))}</strong> ${this.formatNum(lastRow.closingBalance)}</div>`) +
-      `<div class="footer">${this.escapeHtml(this.i18n.translate('print.thankyou'))}</div>` +
-      `<script>window.onload=function(){window.print();}<\/script></body></html>`;
+        : `<div class="summary-line"><strong>${this.escapeHtml(this.i18n.translate('ledger.detail.col.closing.balance'))}</strong> ${this.formatNum(lastRow.closingBalance)}</div>`);
 
-    openPrintWindow(reportHtml, 320, 600);
+    const result = await this.receipt.output(content, {
+      title: this.i18n.translate('buyer.ledger.detail.title'),
+      fileBase: 'buyer-ledger',
+      format,
+    });
+    if (result.status !== 'ok') {
+      this.toast.error(result.message);
+    }
   }
 
-  protected printPopup(): void {
+  protected async printPopup(format: ReceiptFormat): Promise<void> {
     const items = this.popupItems();
     if (!items || items.length === 0) {
       this.toast.error(this.i18n.translate('msg.no.records'));
@@ -320,8 +334,7 @@ export class BuyerLedgerDetailComponent implements OnInit {
         `<tr class="final"><td class="lbl">${this.escapeHtml(this.i18n.translate('buyer.sales.report.detail.final.total'))}</td><td class="amt">${this.formatNum(finalTotal)}</td></tr>`;
     }
 
-    const reportHtml =
-      this.printStyle('3in auto', '3in') +
+    const content =
       `<div class="print-header">` +
       `<h2>${this.escapeHtml(this.i18n.translate('buyer.ledger.detail.title'))}</h2>` +
       `<p>${this.escapeHtml(this.buyerName() || '')} - ${this.escapeHtml(this.formatDateStr(this.currentSalesDate()))}</p>` +
@@ -336,11 +349,16 @@ export class BuyerLedgerDetailComponent implements OnInit {
       `<th class="right">${this.escapeHtml(this.i18n.translate('report.col.total'))}</th>` +
       `</tr></thead><tbody>${rowsHtml}</tbody></table>` +
       `<div class="divider"></div>` +
-      `<table class="summary-table">${summaryRows}</table>` +
-      `<div class="footer">${this.escapeHtml(this.i18n.translate('print.thankyou'))}</div>` +
-      `<script>window.onload=function(){window.print();}<\/script></body></html>`;
+      `<table class="summary-table">${summaryRows}</table>`;
 
-    openPrintWindow(reportHtml, 320, 600);
+    const result = await this.receipt.output(content, {
+      title: this.i18n.translate('buyer.ledger.detail.title'),
+      fileBase: 'buyer-sales-receipt',
+      format,
+    });
+    if (result.status !== 'ok') {
+      this.toast.error(result.message);
+    }
   }
 
   private loadDetail(): void {
@@ -383,8 +401,14 @@ export class BuyerLedgerDetailComponent implements OnInit {
     return this.isReport() ? this.rows().filter((row) => this.isActive(row)) : this.displayRows();
   }
 
-  protected totalOpening(): number {
-    return this.totalBase().reduce((sum, row) => sum + (Number(row.openingBalance) || 0), 0);
+  protected latestEntry(): BuyerLedgerDetailRow | null {
+    const rows = this.displayRows();
+    return rows.length > 0 ? rows[rows.length - 1] : null;
+  }
+
+  protected startOpening(): number {
+    const rows = this.displayRows();
+    return rows.length > 0 ? Number(rows[0].openingBalance) || 0 : 0;
   }
 
   protected totalPurchase(): number {
@@ -393,6 +417,20 @@ export class BuyerLedgerDetailComponent implements OnInit {
 
   protected totalCash(): number {
     return this.totalBase().reduce((sum, row) => sum + (Number(row.cash) || 0), 0);
+  }
+
+  protected currentDayPurchase(): number {
+    const today = this.todayStr();
+    return this.displayRows()
+      .filter((row) => row.salesDate === today)
+      .reduce((sum, row) => sum + (Number(row.purchase) || 0), 0);
+  }
+
+  protected currentDayCash(): number {
+    const today = this.todayStr();
+    return this.displayRows()
+      .filter((row) => row.salesDate === today)
+      .reduce((sum, row) => sum + (Number(row.cash) || 0), 0);
   }
 
   protected totalClosing(): number {
@@ -461,6 +499,10 @@ export class BuyerLedgerDetailComponent implements OnInit {
     return `${y}-${m}-${d}`;
   }
 
+  private todayStr(): string {
+    return this.toDateStr(new Date());
+  }
+
   private escapeHtml(value: string | null | undefined): string {
     if (value === null || value === undefined) {
       return '';
@@ -473,33 +515,4 @@ export class BuyerLedgerDetailComponent implements OnInit {
       .replace(/'/g, '&#39;');
   }
 
-  private printStyle(pageSize: string, bodyWidth: string): string {
-    return (
-      `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>` +
-      `@page{size:${pageSize};margin:0;}` +
-      `body{margin:0;padding:2mm 1.5mm;width:${bodyWidth};box-sizing:border-box;font-family:"Courier New",monospace;font-size:9px;line-height:1.4;color:#000;background:#fff;}` +
-      `.print-header{text-align:center;border-bottom:1px dashed #000;padding-bottom:5px;margin-bottom:5px;}` +
-      `.print-header h2{font-size:12px;margin:0 0 2px;font-weight:700;letter-spacing:0.5px;}` +
-      `.print-header p{font-size:8px;margin:1px 0;color:#333;}` +
-      `.print-info{margin-bottom:6px;font-size:8px;line-height:1.5;}` +
-      `.print-info span{display:block;}` +
-      `.print-info strong{font-size:8px;}` +
-      `table{width:100%;border-collapse:collapse;margin:0 0 6px;font-size:8px;table-layout:fixed;}` +
-      `th,td{padding:3px 2px;vertical-align:top;word-wrap:break-word;overflow-wrap:break-word;}` +
-      `th{border-bottom:1.5px solid #000;font-weight:700;font-size:7.5px;text-transform:uppercase;letter-spacing:0.3px;}` +
-      `th.left,td.left{text-align:left;}` +
-      `th.right,td.right{text-align:right;}` +
-      `tbody tr{border-bottom:0.5px dotted #ccc;}` +
-      `tbody tr:last-child{border-bottom:none;}` +
-      `.divider{border-top:1px dashed #000;margin:6px 0;}` +
-      `.summary-table{width:100%;border-collapse:collapse;font-size:8px;margin:0 0 4px;}` +
-      `.summary-table td{padding:2px 2px;border:none;}` +
-      `.summary-table td.lbl{width:40%;text-align:left;}` +
-      `.summary-table td.amt{width:60%;text-align:right;}` +
-      `.summary-table tr.final td{font-size:10px;font-weight:700;border-top:1px solid #000;padding-top:4px;}` +
-      `.summary-line{margin:8px 0 4px;text-align:right;font-weight:700;font-size:10px;border-top:1px solid #000;padding-top:6px;}` +
-      `.footer{text-align:center;margin-top:10px;font-size:7px;border-top:1px dashed #000;padding-top:5px;letter-spacing:0.5px;}` +
-      `</style></head><body>`
-    );
   }
-}

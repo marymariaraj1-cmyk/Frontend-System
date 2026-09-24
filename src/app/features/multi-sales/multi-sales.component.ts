@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { AutocompleteComponent } from '../../core/components/autocomplete/autocomplete.component';
+import { ReceiptPrintButtonsComponent } from '../../core/components/receipt-print-buttons/receipt-print-buttons.component';
 import { BagCountConfigRow } from '../../core/models/bag-count-config';
 import { MultiSalesLine, SalesMasterData } from '../../core/models/sales';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
@@ -10,12 +11,12 @@ import { BagCountConfigService } from '../../core/services/bag-count-config.serv
 import { FarmerLedgerService } from '../../core/services/farmer-ledger.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { MultiSalesEntryService } from '../../core/services/multi-sales.service';
+import { ReceiptFormat, ReceiptService } from '../../core/services/receipt.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatCurrency } from '../../core/utils/currency-format.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
 import { roundOff } from '../../core/utils/round-off.util';
 import { formatApiDate, isDecimal } from '../../core/utils/sales.util';
-import { printHtml } from '../../core/utils/print.util';
 
 interface MultiSalesRow {
   salesId: number | null;
@@ -35,7 +36,7 @@ interface MultiSalesRow {
 @Component({
   selector: 'app-multi-sales',
   standalone: true,
-  imports: [FormsModule, I18nPipe, AutocompleteComponent],
+  imports: [FormsModule, I18nPipe, AutocompleteComponent, ReceiptPrintButtonsComponent],
   templateUrl: './multi-sales.html',
   styleUrl: './multi-sales.css',
 })
@@ -46,6 +47,7 @@ export class MultiSalesComponent implements OnInit {
   private readonly i18n = inject(I18nService);
   private readonly toast = inject(ToastService);
   private readonly bagCountConfigService = inject(BagCountConfigService);
+  private readonly receipt = inject(ReceiptService);
 
   protected readonly master = signal<SalesMasterData>({
     farmers: [],
@@ -63,11 +65,7 @@ export class MultiSalesComponent implements OnInit {
 
   protected readonly bagLimits = computed(() =>
     this.bagConfigs()
-      .filter(
-        (c) =>
-          c.salesDate === formatApiDate(new Date()) &&
-          (c.bagCheck ?? 'E').toUpperCase() === 'E',
-      )
+      .filter((c) => c.salesDate === formatApiDate(new Date()))
       .sort((a, b) => a.flowerName.localeCompare(b.flowerName)),
   );
 
@@ -209,6 +207,47 @@ export class MultiSalesComponent implements OnInit {
       flowerInvalid: false,
       customerInvalid: false,
     };
+  }
+
+  protected onDecimalKeydown(event: KeyboardEvent): void {
+    if (event.ctrlKey || event.metaKey || event.altKey) {
+      return;
+    }
+    const key = event.key;
+    if (
+      key.length !== 1 ||
+      key === 'Backspace' ||
+      key === 'Delete' ||
+      key === 'Tab' ||
+      key === 'Enter' ||
+      key === 'Escape' ||
+      key === 'ArrowLeft' ||
+      key === 'ArrowRight' ||
+      key === 'ArrowUp' ||
+      key === 'ArrowDown' ||
+      key === 'Home' ||
+      key === 'End'
+    ) {
+      return;
+    }
+    if (key === '.') {
+      if ((event.target as HTMLInputElement).value.includes('.')) {
+        event.preventDefault();
+      }
+      return;
+    }
+    if (!/[0-9]/.test(key)) {
+      event.preventDefault();
+    }
+  }
+
+  protected sanitizeDecimal(value: string): string {
+    const cleaned = value.replace(/[^0-9.]/g, '');
+    const firstDot = cleaned.indexOf('.');
+    if (firstDot === -1) {
+      return cleaned;
+    }
+    return cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, '');
   }
 
   protected onBagInput(index: number): void {
@@ -427,14 +466,13 @@ export class MultiSalesComponent implements OnInit {
     });
   }
 
-  protected printReport(): void {
+  protected async printReport(format: ReceiptFormat): Promise<void> {
     const rows = this.rows();
     if (rows.length === 0) {
       this.toast.error(this.i18n.translate('sales.error.no.rows.print'));
       return;
     }
 
-    const shopName = this.auth.user()?.shopName ?? '';
     const today = formatApiDate(new Date());
     const t = this.i18n.translate.bind(this.i18n);
     const bagLimits = this.bagLimits();
@@ -475,28 +513,7 @@ export class MultiSalesComponent implements OnInit {
         '</tr></thead><tbody>' + body + '</tbody></table>';
     }
 
-    const reportHtml =
-      '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + t('print.receipt.title') + '</title>' +
-      '<style>' +
-      '@page{size:80mm auto;margin:3mm 2mm;}' +
-      'body{margin:0;padding:2mm 1mm;width:76mm;font-family:"Courier New",monospace;font-size:9px;line-height:1.4;color:#000;background:#fff;}' +
-      '.print-header{text-align:center;border-bottom:1px dashed #000;padding-bottom:5px;margin-bottom:5px;}' +
-      '.print-header h2{font-size:13px;margin:0 0 2px;font-weight:700;letter-spacing:0.5px;}' +
-      '.print-header p{font-size:8px;margin:1px 0;color:#333;}' +
-      '.print-info{margin-bottom:6px;font-size:8px;line-height:1.5;}' +
-      '.print-info span{display:block;}' +
-      '.print-info strong{font-size:8px;}' +
-      'table{width:100%;border-collapse:collapse;margin:0 0 6px;font-size:7.5px;table-layout:fixed;}' +
-      'th,td{padding:3px 2px;vertical-align:top;word-wrap:break-word;overflow-wrap:break-word;}' +
-      'th{border-bottom:1.5px solid #000;font-weight:700;font-size:7px;text-transform:uppercase;letter-spacing:0.3px;}' +
-      'th.left,td.left{text-align:left;}' +
-      'th.right,td.right{text-align:right;}' +
-      'tbody tr{border-bottom:0.5px dotted #ccc;}' +
-      'tbody tr:last-child{border-bottom:none;}' +
-      '.bl-title{font-size:8px;font-weight:700;text-align:center;text-transform:uppercase;letter-spacing:0.4px;margin:6px 0 3px;border-top:1px dashed #000;padding-top:5px;}' +
-      '.footer{text-align:center;margin-top:10px;font-size:7px;border-top:1px dashed #000;padding-top:5px;}' +
-      '</style></head><body>' +
-      '<div class="print-header"><h2>' + shopName + '</h2></div>' +
+    const content =
       '<div class="print-info"><span><strong>' + t('report.date') + '</strong> ' + today + '</span></div>' +
       '<table>' +
       '<colgroup>' +
@@ -511,12 +528,15 @@ export class MultiSalesComponent implements OnInit {
       '<th class="right">' + t('report.col.total') + '</th>' +
       '<th class="left">' + t('report.col.customer') + '</th>' +
       '</tr></thead>' +
-      '<tbody>' + rowsHtml + '</tbody></table>' + bagLimitHtml +
-      '<div class="footer">' + t('print.thankyou') + '</div>' +
-      '</body></html>';
+      '<tbody>' + rowsHtml + '</tbody></table>' + bagLimitHtml;
 
-    if (!printHtml(reportHtml)) {
-      this.toast.error(this.i18n.translate('sales.error.print.blocked'));
+    const result = await this.receipt.output(content, {
+      title: t('print.receipt.title'),
+      fileBase: 'multi-sales-receipt',
+      format,
+    });
+    if (result.status !== 'ok') {
+      this.toast.error(result.message);
     }
   }
 

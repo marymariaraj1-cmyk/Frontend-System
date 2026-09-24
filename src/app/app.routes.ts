@@ -54,6 +54,20 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'flower-market-price-config',
+        loadComponent: () =>
+          import('./features/flower-market-price-config/flower-market-price-config.component').then(
+            (m) => m.FlowerMarketPriceConfigComponent,
+          ),
+      },
+      {
+        path: 'tamilnadu-flower-price-report',
+        loadComponent: () =>
+          import('./features/vayal-agro-flower-price/vayal-agro-flower-price.component').then(
+            (m) => m.VayalAgroFlowerPriceComponent,
+          ),
+      },
+      {
         path: 'sales-entry',
         loadComponent: () =>
           import('./features/sales-entry/sales-entry.component').then(
@@ -75,6 +89,20 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'flower-loot-sale',
+        loadComponent: () =>
+          import('./features/flower-loot-sale/flower-loot-sale.component').then(
+            (m) => m.FlowerLootSaleComponent,
+          ),
+      },
+      {
+        path: 'flower-loot-sale-edit',
+        loadComponent: () =>
+          import('./features/flower-loot-sale-edit/flower-loot-sale-edit.component').then(
+            (m) => m.FlowerLootSaleEditComponent,
+          ),
+      },
+      {
         path: 'farmer-transaction',
         loadComponent: () =>
           import('./features/farmer-transaction/farmer-transaction.component').then(
@@ -86,6 +114,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/buyer-transaction/buyer-transaction.component').then(
             (m) => m.BuyerTransactionComponent,
+          ),
+      },
+      {
+        path: 'daily-cash-book',
+        loadComponent: () =>
+          import('./features/daily-cash-book/daily-cash-book.component').then(
+            (m) => m.DailyCashBookComponent,
           ),
       },
       {

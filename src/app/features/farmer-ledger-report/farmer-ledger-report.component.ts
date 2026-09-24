@@ -6,7 +6,9 @@ import { FarmerLedgerEntry } from '../../core/models/ledger';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
 import { FarmerLedgerService } from '../../core/services/farmer-ledger.service';
 import { I18nService } from '../../core/services/i18n.service';
+import { LedgerNavService } from '../../core/services/ledger-nav.service';
 import { ToastService } from '../../core/services/toast.service';
+import { formatCurrency } from '../../core/utils/currency-format.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
 
 @Component({
@@ -19,6 +21,7 @@ import { extractErrorMessage } from '../../core/utils/http-error.util';
 export class FarmerLedgerReportComponent implements OnInit {
   private readonly service = inject(FarmerLedgerService);
   private readonly router = inject(Router);
+  private readonly ledgerNav = inject(LedgerNavService);
   private readonly i18n = inject(I18nService);
   private readonly toast = inject(ToastService);
 
@@ -26,6 +29,8 @@ export class FarmerLedgerReportComponent implements OnInit {
   protected readonly search = signal('');
   protected readonly loading = signal(false);
   protected readonly loaded = signal(false);
+
+  protected readonly formatCurrency = formatCurrency;
 
   ngOnInit(): void {
     this.loadList();
@@ -40,11 +45,8 @@ export class FarmerLedgerReportComponent implements OnInit {
   }
 
   protected viewDetail(entry: FarmerLedgerEntry): void {
-    sessionStorage.setItem(
-      'bb_farmer_ledger',
-      JSON.stringify({ farmerId: entry.farmerId, farmerName: entry.farmerName }),
-    );
-    this.router.navigate(['/farmer-ledger-detail'], { queryParams: { source: 'report' } });
+    this.ledgerNav.setFarmer(entry.farmerId, entry.farmerName, 'report');
+    this.router.navigate(['/farmer-ledger-detail']);
   }
 
   protected initials(name: string | undefined): string {
@@ -55,6 +57,20 @@ export class FarmerLedgerReportComponent implements OnInit {
     const first = parts[0]?.[0] ?? '';
     const last = parts.length > 1 ? parts[parts.length - 1][0] ?? '' : '';
     return (first + last).toUpperCase();
+  }
+
+  protected outstandingAbs(value: number): number {
+    return Math.abs(value);
+  }
+
+  protected balanceClass(value: number): string {
+    if (value > 0) {
+      return 'credit';
+    }
+    if (value < 0) {
+      return 'debit';
+    }
+    return 'settled';
   }
 
   private loadList(): void {
