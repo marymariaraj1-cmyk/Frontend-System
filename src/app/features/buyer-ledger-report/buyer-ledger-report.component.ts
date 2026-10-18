@@ -1,7 +1,7 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, OnInit, inject, signal, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
 
+import { DataTableComponent, DataTableColumn } from '../../core/components/data-table/data-table.component';
 import { BuyerLedgerEntry } from '../../core/models/ledger';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
 import { BuyerLedgerService } from '../../core/services/buyer-ledger.service';
@@ -14,7 +14,7 @@ import { extractErrorMessage } from '../../core/utils/http-error.util';
 @Component({
   selector: 'app-buyer-ledger-report',
   standalone: true,
-  imports: [FormsModule, I18nPipe],
+  imports: [I18nPipe, DataTableComponent],
   templateUrl: './buyer-ledger-report.html',
   styleUrl: './buyer-ledger-report.css',
 })
@@ -26,22 +26,47 @@ export class BuyerLedgerReportComponent implements OnInit {
   private readonly toast = inject(ToastService);
 
   protected readonly entries = signal<BuyerLedgerEntry[]>([]);
-  protected readonly search = signal('');
   protected readonly loading = signal(false);
   protected readonly loaded = signal(false);
+  protected readonly ledgerTable = viewChild<DataTableComponent>('ledgerTable');
 
   protected readonly formatCurrency = formatCurrency;
 
+  protected readonly columns: DataTableColumn[] = [
+    {
+      key: 'sno',
+      header: 'txn.sno',
+      type: 'text',
+      align: 'center',
+      sortable: false,
+      filterable: false,
+      className: 'col-no',
+    },
+    {
+      key: 'buyerName',
+      header: 'ledger.list.col.buyer.name',
+      type: 'text',
+      className: 'col-name',
+    },
+    {
+      key: 'outstandingBalance',
+      header: 'ledger.list.col.outstanding.balance',
+      type: 'number',
+      className: 'col-outstanding',
+    },
+    {
+      key: 'action',
+      header: 'ledger.list.col.action',
+      type: 'text',
+      align: 'center',
+      sortable: false,
+      filterable: false,
+      className: 'col-action',
+    },
+  ];
+
   ngOnInit(): void {
     this.loadList();
-  }
-
-  protected filteredEntries(): BuyerLedgerEntry[] {
-    const q = this.search().trim().toLowerCase();
-    if (q === '') {
-      return this.entries();
-    }
-    return this.entries().filter((entry) => entry.buyerName.toLowerCase().includes(q));
   }
 
   protected viewDetail(entry: BuyerLedgerEntry): void {

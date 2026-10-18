@@ -225,44 +225,7 @@
 }
 
 /* ---------- Grid ---------- */
-.sales-grid-table {
-  width: 100%;
-  table-layout: fixed;
-  border-collapse: collapse;
-}
-
-.sales-grid-table th,
-.sales-grid-table td {
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  overflow: visible;
-  vertical-align: top;
-  padding-left: 6px;
-  padding-right: 6px;
-}
-
-.sales-grid-table .c-sno {
-  width: 50px;
-}
-
-.sales-grid-table .c-bag {
-  width: 60px;
-}
-
-.sales-grid-table .c-name {
-  width: 26%;
-  min-width: 160px;
-}
-
-.sales-grid-table .c-qty,
-.sales-grid-table .c-rate,
-.sales-grid-table .c-amount {
-  width: 110px;
-}
-
-.sales-grid-table .c-actions {
-  width: 90px;
-}
+/* Column alignment / width / wrapping for this grid is shared in global styles.css (.sales-grid-table). */
 
 .sales-grid-table td:nth-child(3) ::ng-deep .autocomplete-wrapper input {
   height: auto;
@@ -277,13 +240,13 @@
   box-shadow: 0 0 0 3px rgba(114, 103, 239, 0.15);
 }
 
-.sales-grid-table td:not(:first-child):not(:last-child) {
-  padding-top: 6px;
-  padding-bottom: 6px;
-}
-
-.sales-grid-table td:first-child {
-  vertical-align: middle;
+.sales-grid-table .bag-input {
+  width: 100%;
+  text-align: right;
+  padding-left: 34px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='18' viewBox='0 -960 960 960' width='18' fill='%23a0a8ba'%3E%3Cpath d='M640-520h-60v130H450v60h130v130h60v-130h130v-60H640v-130ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v460H200v100h340v60H200Z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 10px center;
 }
 
 .action-cell {

@@ -555,3 +555,81 @@
     flex-direction: column;
   }
 }
+
+/* ---------- Row actions ---------- */
+.delete-row-icon {
+  color: #dc2626;
+}
+
+.delete-row-icon:hover {
+  background: #fee2e2;
+}
+
+/* ---------- Confirmation dialogs ---------- */
+.confirm-text {
+  font-size: 14px;
+  color: #334155;
+  line-height: 1.6;
+  margin-bottom: 18px;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.confirm-actions .btn {
+  min-width: 100px;
+}
+
+/* ---------- Edit dialog form ---------- */
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.edit-form .form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.edit-form input[type='text'],
+.edit-form input[type='date'] {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #fff;
+  color: #0f172a;
+}
+
+.edit-form input[type='date']:disabled {
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+.edit-form .input-with-icon {
+  position: relative;
+}
+
+.edit-form .input-with-icon .input-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 15px;
+  pointer-events: none;
+}
+
+.edit-form .input-with-icon input[type='text'] {
+  padding-left: 30px;
+}

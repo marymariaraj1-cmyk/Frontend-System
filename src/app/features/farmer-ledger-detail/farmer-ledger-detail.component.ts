@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
@@ -9,7 +9,9 @@ import {
   FarmerSalesSummary,
 } from '../../core/models/ledger';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
+import { DateFormatPipe } from '../../core/pipes/date-format.pipe';
 import { ReceiptPrintButtonsComponent } from '../../core/components/receipt-print-buttons/receipt-print-buttons.component';
+import { DataTableComponent, DataTableColumn } from '../../core/components/data-table/data-table.component';
 import { DraggableDirective } from '../../core/directives/draggable.directive';
 import { FarmerLedgerService } from '../../core/services/farmer-ledger.service';
 import { I18nService } from '../../core/services/i18n.service';
@@ -17,13 +19,14 @@ import { LedgerNavService } from '../../core/services/ledger-nav.service';
 import { ReceiptFormat, ReceiptService } from '../../core/services/receipt.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatCurrency } from '../../core/utils/currency-format.util';
+import { formatDate } from '../../core/utils/date.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
 import { formatDecimal } from '../../core/utils/round-off.util';
 
 @Component({
   selector: 'app-farmer-ledger-detail',
   standalone: true,
-  imports: [I18nPipe, DraggableDirective, FormsModule, ReceiptPrintButtonsComponent],
+  imports: [I18nPipe, DateFormatPipe, DraggableDirective, FormsModule, ReceiptPrintButtonsComponent, DataTableComponent],
   templateUrl: './farmer-ledger-detail.html',
   styleUrl: './farmer-ledger-detail.css',
 })
@@ -54,6 +57,111 @@ export class FarmerLedgerDetailComponent implements OnInit {
   protected readonly popupCreditAmt = signal<number | undefined>(undefined);
   protected readonly source = signal<'ledger' | 'report'>('ledger');
   protected readonly showClosed = signal(false);
+
+  protected readonly displayRows = computed<FarmerLedgerDetailRow[]>(() => {
+    if (this.isReport()) {
+      return this.rows();
+    }
+    return this.showClosed() ? this.rows() : this.rows().filter((row) => this.isActive(row));
+  });
+
+  protected readonly columns = computed<DataTableColumn[]>(() =>
+    this.isReport()
+      ? [
+          {
+            key: 'sno',
+            header: 'txn.sno',
+            type: 'text',
+            align: 'center',
+            width: '50px',
+            sortable: false,
+            filterable: false,
+          },
+          {
+            key: 'salesDate',
+            header: 'ledger.report.col.sales.date',
+            type: 'date',
+          },
+          {
+            key: 'sales',
+            header: 'ledger.report.col.credit.amt',
+            type: 'currency',
+            className: 'amount-col',
+          },
+          {
+            key: 'creditAmount',
+            header: 'ledger.report.col.debit.amt',
+            type: 'currency',
+            className: 'amount-col',
+          },
+        ]
+      : [
+          {
+            key: 'sno',
+            header: 'txn.sno',
+            type: 'text',
+            align: 'center',
+            width: '50px',
+            sortable: false,
+            filterable: false,
+          },
+          {
+            key: 'salesDate',
+            header: 'ledger.report.col.sales.date',
+            type: 'date',
+          },
+          {
+            key: 'openingBalance',
+            header: 'ledger.detail.col.opening.balance',
+            type: 'currency',
+            className: 'amount-col',
+          },
+          {
+            key: 'sales',
+            header: 'farmer.ledger.detail.col.sales',
+            type: 'currency',
+            className: 'amount-col',
+          },
+          {
+            key: 'creditAmount',
+            header: 'farmer.ledger.detail.col.received',
+            type: 'currency',
+            className: 'amount-col',
+          },
+          {
+            key: 'closingBalance',
+            header: 'ledger.detail.col.closing.balance',
+            type: 'currency',
+            className: 'amount-col',
+          },
+        ],
+  );
+
+  protected readonly popupColumns: DataTableColumn[] = [
+    {
+      key: 'flowerType',
+      header: 'buyer.sales.report.detail.flower.type',
+      type: 'text',
+    },
+    {
+      key: 'totalWeight',
+      header: 'buyer.sales.report.detail.weight',
+      type: 'number',
+      className: 'amount-col',
+    },
+    {
+      key: 'perKgRate',
+      header: 'buyer.sales.report.detail.price',
+      type: 'number',
+      className: 'amount-col',
+    },
+    {
+      key: 'price',
+      header: 'buyer.sales.report.detail.total',
+      type: 'number',
+      className: 'amount-col',
+    },
+  ];
 
   protected readonly period = signal<'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom'>('monthly');
   protected readonly fromDate = signal(this.toDateStr(new Date(new Date().getFullYear(), new Date().getMonth(), 1)));
@@ -93,13 +201,6 @@ export class FarmerLedgerDetailComponent implements OnInit {
 
   protected toggleClosed(): void {
     this.showClosed.set(!this.showClosed());
-  }
-
-  protected displayRows(): FarmerLedgerDetailRow[] {
-    if (this.isReport()) {
-      return this.rows();
-    }
-    return this.showClosed() ? this.rows() : this.rows().filter((row) => this.isActive(row));
   }
 
   protected hasActiveRows(): boolean {
@@ -266,8 +367,7 @@ export class FarmerLedgerDetailComponent implements OnInit {
       .map((row, idx) => {
         const base =
           `<tr>` +
-          `<td class="left">${idx + 1}</td>` +
-          `<td class="left">${this.escapeHtml(row.salesDate)}</td>`;
+          `<td class="left">${this.escapeHtml(formatDate(row.salesDate))}</td>`;
         const body = report
           ? `<td class="right"><span style="color:#15803d;">${this.formatNum(row.sales)}</span></td>` +
             `<td class="right"><span style="color:#b91c1c;">${this.formatNum(row.creditAmount)}</span></td>`
@@ -280,12 +380,10 @@ export class FarmerLedgerDetailComponent implements OnInit {
       .join('');
 
     const headers = report
-      ? `<th class="left">#</th>` +
-        `<th class="left">${this.escapeHtml(this.i18n.translate('ledger.report.col.sales.date'))}</th>` +
+      ? `<th class="left">${this.escapeHtml(this.i18n.translate('ledger.report.col.sales.date'))}</th>` +
         `<th class="right">${this.escapeHtml(this.i18n.translate('ledger.report.col.credit.amt'))}</th>` +
         `<th class="right">${this.escapeHtml(this.i18n.translate('ledger.report.col.debit.amt'))}</th>`
-      : `<th class="left">#</th>` +
-        `<th class="left">${this.escapeHtml(this.i18n.translate('ledger.report.col.sales.date'))}</th>` +
+      : `<th class="left">${this.escapeHtml(this.i18n.translate('ledger.report.col.sales.date'))}</th>` +
         `<th class="right">${this.escapeHtml(this.i18n.translate('ledger.detail.col.opening.balance'))}</th>` +
         `<th class="right">${this.escapeHtml(this.i18n.translate('farmer.ledger.detail.col.sales'))}</th>` +
         `<th class="right">${this.escapeHtml(this.i18n.translate('farmer.ledger.detail.col.received'))}</th>` +
@@ -306,8 +404,8 @@ export class FarmerLedgerDetailComponent implements OnInit {
     const summaryHtml =
       `<div style="max-width:420px;margin:10px auto 0;background:#f8fafc;border:1px solid #e0e7ff;border-radius:8px;padding:8px 10px;">` +
       `<div style="text-align:center;font-weight:700;font-size:8px;color:#4338ca;letter-spacing:0.6px;text-transform:uppercase;padding-bottom:6px;margin-bottom:6px;border-bottom:1px solid #e0e7ff;">&#9998; ${this.escapeHtml(this.i18n.translate('ledger.summary.title'))}</div>` +
-      `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px dashed #e0e7ff;font-size:8px;"><span style="color:#475569;">&#10022; ${this.escapeHtml(this.i18n.translate('ledger.summary.flower.credit.sale'))}</span><strong style="color:#15803d;">${this.formatNum(totalSalesPrint)}</strong></div>` +
-      `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px dashed #e0e7ff;font-size:8px;"><span style="color:#475569;">&#9673; ${this.escapeHtml(this.i18n.translate('ledger.summary.debit'))}</span><strong style="color:#b91c1c;">${this.formatNum(totalDebitPrint)}</strong></div>` +
+      `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #e0e7ff;font-size:8px;"><span style="color:#475569;">&#10022; ${this.escapeHtml(this.i18n.translate('ledger.summary.flower.credit.sale'))}</span><strong style="color:#15803d;">${this.formatNum(totalSalesPrint)}</strong></div>` +
+      `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #e0e7ff;font-size:8px;"><span style="color:#475569;">&#9673; ${this.escapeHtml(this.i18n.translate('ledger.summary.debit'))}</span><strong style="color:#b91c1c;">${this.formatNum(totalDebitPrint)}</strong></div>` +
       `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 8px;margin-top:6px;background:#fff;border:1px solid #c7d2fe;border-radius:6px;font-size:9px;font-weight:700;"><span style="color:${balancePrintColor};">&#9670; ${this.escapeHtml(balancePrintLabel)}</span><span style="color:${balancePrintColor};">${this.formatNum(balancePrintAbs)}</span></div>` +
       `</div>`;
 
@@ -367,8 +465,6 @@ export class FarmerLedgerDetailComponent implements OnInit {
     const adjRow =
       fAdjust > 0
         ? `<tr>` +
-          `<td class="left">${items.length + 1}</td>` +
-          `<td class="left">${this.escapeHtml(this.currentSalesDate())}</td>` +
           `<td class="left">${this.escapeHtml(this.i18n.translate('fac.adjustment.label'))}</td>` +
           `<td class="right">-</td>` +
           `<td class="right">-</td>` +
@@ -380,8 +476,6 @@ export class FarmerLedgerDetailComponent implements OnInit {
       .map(
         (item, i) =>
           `<tr>` +
-          `<td class="left">${i + 1}</td>` +
-          `<td class="left">${this.escapeHtml(item.salesDate || '-')}</td>` +
           `<td class="left">${this.escapeHtml(item.flowerType || '-')}</td>` +
           `<td class="right">${this.formatDecimal(item.totalWeight)}</td>` +
           `<td class="right">${this.formatNum(item.perKgRate)}</td>` +
@@ -397,8 +491,6 @@ export class FarmerLedgerDetailComponent implements OnInit {
       `</div>` +
       `<table>` +
       `<thead><tr>` +
-      `<th class="left">#</th>` +
-      `<th class="left">${this.escapeHtml(this.i18n.translate('buyer.sales.report.detail.sales.date'))}</th>` +
       `<th class="left">${this.escapeHtml(this.i18n.translate('report.col.flower.type'))}</th>` +
       `<th class="right">${this.escapeHtml(this.i18n.translate('report.col.weight'))}</th>` +
       `<th class="right">${this.escapeHtml(this.i18n.translate('report.col.price'))}</th>` +
@@ -538,19 +630,16 @@ export class FarmerLedgerDetailComponent implements OnInit {
     return row.salesIds === '0';
   }
 
+  protected hasSaleDetail(row: FarmerLedgerDetailRow): boolean {
+    return !!row.salesIds && row.salesIds !== '0';
+  }
+
   private formatNum(value: number | null | undefined | string): string {
     return formatCurrency(value);
   }
 
   private formatDateStr(dateStr: string): string {
-    if (!dateStr) {
-      return '';
-    }
-    const parts = dateStr.split('-');
-    if (parts.length !== 3) {
-      return dateStr;
-    }
-    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    return formatDate(dateStr);
   }
 
   private toDateStr(date: Date): string {

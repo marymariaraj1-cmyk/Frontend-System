@@ -1,24 +1,27 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
 import { BuyerLedgerDetailRow, BuyerSalesItem } from '../../core/models/ledger';
 import { ReceiptPrintButtonsComponent } from '../../core/components/receipt-print-buttons/receipt-print-buttons.component';
+import { DataTableComponent, DataTableColumn } from '../../core/components/data-table/data-table.component';
 import { DraggableDirective } from '../../core/directives/draggable.directive';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
+import { DateFormatPipe } from '../../core/pipes/date-format.pipe';
 import { BuyerLedgerService } from '../../core/services/buyer-ledger.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { LedgerNavService } from '../../core/services/ledger-nav.service';
 import { ReceiptFormat, ReceiptService } from '../../core/services/receipt.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatCurrency } from '../../core/utils/currency-format.util';
+import { formatDate } from '../../core/utils/date.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
 import { formatDecimal } from '../../core/utils/round-off.util';
 
 @Component({
   selector: 'app-buyer-ledger-detail',
   standalone: true,
-  imports: [I18nPipe, DraggableDirective, FormsModule, ReceiptPrintButtonsComponent],
+  imports: [I18nPipe, DateFormatPipe, DraggableDirective, FormsModule, ReceiptPrintButtonsComponent, DataTableComponent],
   templateUrl: './buyer-ledger-detail.html',
   styleUrl: './buyer-ledger-detail.css',
 })
@@ -96,12 +99,110 @@ export class BuyerLedgerDetailComponent implements OnInit {
     this.showClosed.set(!this.showClosed());
   }
 
-  protected displayRows(): BuyerLedgerDetailRow[] {
+  protected displayRows = computed<BuyerLedgerDetailRow[]>(() => {
     if (this.isReport()) {
       return this.rows();
     }
     return this.showClosed() ? this.rows() : this.rows().filter((row) => this.isActive(row));
-  }
+  });
+
+  protected readonly columns = computed<DataTableColumn[]>(() =>
+    this.isReport()
+      ? [
+          {
+            key: 'sno',
+            header: 'txn.sno',
+            type: 'text',
+            align: 'center',
+            width: '50px',
+            sortable: false,
+            filterable: false,
+          },
+          {
+            key: 'salesDate',
+            header: 'ledger.report.col.sales.date',
+            type: 'date',
+          },
+          {
+            key: 'cash',
+            header: 'ledger.report.col.credit.amt',
+            type: 'currency',
+            className: 'amount-col',
+          },
+          {
+            key: 'purchase',
+            header: 'ledger.report.col.debit.amt',
+            type: 'currency',
+            className: 'amount-col',
+          },
+        ]
+      : [
+          {
+            key: 'sno',
+            header: 'txn.sno',
+            type: 'text',
+            align: 'center',
+            width: '50px',
+            sortable: false,
+            filterable: false,
+          },
+          {
+            key: 'salesDate',
+            header: 'ledger.report.col.sales.date',
+            type: 'date',
+          },
+          {
+            key: 'openingBalance',
+            header: 'ledger.detail.col.opening.balance',
+            type: 'currency',
+            className: 'amount-col',
+          },
+          {
+            key: 'purchase',
+            header: 'buyer.ledger.detail.col.purchase',
+            type: 'currency',
+            className: 'amount-col',
+          },
+          {
+            key: 'cash',
+            header: 'buyer.ledger.detail.col.cash',
+            type: 'currency',
+            className: 'amount-col',
+          },
+          {
+            key: 'closingBalance',
+            header: 'ledger.detail.col.closing.balance',
+            type: 'currency',
+            className: 'amount-col',
+          },
+        ],
+  );
+
+  protected readonly popupColumns: DataTableColumn[] = [
+    {
+      key: 'flowerType',
+      header: 'buyer.sales.report.detail.flower.type',
+      type: 'text',
+    },
+    {
+      key: 'totalWeight',
+      header: 'buyer.sales.report.detail.weight',
+      type: 'number',
+      className: 'amount-col',
+    },
+    {
+      key: 'perKgRate',
+      header: 'buyer.sales.report.detail.price',
+      type: 'number',
+      className: 'amount-col',
+    },
+    {
+      key: 'price',
+      header: 'buyer.sales.report.detail.total',
+      type: 'number',
+      className: 'amount-col',
+    },
+  ];
 
   protected hasActiveRows(): boolean {
     return this.rows().some((row) => this.isActive(row));
@@ -213,8 +314,37 @@ export class BuyerLedgerDetailComponent implements OnInit {
     return row ? Number(row.discount) || 0 : 0;
   }
 
-  protected popupFinalTotal(): number {
-    return this.popupTotal() - this.popupDiscount();
+  protected popupSummary(): {
+    todayPurchase: number;
+    discount: number;
+    finalTodayPurchase: number;
+    opening: number;
+    total: number;
+    received: number;
+    balance: number;
+    balanceBadge: 'debit' | 'credit' | null;
+    balanceAbs: number;
+  } {
+    const todayPurchase = this.popupTotal();
+    const discount = this.popupDiscount();
+    const finalTodayPurchase = todayPurchase - discount;
+    const salesDate = this.currentSalesDate();
+    const row = this.rows().find((r) => r.salesDate === salesDate);
+    const opening = row ? Number(row.openingBalance) || 0 : 0;
+    const received = row ? Number(row.cash) || 0 : 0;
+    const total = finalTodayPurchase + opening;
+    const balance = total - received;
+    return {
+      todayPurchase,
+      discount,
+      finalTodayPurchase,
+      opening,
+      total,
+      received,
+      balance,
+      balanceBadge: balance > 0 ? 'debit' : balance < 0 ? 'credit' : null,
+      balanceAbs: Math.abs(balance),
+    };
   }
 
   protected async printDetail(format: ReceiptFormat): Promise<void> {
@@ -235,8 +365,7 @@ export class BuyerLedgerDetailComponent implements OnInit {
       .map((row, idx) => {
         const base =
           `<tr>` +
-          `<td class="left">${idx + 1}</td>` +
-          `<td class="left">${this.escapeHtml(row.salesDate)}</td>`;
+          `<td class="left">${this.escapeHtml(formatDate(row.salesDate))}</td>`;
         const body = report
           ? `<td class="right"><span style="color:#15803d;">${this.formatNum(row.cash)}</span></td>` +
             `<td class="right"><span style="color:#b91c1c;">${this.formatNum(row.purchase)}</span></td>`
@@ -249,12 +378,10 @@ export class BuyerLedgerDetailComponent implements OnInit {
       .join('');
 
     const headers = report
-      ? `<th class="left">#</th>` +
-        `<th class="left">${this.escapeHtml(this.i18n.translate('ledger.report.col.sales.date'))}</th>` +
+      ? `<th class="left">${this.escapeHtml(this.i18n.translate('ledger.report.col.sales.date'))}</th>` +
         `<th class="right">${this.escapeHtml(this.i18n.translate('ledger.report.col.credit.amt'))}</th>` +
         `<th class="right">${this.escapeHtml(this.i18n.translate('ledger.report.col.debit.amt'))}</th>`
-      : `<th class="left">#</th>` +
-        `<th class="left">${this.escapeHtml(this.i18n.translate('ledger.report.col.sales.date'))}</th>` +
+      : `<th class="left">${this.escapeHtml(this.i18n.translate('ledger.report.col.sales.date'))}</th>` +
         `<th class="right">${this.escapeHtml(this.i18n.translate('ledger.detail.col.opening.balance'))}</th>` +
         `<th class="right">${this.escapeHtml(this.i18n.translate('buyer.ledger.detail.col.purchase'))}</th>` +
         `<th class="right">${this.escapeHtml(this.i18n.translate('buyer.ledger.detail.col.cash'))}</th>` +
@@ -275,8 +402,8 @@ export class BuyerLedgerDetailComponent implements OnInit {
     const summaryHtml =
       `<div style="max-width:420px;margin:10px auto 0;background:#f8fafc;border:1px solid #e0e7ff;border-radius:8px;padding:8px 10px;">` +
       `<div style="text-align:center;font-weight:700;font-size:8px;color:#4338ca;letter-spacing:0.6px;text-transform:uppercase;padding-bottom:6px;margin-bottom:6px;border-bottom:1px solid #e0e7ff;">&#9998; ${this.escapeHtml(this.i18n.translate('ledger.summary.title'))}</div>` +
-      `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px dashed #e0e7ff;font-size:8px;"><span style="color:#475569;">&#10022; ${this.escapeHtml(this.i18n.translate('ledger.summary.flower.purchase'))}</span><strong style="color:#15803d;">${this.formatNum(totalPurchasePrint)}</strong></div>` +
-      `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px dashed #e0e7ff;font-size:8px;"><span style="color:#475569;">&#9673; ${this.escapeHtml(this.i18n.translate('ledger.summary.cash.received'))}</span><strong style="color:#b91c1c;">${this.formatNum(totalCashPrint)}</strong></div>` +
+      `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #e0e7ff;font-size:8px;"><span style="color:#475569;">&#10022; ${this.escapeHtml(this.i18n.translate('ledger.summary.flower.purchase'))}</span><strong style="color:#15803d;">${this.formatNum(totalPurchasePrint)}</strong></div>` +
+      `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #e0e7ff;font-size:8px;"><span style="color:#475569;">&#9673; ${this.escapeHtml(this.i18n.translate('ledger.summary.cash.received'))}</span><strong style="color:#b91c1c;">${this.formatNum(totalCashPrint)}</strong></div>` +
       `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 8px;margin-top:6px;background:#fff;border:1px solid #c7d2fe;border-radius:6px;font-size:9px;font-weight:700;"><span style="color:${balancePrintColor};">&#9670; ${this.escapeHtml(balancePrintLabel)}</span><span style="color:${balancePrintColor};">${this.formatNum(balancePrintAbs)}</span></div>` +
       `</div>`;
 
@@ -308,16 +435,12 @@ export class BuyerLedgerDetailComponent implements OnInit {
       this.toast.error(this.i18n.translate('msg.no.records'));
       return;
     }
-    const total = this.popupTotal();
-    const discount = this.popupDiscount();
-    const finalTotal = total - discount;
+    const s = this.popupSummary();
 
     const rowsHtml = items
       .map(
         (item, i) =>
           `<tr>` +
-          `<td class="left">${i + 1}</td>` +
-          `<td class="left">${this.escapeHtml(item.salesDate || '-')}</td>` +
           `<td class="left">${this.escapeHtml(item.flowerType || '-')}</td>` +
           `<td class="right">${this.formatDecimal(item.totalWeight)}</td>` +
           `<td class="right">${this.formatNum(item.perKgRate)}</td>` +
@@ -326,13 +449,34 @@ export class BuyerLedgerDetailComponent implements OnInit {
       )
       .join('');
 
-    let summaryRows =
-      `<tr><td class="lbl">${this.escapeHtml(this.i18n.translate('buyer.sales.report.detail.total'))}</td><td class="amt">${this.formatNum(total)}</td></tr>`;
-    if (discount > 0) {
-      summaryRows +=
-        `<tr><td class="lbl">${this.escapeHtml(this.i18n.translate('buyer.sales.report.detail.discount'))}</td><td class="amt">${this.formatNum(discount)}</td></tr>` +
-        `<tr class="final"><td class="lbl">${this.escapeHtml(this.i18n.translate('buyer.sales.report.detail.final.total'))}</td><td class="amt">${this.formatNum(finalTotal)}</td></tr>`;
-    }
+    const balanceBadgeHtml = s.balanceBadge
+      ? ` <span style="border:1px solid #000;border-radius:6px;padding:0 3px;font-size:7px;">${this.escapeHtml(
+          this.i18n.translate(s.balanceBadge === 'debit' ? 'fac.debit' : 'fac.credit'),
+        )}</span>`
+      : '';
+
+    const summaryRows =
+      `<tr style="border-top:1px solid #000;">` +
+      `<td class="lbl" style="text-align:right;">${this.escapeHtml(this.i18n.translate('buyer.ledger.summary.today.purchase'))}</td>` +
+      `<td class="amt">${this.formatNum(s.todayPurchase)}</td></tr>` +
+      `<tr>` +
+      `<td class="lbl" style="text-align:right;">${this.escapeHtml(this.i18n.translate('buyer.ledger.detail.col.discount'))}</td>` +
+      `<td class="amt">${this.formatNum(s.discount)}</td></tr>` +
+      `<tr>` +
+      `<td class="lbl" style="text-align:right;">${this.escapeHtml(this.i18n.translate('buyer.ledger.summary.final.today.purchase'))}</td>` +
+      `<td class="amt">${this.formatNum(s.finalTodayPurchase)}</td></tr>` +
+      `<tr>` +
+      `<td class="lbl" style="text-align:right;">${this.escapeHtml(this.i18n.translate('buyer.ledger.summary.opening'))}</td>` +
+      `<td class="amt">${this.formatNum(s.opening)}</td></tr>` +
+      `<tr class="final">` +
+      `<td class="lbl" style="text-align:right;">${this.escapeHtml(this.i18n.translate('buyer.ledger.summary.total'))}</td>` +
+      `<td class="amt">${this.formatNum(s.total)}</td></tr>` +
+      `<tr>` +
+      `<td class="lbl" style="text-align:right;">${this.escapeHtml(this.i18n.translate('buyer.ledger.summary.received'))}</td>` +
+      `<td class="amt">${this.formatNum(s.received)}</td></tr>` +
+      `<tr class="final">` +
+      `<td class="lbl" style="text-align:right;">${this.escapeHtml(this.i18n.translate('buyer.ledger.summary.balance'))}${balanceBadgeHtml}</td>` +
+      `<td class="amt">${this.formatNum(s.balanceAbs)}</td></tr>`;
 
     const content =
       `<div class="print-header">` +
@@ -341,14 +485,11 @@ export class BuyerLedgerDetailComponent implements OnInit {
       `</div>` +
       `<table>` +
       `<thead><tr>` +
-      `<th class="left">#</th>` +
-      `<th class="left">${this.escapeHtml(this.i18n.translate('buyer.sales.report.detail.sales.date'))}</th>` +
       `<th class="left">${this.escapeHtml(this.i18n.translate('report.col.flower.type'))}</th>` +
       `<th class="right">${this.escapeHtml(this.i18n.translate('report.col.weight'))}</th>` +
       `<th class="right">${this.escapeHtml(this.i18n.translate('report.col.price'))}</th>` +
       `<th class="right">${this.escapeHtml(this.i18n.translate('report.col.total'))}</th>` +
       `</tr></thead><tbody>${rowsHtml}</tbody></table>` +
-      `<div class="divider"></div>` +
       `<table class="summary-table">${summaryRows}</table>`;
 
     const result = await this.receipt.output(content, {
@@ -482,14 +623,7 @@ export class BuyerLedgerDetailComponent implements OnInit {
   }
 
   private formatDateStr(dateStr: string): string {
-    if (!dateStr) {
-      return '';
-    }
-    const parts = dateStr.split('-');
-    if (parts.length !== 3) {
-      return dateStr;
-    }
-    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    return formatDate(dateStr);
   }
 
   private toDateStr(date: Date): string {

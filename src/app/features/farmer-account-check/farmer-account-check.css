@@ -179,6 +179,14 @@
 }
 
 /* ==================== TABLE ==================== */
+.fac-ledger-table {
+  max-width: 700px;
+}
+
+.fac-ledger-table app-data-table {
+  display: block;
+}
+
 .table-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -206,14 +214,13 @@
   white-space: nowrap;
 }
 
-.data-table th.left,
-.data-table td.left {
-  text-align: left;
-}
-
-.data-table th.right,
-.data-table td.right {
+/* Right-aligns the Credit/Sale and Debit/Farmer Advance header, row and total
+   cells. Keep this selector UNQUALIFIED: the <table class="data-table"> is
+   rendered inside app-data-table, so a parent rule like `.data-table td...`
+   gets scoped to this component and never matches the projected cells. */
+.amount-col {
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .data-table tbody tr {
@@ -344,77 +351,72 @@
   margin-bottom: 14px;
 }
 
-.calc-table {
+.calc-stmt {
   position: relative;
   width: 100%;
-  border-collapse: collapse;
+}
+
+.calc-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 7px 6px;
   font-size: 14px;
 }
 
-.calc-table td {
-  padding: 7px 6px;
-  border: none;
-}
-
-.calc-table td.lbl,
-.calc-table th.lbl {
-  width: 32%;
-  text-align: left;
+.calc-lbl {
+  flex: 1 1 auto;
+  min-width: 0;
   color: rgba(255, 255, 255, 0.82);
   font-weight: 600;
 }
 
-.calc-table td.amt,
-.calc-table th.amt {
-  width: 20%;
-  padding-right: 16px;
-  text-align: right;
-  color: #fff;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
+.calc-note {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.calc-amt {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
   white-space: nowrap;
 }
 
-.calc-table td.desc,
-.calc-table th.desc {
-  width: 44%;
-  text-align: left;
-  color: rgba(255, 255, 255, 0.62);
-  font-size: 12px;
-  font-style: italic;
+.calc-val {
+  color: #fff;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
-.calc-table thead th {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: rgba(255, 255, 255, 0.5);
-  background: transparent;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
-  padding-bottom: 6px;
+.calc-hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
+  margin: 6px;
 }
 
-.calc-table tbody tr {
-  transition: background 0.15s;
-}
-
-.calc-table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.calc-table tr.final td {
-  font-size: 17px;
-  font-weight: 800;
+.calc-line-final {
   border-top: 2px solid rgba(245, 158, 11, 0.85);
-  padding-top: 10px;
+  margin-top: 4px;
+  padding-top: 12px;
+}
+
+.calc-line-final .calc-lbl,
+.calc-line-final .calc-val {
   color: #fbbf24;
+  font-weight: 800;
+  font-size: 17px;
   letter-spacing: 0.3px;
   text-shadow: 0 1px 10px rgba(245, 158, 11, 0.35);
 }
 
 .fac-tag {
   display: inline-block;
-  margin-left: 8px;
   padding: 1px 8px;
   border-radius: 999px;
   font-size: 10px;
@@ -506,15 +508,16 @@
     font-size: 15px;
   }
 
-  .calc-table {
+  .calc-line {
     font-size: 13px;
   }
 
-  .calc-table td.amt {
-    white-space: normal;
+  .calc-amt {
+    white-space: nowrap;
   }
 
-  .calc-table tr.final td {
+  .calc-line-final .calc-lbl,
+  .calc-line-final .calc-val {
     font-size: 14px;
   }
 }

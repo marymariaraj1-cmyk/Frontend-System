@@ -1,0 +1,233 @@
+<div class="mst-page">
+  <div class="mst-header">
+    <span class="mst-accent"></span>
+    <span class="mst-ring mst-ring-1"></span>
+    <span class="mst-ring mst-ring-2"></span>
+    <span class="material-symbols-rounded mst-glyph">tune</span>
+    <div class="mst-header-icon">
+      <span class="material-symbols-rounded">tune</span>
+    </div>
+    <div class="mst-header-text">
+      <h2>{{ 'cbcfg.title' | i18n }}</h2>
+      <p class="mst-subtitle">{{ 'cbcfg.subtitle' | i18n }}</p>
+    </div>
+  </div>
+
+  <div class="cfc-info">
+    <span class="material-symbols-rounded">info</span>
+    {{ 'cbcfg.info' | i18n }}
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="cfc-add-form">
+        <div class="form-group">
+          <label for="cfcLabel">{{ 'cbcfg.label' | i18n }}</label>
+          <input id="cfcLabel" type="text" maxlength="50" [ngModel]="addLabel()" (ngModelChange)="addLabel.set($event)" />
+        </div>
+        <div class="form-group">
+          <label for="cfcLabelTa">{{ 'cbcfg.label.ta' | i18n }}</label>
+          <input id="cfcLabelTa" type="text" maxlength="100" [ngModel]="addLabelTa()" (ngModelChange)="addLabelTa.set($event)" />
+        </div>
+        <div class="form-group">
+          <label for="cfcType">{{ 'cbcfg.type' | i18n }}</label>
+          <select id="cfcType" [ngModel]="addType()" (ngModelChange)="addType.set($event)">
+            <option value="DEBIT">{{ 'cbcfg.type.debit' | i18n }}</option>
+            <option value="CREDIT">{{ 'cbcfg.type.credit' | i18n }}</option>
+          </select>
+        </div>
+        <div class="form-actions cfc-add-actions">
+          <button type="button" class="btn btn-primary" [disabled]="adding()" (click)="addField()">
+            <span class="material-symbols-rounded">add</span>
+            {{ 'cbcfg.add' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cfc-panels">
+    <div class="card cfc-panel">
+      <div class="card-body">
+        <div class="cfc-panel-head cfc-panel-head-debit">
+          <span class="material-symbols-rounded">arrow_upward</span>
+          <h3>{{ 'cbcfg.panel.debit' | i18n }}</h3>
+        </div>
+        @if (loading()) {
+          <p class="no-records">...</p>
+        } @else if (debitFields().length === 0) {
+          <p class="no-records">{{ 'cbcfg.no.fields' | i18n }}</p>
+        } @else {
+          @for (field of debitFields(); track field.fieldConfigId) {
+            <div class="cfc-row">
+              @if (isEditable(field)) {
+                <div class="cfc-edit-form">
+                  <input
+                    type="text"
+                    maxlength="50"
+                    [ngModel]="editLabel()"
+                    (ngModelChange)="editLabel.set($event)"
+                  />
+                  <input
+                    type="text"
+                    maxlength="100"
+                    placeholder="{{ 'cbcfg.label.ta' | i18n }}"
+                    [ngModel]="editLabelTa()"
+                    (ngModelChange)="editLabelTa.set($event)"
+                  />
+                  <div class="cfc-edit-actions">
+                    <button class="icon-btn icon-btn-primary icon-btn-sm" title="{{ 'btn.save' | i18n }}" (click)="saveEdit(field)">
+                      <span class="material-symbols-rounded">check</span>
+                    </button>
+                    <button class="icon-btn icon-btn-secondary icon-btn-sm" title="{{ 'btn.cancel' | i18n }}" (click)="cancelEdit()">
+                      <span class="material-symbols-rounded">close</span>
+                    </button>
+                  </div>
+                </div>
+              } @else {
+                <div class="cfc-field-label">
+                  <span class="cfc-name">{{ field.label }}</span>
+                  @if (field.labelTa) {
+                    <span class="cfc-name-ta">{{ field.labelTa }}</span>
+                  }
+                </div>
+                <div class="cfc-row-actions">
+                  <button class="icon-btn icon-btn-secondary icon-btn-sm" title="{{ 'btn.edit' | i18n }}" (click)="beginEdit(field)">
+                    <span class="material-symbols-rounded">edit</span>
+                  </button>
+                  <button
+                    class="icon-btn icon-btn-secondary icon-btn-sm"
+                    [disabled]="$index === 0"
+                    title="{{ 'btn.move.up' | i18n }}"
+                    (click)="move(field, -1)"
+                  >
+                    <span class="material-symbols-rounded">arrow_upward</span>
+                  </button>
+                  <button
+                    class="icon-btn icon-btn-secondary icon-btn-sm"
+                    [disabled]="$index === debitFields().length - 1"
+                    title="{{ 'btn.move.down' | i18n }}"
+                    (click)="move(field, 1)"
+                  >
+                    <span class="material-symbols-rounded">arrow_downward</span>
+                  </button>
+                  <button
+                    class="icon-btn icon-btn-danger icon-btn-sm"
+                    [disabled]="field.inUse"
+                    [title]="field.inUse ? ('cbcfg.in.use.tooltip' | i18n) : ('btn.delete' | i18n)"
+                    (click)="openDelete(field)"
+                  >
+                    <span class="material-symbols-rounded">delete</span>
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        }
+      </div>
+    </div>
+
+    <div class="card cfc-panel">
+      <div class="card-body">
+        <div class="cfc-panel-head cfc-panel-head-credit">
+          <span class="material-symbols-rounded">arrow_downward</span>
+          <h3>{{ 'cbcfg.panel.credit' | i18n }}</h3>
+        </div>
+        @if (loading()) {
+          <p class="no-records">...</p>
+        } @else if (creditFields().length === 0) {
+          <p class="no-records">{{ 'cbcfg.no.fields' | i18n }}</p>
+        } @else {
+          @for (field of creditFields(); track field.fieldConfigId) {
+            <div class="cfc-row">
+              @if (isEditable(field)) {
+                <div class="cfc-edit-form">
+                  <input
+                    type="text"
+                    maxlength="50"
+                    [ngModel]="editLabel()"
+                    (ngModelChange)="editLabel.set($event)"
+                  />
+                  <input
+                    type="text"
+                    maxlength="100"
+                    placeholder="{{ 'cbcfg.label.ta' | i18n }}"
+                    [ngModel]="editLabelTa()"
+                    (ngModelChange)="editLabelTa.set($event)"
+                  />
+                  <div class="cfc-edit-actions">
+                    <button class="icon-btn icon-btn-primary icon-btn-sm" title="{{ 'btn.save' | i18n }}" (click)="saveEdit(field)">
+                      <span class="material-symbols-rounded">check</span>
+                    </button>
+                    <button class="icon-btn icon-btn-secondary icon-btn-sm" title="{{ 'btn.cancel' | i18n }}" (click)="cancelEdit()">
+                      <span class="material-symbols-rounded">close</span>
+                    </button>
+                  </div>
+                </div>
+              } @else {
+                <div class="cfc-field-label">
+                  <span class="cfc-name">{{ field.label }}</span>
+                  @if (field.labelTa) {
+                    <span class="cfc-name-ta">{{ field.labelTa }}</span>
+                  }
+                </div>
+                <div class="cfc-row-actions">
+                  <button class="icon-btn icon-btn-secondary icon-btn-sm" title="{{ 'btn.edit' | i18n }}" (click)="beginEdit(field)">
+                    <span class="material-symbols-rounded">edit</span>
+                  </button>
+                  <button
+                    class="icon-btn icon-btn-secondary icon-btn-sm"
+                    [disabled]="$index === 0"
+                    title="{{ 'btn.move.up' | i18n }}"
+                    (click)="move(field, -1)"
+                  >
+                    <span class="material-symbols-rounded">arrow_upward</span>
+                  </button>
+                  <button
+                    class="icon-btn icon-btn-secondary icon-btn-sm"
+                    [disabled]="$index === creditFields().length - 1"
+                    title="{{ 'btn.move.down' | i18n }}"
+                    (click)="move(field, 1)"
+                  >
+                    <span class="material-symbols-rounded">arrow_downward</span>
+                  </button>
+                  <button
+                    class="icon-btn icon-btn-danger icon-btn-sm"
+                    [disabled]="field.inUse"
+                    [title]="field.inUse ? ('cbcfg.in.use.tooltip' | i18n) : ('btn.delete' | i18n)"
+                    (click)="openDelete(field)"
+                  >
+                    <span class="material-symbols-rounded">delete</span>
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </div>
+
+  @if (deleteTarget()) {
+    <div class="report-popup-overlay" (click)="onDeleteOverlayClick($event)">
+      <div class="report-popup">
+        <div class="report-popup-header">
+          <div class="report-popup-title-col">
+            <h3>{{ 'btn.delete' | i18n }}</h3>
+            <div class="report-popup-name">{{ deleteTarget()?.label }}</div>
+          </div>
+          <button class="report-popup-close" (click)="closeDelete()">&times;</button>
+        </div>
+        <div class="report-popup-body">
+          <div class="confirm-text">{{ 'cbcfg.delete.confirm' | i18n }}</div>
+          <div class="confirm-actions">
+            <button class="btn btn-secondary" (click)="closeDelete()">{{ 'btn.cancel' | i18n }}</button>
+            <button class="btn btn-danger" [disabled]="deleting()" (click)="confirmDelete()">
+              {{ 'btn.delete' | i18n }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

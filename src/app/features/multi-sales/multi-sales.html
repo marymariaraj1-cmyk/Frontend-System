@@ -37,132 +37,149 @@
     <div class="ms-card-head">
       <span class="ms-chip material-symbols-rounded">view_list</span>
       <h3>{{ 'multi.sales.grid.title' | i18n }}</h3>
-      <span class="ms-head-count">{{ rows().length }}</span>
+      <span class="ms-head-count">{{ filledRowsCount() }}</span>
     </div>
     <div class="card-body">
-      <div class="table-container">
-        <table id="salesTable" class="sales-grid-table">
-          <thead>
-            <tr>
-              <th style="width: 50px">{{ 'flower.sno' | i18n }}</th>
-              <th>{{ 'farmer.name' | i18n }} <span class="required">*</span></th>
-              <th style="width: 80px">{{ 'sales.bag' | i18n }}</th>
-              <th>{{ 'sales.flower' | i18n }} <span class="required">*</span></th>
-              <th>{{ 'sales.qty' | i18n }}</th>
-              <th>{{ 'sales.rate' | i18n }}</th>
-              <th>{{ 'sales.amount' | i18n }} <span class="required">*</span></th>
-              <th>{{ 'sales.customer' | i18n }} <span class="required">*</span></th>
-              <th style="width: 80px">{{ 'flower.actions' | i18n }}</th>
-            </tr>
-          </thead>
-        <tbody>
-          @for (row of rows(); track row.saved ? row.salesId : $index; let i = $index) {
-            <tr class="sales-row" [class.saved-row]="row.saved">
-              <td class="row-index text-center">{{ i + 1 }}</td>
-              @if (row.saved) {
-                <td><div class="grid-display">{{ row.farmerName }}</div></td>
-                <td><div class="grid-display">{{ row.bagCount }}</div></td>
-                <td><div class="grid-display">{{ row.flowerType }}</div></td>
-                <td><div class="grid-display">{{ row.totalWeight }}</div></td>
-                <td><div class="grid-display">{{ row.price }}</div></td>
-                <td><div class="grid-display">{{ row.amount }}</div></td>
-                <td><div class="grid-display">{{ row.customerName }}</div></td>
-                <td class="text-center action-cell">
-                  <span class="action-icon saved-icon" title="Saved">&#10003;</span>
-                </td>
-              } @else {
-                <td>
-                  <app-autocomplete
-                    [items]="master().farmers"
-                    [invalid]="row.farmerInvalid"
-                    [value]="row.farmerName"
-                    (valueChange)="updateRow(i, { farmerName: $event, farmerInvalid: false })"
-                    (onSelect)="updateRow(i, { farmerName: $event, farmerInvalid: false })"
-                    (blur)="validateField(i, 'farmer')"
-                  />
-                  @if (row.farmerInvalid) {
-                    <span class="field-error">{{ 'sales.error.farmer.notfound' | i18n }}</span>
-                  }
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    inputmode="numeric"
-                    class="grid-input bag-input"
-                    [ngModel]="row.bagCount"
-                    (ngModelChange)="updateRow(i, { bagCount: $event })"
-                    (input)="onBagInput(i)"
-                  />
-                </td>
-                <td>
-                  <app-autocomplete
-                    [items]="master().flowers"
-                    [invalid]="row.flowerInvalid"
-                    [value]="row.flowerType"
-                    (valueChange)="updateRow(i, { flowerType: $event, flowerInvalid: false })"
-                    (onSelect)="updateRow(i, { flowerType: $event, flowerInvalid: false })"
-                    (blur)="validateField(i, 'flower')"
-                  />
-                  @if (row.flowerInvalid) {
-                    <span class="field-error">{{ 'sales.error.flower.notfound' | i18n }}</span>
-                  }
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    class="grid-input"
-                    [ngModel]="row.totalWeight"
-                    (ngModelChange)="updateRow(i, { totalWeight: sanitizeDecimal($event) }); onQtyChange(i)"
-                    (keydown)="onDecimalKeydown($event)"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    class="grid-input"
-                    [ngModel]="row.price"
-                    (ngModelChange)="updateRow(i, { price: sanitizeDecimal($event) })"
-                    (input)="recalcRowAmount(i)"
-                    (keydown)="onDecimalKeydown($event)"
-                  />
-                </td>
-                <td>
+      <app-data-table
+        [columns]="columns"
+        [data]="rows()"
+        [enablePagination]="false"
+        [enableSort]="false"
+        [enableFilter]="false"
+        [showClearFilters]="false"
+        [pageSizeSelector]="false"
+        [resultInfo]="false"
+        tableClasses="sales-grid-table"
+        wrapperClasses="table-container"
+      >
+        <ng-template #row let-row let-idx="idx">
+          <tr class="sales-row" [class.saved-row]="row.saved">
+            <td class="row-index text-center">{{ idx + 1 }}</td>
+            @if (row.saved) {
+              <td><div class="grid-display">{{ salesNameLabel(row.farmerName) }}</div></td>
+              <td><div class="grid-display" style="text-align: right">{{ row.bagCount }}</div></td>
+              <td><div class="grid-display">{{ row.flowerType }}</div></td>
+              <td><div class="grid-display" style="text-align: right">{{ row.totalWeight }}</div></td>
+              <td><div class="grid-display" style="text-align: right">{{ row.price }}</div></td>
+              <td><div class="grid-display" style="text-align: right">{{ row.amount }}</div></td>
+              <td><div class="grid-display">{{ salesNameLabel(row.customerName) }}</div></td>
+              <td class="text-center action-cell">
+                <span class="action-icon saved-icon" title="Saved">&#10003;</span>
+              </td>
+            } @else {
+              <td>
+                <app-autocomplete
+                  [items]="master().farmers"
+                  [invalid]="row.farmerInvalid"
+                  [value]="row.farmerName"
+                  (valueChange)="updateRow(idx, { farmerName: $event, farmerInvalid: false })"
+                  (onSelect)="updateRow(idx, { farmerName: $event, farmerInvalid: false })"
+                  (blur)="validateField(idx, 'farmer')"
+                />
+                @if (row.farmerInvalid) {
+                  <span class="field-error">{{ 'sales.error.farmer.notfound' | i18n }}</span>
+                }
+              </td>
+              <td>
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  class="grid-input bag-input"
+                  style="text-align: right"
+                  [ngModel]="row.bagCount"
+                  (ngModelChange)="updateRow(idx, { bagCount: $event })"
+                  (input)="onBagInput(idx)"
+                />
+              </td>
+              <td>
+                <app-autocomplete
+                  [items]="master().flowers"
+                  [invalid]="row.flowerInvalid"
+                  [value]="row.flowerType"
+                  (valueChange)="updateRow(idx, { flowerType: $event, flowerInvalid: false })"
+                  (onSelect)="updateRow(idx, { flowerType: $event, flowerInvalid: false })"
+                  (blur)="validateField(idx, 'flower')"
+                />
+                @if (row.flowerInvalid) {
+                  <span class="field-error">{{ 'sales.error.flower.notfound' | i18n }}</span>
+                }
+              </td>
+              <td>
                 <input
                   type="text"
                   class="grid-input"
-                  [ngModel]="row.amount"
-                  (ngModelChange)="updateRow(i, { amount: sanitizeDecimal($event) }); recalcRowRate(i)"
+                  style="text-align: right"
+                  [ngModel]="row.totalWeight"
+                  (ngModelChange)="updateRow(idx, { totalWeight: sanitizeDecimal($event) }); onQtyChange(idx)"
                   (keydown)="onDecimalKeydown($event)"
                 />
-                </td>
-                <td>
-                  <app-autocomplete
-                    [items]="master().buyers"
-                    [invalid]="row.customerInvalid"
-                    [value]="row.customerName"
-                    (valueChange)="updateRow(i, { customerName: $event, customerInvalid: false })"
-                    (onSelect)="updateRow(i, { customerName: $event, customerInvalid: false })"
-                    (blur)="validateField(i, 'customer')"
-                    (enter)="addEmptyRow()"
-                  />
-                  @if (row.customerInvalid) {
-                    <span class="field-error">{{ 'sales.error.buyer.notfound' | i18n }}</span>
-                  }
-                </td>
-                <td class="text-center action-cell">
-                  <span class="action-icon add-row-icon" title="{{ 'sales.add.row' | i18n }}" (click)="addEmptyRowBelow(i)">+</span>
-                  <span class="action-icon remove-row-icon" title="{{ 'sales.remove.row' | i18n }}" (click)="removeRow(i)">&times;</span>
-                </td>
-              }
-            </tr>
-          }
-        </tbody>
-      </table>
+              </td>
+              <td>
+                <input
+                  type="text"
+                  class="grid-input"
+                  style="text-align: right"
+                  [ngModel]="row.price"
+                  (ngModelChange)="updateRow(idx, { price: sanitizeDecimal($event) })"
+                  (input)="recalcRowAmount(idx)"
+                  (keydown)="onDecimalKeydown($event)"
+                />
+              </td>
+              <td>
+              <input
+                type="text"
+                class="grid-input"
+                style="text-align: right"
+                [ngModel]="row.amount"
+                (ngModelChange)="updateRow(idx, { amount: sanitizeDecimal($event) }); recalcRowRate(idx)"
+                (keydown)="onDecimalKeydown($event)"
+              />
+              </td>
+              <td>
+                <app-autocomplete
+                  [items]="master().buyers"
+                  [invalid]="row.customerInvalid"
+                  [value]="row.customerName"
+                  (valueChange)="updateRow(idx, { customerName: $event, customerInvalid: false })"
+                  (onSelect)="updateRow(idx, { customerName: $event, customerInvalid: false })"
+                  (blur)="validateField(idx, 'customer')"
+                  (enter)="addEmptyRow()"
+                />
+                @if (row.customerInvalid) {
+                  <span class="field-error">{{ 'sales.error.buyer.notfound' | i18n }}</span>
+                }
+              </td>
+              <td class="text-center action-cell">
+                <span class="action-icon add-row-icon" title="{{ 'sales.add.row' | i18n }}" (click)="addEmptyRowBelow(idx)">+</span>
+                <span class="action-icon remove-row-icon" title="{{ 'sales.remove.row' | i18n }}" (click)="removeRow(idx)">&times;</span>
+              </td>
+            }
+          </tr>
+        </ng-template>
+        <ng-template #footer>
+          <tr class="grid-totals-row">
+            <td class="totals-label text-center">
+              <img class="totals-icon" src="total-icon.png" [attr.alt]="'sales.total' | i18n" [attr.title]="'sales.total' | i18n" />
+            </td>
+            <td class="totals-empty"></td>
+            <td class="totals-num-center">{{ gridTotals().bag }}</td>
+            <td class="totals-empty"></td>
+            <td class="totals-num">{{ gridTotals().qty }}</td>
+            <td class="totals-empty"></td>
+            <td class="totals-num">{{ gridTotals().amount }}</td>
+            <td class="totals-empty"></td>
+            <td class="totals-empty"></td>
+          </tr>
+        </ng-template>
+      </app-data-table>
     </div>
 
     <button type="button" class="calc-toggle-btn" (click)="calcOpen.set(!calcOpen())">
+      <span class="calc-toggle-left">
+        <span class="calc-toggle-badge material-symbols-rounded">calculate</span>
+        <span>{{ (calcOpen() ? 'sales.calc.summary' : 'sales.calc.toggle') | i18n }}</span>
+      </span>
       <span class="material-symbols-rounded">{{ calcOpen() ? 'expand_less' : 'expand_more' }}</span>
-      {{ (calcOpen() ? 'sales.calc.summary' : 'sales.calc.toggle') | i18n }}
     </button>
     <div class="calc-summary" [class.collapsed]="!calcOpen()">
       <div class="calc-row">
@@ -176,10 +193,6 @@
       <div class="calc-row">
         <span class="calc-label">{{ 'sales.net.amount' | i18n }}:</span>
         <span class="calc-value">{{ formatCurrency(summary().net) }}</span>
-      </div>
-      <div class="calc-row">
-        <span class="calc-label">{{ 'sales.debit' | i18n }}:</span>
-        <input type="text" class="calc-input" [(ngModel)]="debit" autocomplete="off" />
       </div>
       <div class="calc-row calc-final">
         <span class="calc-label">{{ 'sales.final.total' | i18n }}:</span>
@@ -198,5 +211,4 @@
       </button>
     </div>
   </div>
-</div>
 </div>

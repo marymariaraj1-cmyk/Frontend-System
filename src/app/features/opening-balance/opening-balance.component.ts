@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 
 import { OpeningBalanceBuyerRow, OpeningBalanceFarmerRow } from '../../core/models/opening-balance';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
+import { DataTableComponent, DataTableColumn } from '../../core/components/data-table/data-table.component';
 import { I18nService } from '../../core/services/i18n.service';
 import { OpeningBalanceService } from '../../core/services/opening-balance.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -12,7 +13,7 @@ import { extractErrorMessage } from '../../core/utils/http-error.util';
 @Component({
   selector: 'app-opening-balance',
   standalone: true,
-  imports: [FormsModule, I18nPipe],
+  imports: [FormsModule, I18nPipe, DataTableComponent],
   templateUrl: './opening-balance.html',
   styleUrl: './opening-balance.css',
 })
@@ -50,6 +51,102 @@ export class OpeningBalanceComponent implements OnInit {
   protected buyerDateEdits: Record<string, string> = {};
   protected savingFarmerId = '';
   protected savingBuyerId = '';
+
+  protected readonly farmerColumns: DataTableColumn[] = [
+    {
+      key: 'sno',
+      header: 'common.sno',
+      type: 'text',
+      align: 'center',
+      width: '70px',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'farmerName',
+      header: 'farmer.name',
+      type: 'text',
+      className: 'ob-farmer-name',
+      filterable: false,
+    },
+    {
+      key: 'openingBalance',
+      header: 'opening.balance.config.col.amount',
+      type: 'number',
+      className: 'ob-amount-col',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'openingBalanceDate',
+      header: 'opening.balance.config.col.date',
+      type: 'text',
+      className: 'ob-date-col',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'actions',
+      header: 'farmer.actions',
+      type: 'text',
+      align: 'center',
+      className: 'ob-actions-col',
+      sortable: false,
+      filterable: false,
+    },
+  ];
+
+  protected readonly buyerColumns: DataTableColumn[] = [
+    {
+      key: 'sno',
+      header: 'common.sno',
+      type: 'text',
+      align: 'center',
+      width: '70px',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'buyerName',
+      header: 'buyer.name',
+      type: 'text',
+      className: 'ob-farmer-name',
+      filterable: false,
+    },
+    {
+      key: 'openingBalance',
+      header: 'opening.balance.config.col.amount',
+      type: 'number',
+      className: 'ob-amount-col',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'openingBalanceDate',
+      header: 'opening.balance.config.col.date',
+      type: 'text',
+      className: 'ob-date-col',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'actions',
+      header: 'buyer.actions',
+      type: 'text',
+      align: 'center',
+      className: 'ob-actions-col',
+      sortable: false,
+      filterable: false,
+    },
+  ];
+
+  protected onFarmerSearch(event: Event): void {
+    this.farmerSearch.set((event.target as HTMLInputElement).value);
+  }
+
+  protected onBuyerSearch(event: Event): void {
+    this.buyerSearch.set((event.target as HTMLInputElement).value);
+  }
 
   protected readonly formatCurrency = formatCurrency;
 

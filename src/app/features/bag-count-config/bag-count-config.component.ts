@@ -3,12 +3,14 @@ import { FormsModule } from '@angular/forms';
 
 import { AutocompleteComponent } from '../../core/components/autocomplete/autocomplete.component';
 import { DraggableDirective } from '../../core/directives/draggable.directive';
+import { DataTableComponent, DataTableColumn } from '../../core/components/data-table/data-table.component';
 import {
   BagCountConfigFarmer,
   BagCountConfigFlower,
   BagCountConfigRow,
 } from '../../core/models/bag-count-config';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
+import { DateFormatPipe } from '../../core/pipes/date-format.pipe';
 import { BagCountConfigService } from '../../core/services/bag-count-config.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -21,7 +23,7 @@ type ReportPeriod = 'daily' | 'monthly' | 'yearly' | 'custom';
 @Component({
   selector: 'app-bag-count-config',
   standalone: true,
-  imports: [FormsModule, I18nPipe, AutocompleteComponent, DraggableDirective],
+  imports: [FormsModule, I18nPipe, DateFormatPipe, AutocompleteComponent, DraggableDirective, DataTableComponent],
   templateUrl: './bag-count-config.html',
   styleUrl: './bag-count-config.css',
 })
@@ -97,6 +99,133 @@ export class BagCountConfigComponent implements OnInit {
       f.flowerName.toLowerCase().includes(term),
     );
   });
+
+  protected readonly setupColumns: DataTableColumn[] = [
+    {
+      key: 'sno',
+      header: 'common.sno',
+      type: 'text',
+      align: 'center',
+      className: 'bcl-col-sno',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'flowerName',
+      header: 'bag.count.config.flower',
+      type: 'text',
+      className: 'bcl-col-flower',
+      filterable: false,
+    },
+    {
+      key: 'farmer',
+      header: 'farmer.name',
+      type: 'text',
+      className: 'bcl-col-farmer',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'bagCount',
+      header: 'bag.count.config.bag.count',
+      type: 'number',
+      className: 'bcl-col-limit',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'salesDate',
+      header: 'bag.count.config.date',
+      type: 'date',
+      className: 'bcl-col-date',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'actions',
+      header: 'bag.count.config.action',
+      type: 'text',
+      align: 'center',
+      className: 'bcl-col-action',
+      sortable: false,
+      filterable: false,
+    },
+  ];
+
+  protected readonly farmerColumns: DataTableColumn[] = [
+    {
+      key: 'sno',
+      header: 'common.sno',
+      type: 'text',
+      align: 'center',
+      className: 'bcl-col-sno',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'farmerName',
+      header: 'farmer.name',
+      type: 'text',
+      className: 'bcl-col-flower',
+      filterable: false,
+    },
+    {
+      key: 'actions',
+      header: 'bag.count.config.action',
+      type: 'text',
+      align: 'center',
+      className: 'bcl-col-action',
+      sortable: false,
+      filterable: false,
+    },
+  ];
+
+  protected readonly detailColumns: DataTableColumn[] = [
+    {
+      key: 'sno',
+      header: 'common.sno',
+      type: 'text',
+      align: 'center',
+      className: 'bcl-col-sno',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'salesDate',
+      header: 'bag.count.config.date',
+      type: 'date',
+      className: 'bcl-col-date',
+    },
+    {
+      key: 'flowerName',
+      header: 'bag.count.config.flower',
+      type: 'text',
+      className: 'bcl-col-flower',
+    },
+    {
+      key: 'bagCount',
+      header: 'bag.count.config.bag.count',
+      type: 'number',
+      className: 'bcl-col-limit',
+    },
+    {
+      key: 'actions',
+      header: 'bag.count.config.action',
+      type: 'text',
+      align: 'center',
+      className: 'bcl-col-action',
+      sortable: false,
+      filterable: false,
+    },
+  ];
+
+  protected farmerSno(row: { farmerId: string; farmerName: string }): number {
+    return this.filteredConfiguredFarmers().findIndex((f) => f.farmerId === row.farmerId) + 1;
+  }
+
+  protected onSearch(event: Event): void {
+    this.search.set((event.target as HTMLInputElement).value);
+  }
 
   protected bagCountEdits: Record<string, string> = {};
   protected dateEdits: Record<string, string> = {};

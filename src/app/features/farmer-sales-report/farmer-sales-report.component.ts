@@ -1,15 +1,18 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { FarmerSalesReportItem, FarmerSalesReportRow } from '../../core/models/report';
 import { ReceiptPrintButtonsComponent } from '../../core/components/receipt-print-buttons/receipt-print-buttons.component';
+import { DataTableComponent, DataTableColumn } from '../../core/components/data-table/data-table.component';
 import { DraggableDirective } from '../../core/directives/draggable.directive';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
+import { DateFormatPipe } from '../../core/pipes/date-format.pipe';
 import { ReceiptFormat, ReceiptService } from '../../core/services/receipt.service';
 import { SalesReportService } from '../../core/services/sales-report.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatCurrency } from '../../core/utils/currency-format.util';
+import { formatDate } from '../../core/utils/date.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
 import { formatDecimal } from '../../core/utils/round-off.util';
 import { formatApiDate } from '../../core/utils/sales.util';
@@ -19,7 +22,7 @@ type ReportPeriod = 'daily' | 'monthly' | 'yearly' | 'custom';
 @Component({
   selector: 'app-farmer-sales-report',
   standalone: true,
-  imports: [FormsModule, DraggableDirective, I18nPipe, ReceiptPrintButtonsComponent],
+  imports: [FormsModule, DraggableDirective, I18nPipe, DateFormatPipe, ReceiptPrintButtonsComponent, DataTableComponent],
   templateUrl: './farmer-sales-report.html',
   styleUrl: './farmer-sales-report.css',
 })
@@ -39,20 +42,96 @@ export class FarmerSalesReportComponent {
   protected readonly loading = signal(false);
   protected readonly searched = signal(false);
 
+  protected readonly sourceRows = computed<FarmerSalesReportRow[]>(() => {
+    const q = this.farmerSearch().trim().toLowerCase();
+    if (!q) {
+      return this.rows();
+    }
+    return this.rows().filter((row) => (row.farmerName || '').toLowerCase().includes(q));
+  });
+
+  protected onFarmerSearch(event: Event): void {
+    this.farmerSearch.set((event.target as HTMLInputElement).value);
+  }
+
+  protected readonly gridColumns: DataTableColumn[] = [
+    {
+      key: 'sno',
+      header: 'txn.sno',
+      type: 'text',
+      align: 'center',
+      width: '50px',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'farmerName',
+      header: 'farmer.sales.report.col.farmer',
+      type: 'text',
+    },
+    {
+      key: 'total',
+      header: 'farmer.sales.report.col.total',
+      type: 'number',
+      className: 'amount-col',
+    },
+    {
+      key: 'commission',
+      header: 'farmer.sales.report.col.commission',
+      type: 'number',
+      className: 'amount-col',
+    },
+    {
+      key: 'debit',
+      header: 'farmer.sales.report.col.debit.amt',
+      type: 'number',
+      className: 'amount-col',
+    },
+    {
+      key: 'totalNetAmt',
+      header: 'farmer.sales.report.col.net.amt',
+      type: 'number',
+      className: 'amount-col',
+    },
+  ];
+
+  protected readonly detailColumns: DataTableColumn[] = [
+    {
+      key: 'salesDate',
+      header: 'buyer.sales.report.detail.sales.date',
+      type: 'date',
+    },
+    {
+      key: 'flowerType',
+      header: 'buyer.sales.report.detail.flower.type',
+      type: 'text',
+    },
+    {
+      key: 'totalWeight',
+      header: 'buyer.sales.report.detail.weight',
+      type: 'number',
+      className: 'amount-col',
+    },
+    {
+      key: 'perKgRate',
+      header: 'buyer.sales.report.detail.price',
+      type: 'number',
+      className: 'amount-col',
+    },
+    {
+      key: 'price',
+      header: 'buyer.sales.report.detail.total',
+      type: 'number',
+      className: 'amount-col',
+    },
+  ];
+
   protected readonly popupOpen = signal(false);
   protected readonly popupTitle = signal('');
   protected readonly popupFarmer = signal<FarmerSalesReportRow | null>(null);
   protected readonly popupItems = signal<FarmerSalesReportItem[]>([]);
 
   private applyingPeriod = false;
-
-  protected filteredRows(): FarmerSalesReportRow[] {
-    const q = this.farmerSearch().trim().toLowerCase();
-    if (!q) {
-      return this.rows();
-    }
-    return this.rows().filter((row) => (row.farmerName || '').toLowerCase().includes(q));
-  }
 
   protected setPeriod(period: ReportPeriod): void {
     this.applyingPeriod = true;
@@ -131,20 +210,20 @@ export class FarmerSalesReportComponent {
     });
   }
 
-  protected totalTotal(): number {
-    return this.rows().reduce((sum, row) => sum + (Number(row.total) || 0), 0);
+  protected totalTotal(rows: FarmerSalesReportRow[]): number {
+    return rows.reduce((sum, row) => sum + (Number(row.total) || 0), 0);
   }
 
-  protected totalCommission(): number {
-    return this.rows().reduce((sum, row) => sum + (Number(row.commission) || 0), 0);
+  protected totalCommission(rows: FarmerSalesReportRow[]): number {
+    return rows.reduce((sum, row) => sum + (Number(row.commission) || 0), 0);
   }
 
-  protected totalDebit(): number {
-    return this.rows().reduce((sum, row) => sum + (Number(row.debit) || 0), 0);
+  protected totalDebit(rows: FarmerSalesReportRow[]): number {
+    return rows.reduce((sum, row) => sum + (Number(row.debit) || 0), 0);
   }
 
-  protected totalNet(): number {
-    return this.rows().reduce((sum, row) => sum + (Number(row.totalNetAmt) || 0), 0);
+  protected totalNetAmt(rows: FarmerSalesReportRow[]): number {
+    return rows.reduce((sum, row) => sum + (Number(row.totalNetAmt) || 0), 0);
   }
 
   protected initials(name: string | undefined): string {
@@ -217,8 +296,7 @@ export class FarmerSalesReportComponent {
       .map(
         (item, i) =>
           `<tr>` +
-          `<td class="left">${i + 1}</td>` +
-          `<td class="left">${this.escapeHtml(item.salesDate || '-')}</td>` +
+          `<td class="left">${this.escapeHtml(item.salesDate ? formatDate(item.salesDate) : '-')}</td>` +
           `<td class="left">${this.escapeHtml(item.flowerType || '-')}</td>` +
           `<td class="right">${this.formatDecimal(item.totalWeight)}</td>` +
           `<td class="right">${this.formatNum(item.perKgRate)}</td>` +
@@ -238,7 +316,6 @@ export class FarmerSalesReportComponent {
       `</div>` +
       `<table>` +
       `<thead><tr>` +
-      `<th class="left">#</th>` +
       `<th class="left">${this.escapeHtml(this.i18n.translate('farmer.sales.daily.report.detail.sales.date'))}</th>` +
       `<th class="left">${this.escapeHtml(this.i18n.translate('report.col.flower.type'))}</th>` +
       `<th class="right">${this.escapeHtml(this.i18n.translate('report.col.weight'))}</th>` +
@@ -269,14 +346,7 @@ export class FarmerSalesReportComponent {
   }
 
   private formatDateStr(dateStr: string): string {
-    if (!dateStr) {
-      return '';
-    }
-    const parts = dateStr.split('-');
-    if (parts.length !== 3) {
-      return dateStr;
-    }
-    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    return formatDate(dateStr);
   }
 
   private escapeHtml(value: string | null | undefined): string {

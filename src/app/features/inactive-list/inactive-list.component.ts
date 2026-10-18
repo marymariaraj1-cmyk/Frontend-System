@@ -1,21 +1,23 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, OnInit, inject, signal } from '@angular/core';
 
+import { DataTableComponent, DataTableColumn } from '../../core/components/data-table/data-table.component';
+import { ReceiptPrintButtonsComponent } from '../../core/components/receipt-print-buttons/receipt-print-buttons.component';
 import { InactiveBuyerRow, InactiveFarmerRow } from '../../core/models/inactive-list';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
 import { I18nService } from '../../core/services/i18n.service';
 import { InactiveListService } from '../../core/services/inactive-list.service';
+import { ReceiptFormat, ReceiptService } from '../../core/services/receipt.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatCurrency } from '../../core/utils/currency-format.util';
+import { formatDate } from '../../core/utils/date.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
-import { openPrintWindow } from '../../core/utils/print.util';
 
 type SectionType = 'farmer' | 'buyer';
 
 @Component({
   selector: 'app-inactive-list',
   standalone: true,
-  imports: [FormsModule, I18nPipe],
+  imports: [I18nPipe, ReceiptPrintButtonsComponent, DataTableComponent],
   templateUrl: './inactive-list.html',
   styleUrl: './inactive-list.css',
 })
@@ -23,6 +25,7 @@ export class InactiveListComponent implements OnInit {
   private readonly service = inject(InactiveListService);
   private readonly i18n = inject(I18nService);
   private readonly toast = inject(ToastService);
+  private readonly receipt = inject(ReceiptService);
 
   protected readonly section = signal<SectionType>('farmer');
   protected readonly farmers = signal<InactiveFarmerRow[]>([]);
@@ -30,26 +33,56 @@ export class InactiveListComponent implements OnInit {
   protected readonly loadingFarmers = signal(false);
   protected readonly loadingBuyers = signal(false);
   protected readonly loaded = signal(false);
-  protected readonly farmerSearch = signal('');
-  protected readonly buyerSearch = signal('');
 
   protected readonly formatCurrency = formatCurrency;
 
-  protected readonly filteredFarmers = computed(() => {
-    const term = this.farmerSearch().trim().toLowerCase();
-    if (!term) {
-      return this.farmers();
-    }
-    return this.farmers().filter((row) => (row.farmerName ?? '').toLowerCase().includes(term));
-  });
+  protected readonly farmerColumns: DataTableColumn[] = [
+    {
+      key: 'sno',
+      header: 'common.sno',
+      type: 'text',
+      align: 'center',
+      sortable: false,
+      filterable: false,
+      className: 'col-no',
+    },
+    {
+      key: 'farmerName',
+      header: 'farmer.name',
+      type: 'text',
+      className: 'col-name',
+    },
+    {
+      key: 'outstandingBalance',
+      header: 'ledger.list.col.outstanding.balance',
+      type: 'number',
+      className: 'col-outstanding',
+    },
+  ];
 
-  protected readonly filteredBuyers = computed(() => {
-    const term = this.buyerSearch().trim().toLowerCase();
-    if (!term) {
-      return this.buyers();
-    }
-    return this.buyers().filter((row) => (row.buyerName ?? '').toLowerCase().includes(term));
-  });
+  protected readonly buyerColumns: DataTableColumn[] = [
+    {
+      key: 'sno',
+      header: 'common.sno',
+      type: 'text',
+      align: 'center',
+      sortable: false,
+      filterable: false,
+      className: 'col-no',
+    },
+    {
+      key: 'buyerName',
+      header: 'buyer.name',
+      type: 'text',
+      className: 'col-name',
+    },
+    {
+      key: 'outstandingBalance',
+      header: 'ledger.list.col.outstanding.balance',
+      type: 'number',
+      className: 'col-outstanding',
+    },
+  ];
 
   ngOnInit(): void {
     this.loadFarmers();
@@ -77,8 +110,7 @@ export class InactiveListComponent implements OnInit {
   }
 
   protected todayLabel(): string {
-    const parts = new Date().toLocaleDateString('en-CA').split('-');
-    return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : '';
+    return formatDate(new Date());
   }
 
   protected initials(name: string | undefined): string {
@@ -106,16 +138,18 @@ export class InactiveListComponent implements OnInit {
     return 'settled';
   }
 
-  protected print(): void {
+  protected async printReport(format: ReceiptFormat): Promise<void> {
     const farmers = this.farmers();
     const buyers = this.buyers();
+    const t = this.i18n.translate.bind(this.i18n);
+    const esc = (value: string | null | undefined): string => this.escapeHtml(value);
 
     const farmerRows = farmers
       .map(
         (row, i) =>
           `<tr>` +
           `<td class="left">${i + 1}</td>` +
-          `<td class="left">${this.escapeHtml(row.farmerName)}</td>` +
+          `<td class="left">${esc(row.farmerName)}</td>` +
           `<td class="right">${formatCurrency(Math.abs(row.outstandingBalance))}</td>` +
           `</tr>`,
       )
@@ -126,7 +160,7 @@ export class InactiveListComponent implements OnInit {
         (row, i) =>
           `<tr>` +
           `<td class="left">${i + 1}</td>` +
-          `<td class="left">${this.escapeHtml(row.buyerName)}</td>` +
+          `<td class="left">${esc(row.buyerName)}</td>` +
           `<td class="right">${formatCurrency(Math.abs(row.outstandingBalance))}</td>` +
           `</tr>`,
       )
@@ -135,36 +169,40 @@ export class InactiveListComponent implements OnInit {
     const farmerTotal = formatCurrency(this.farmerTotalOutstanding());
     const buyerTotal = formatCurrency(this.buyerTotalOutstanding());
 
-    const html =
-      this.printStyle() +
+    const content =
       `<div class="print-header">` +
-      `<h2>${this.escapeHtml(this.i18n.translate('inactive.list.print.title'))}</h2>` +
-      `<p>${this.escapeHtml(this.i18n.translate('inactive.list.date.label'))}: ${this.escapeHtml(this.todayLabel())}</p>` +
+      `<h2>${esc(t('inactive.list.print.title'))}</h2>` +
+      `<p>${esc(t('inactive.list.date.label'))}: ${esc(this.todayLabel())}</p>` +
       `</div>` +
-      `<div class="section-title">${this.escapeHtml(this.i18n.translate('inactive.list.print.farmers'))} (${farmers.length})</div>` +
+      `<div class="section-title">${esc(t('inactive.list.print.farmers'))} (${farmers.length})</div>` +
       `<table>` +
       `<thead><tr>` +
-      `<th class="left" style="width:10%">${this.escapeHtml(this.i18n.translate('txn.sno'))}</th>` +
-      `<th class="left">${this.escapeHtml(this.i18n.translate('farmer.name'))}</th>` +
-      `<th class="right" style="width:35%">${this.escapeHtml(this.i18n.translate('ledger.list.col.outstanding.balance'))}</th>` +
+      `<th class="left sno">${esc(t('txn.sno'))}</th>` +
+      `<th class="left">${esc(t('farmer.name'))}</th>` +
+      `<th class="right" style="width:32%">${esc(t('ledger.list.col.outstanding.balance'))}</th>` +
       `</tr></thead><tbody>${farmerRows}</tbody></table>` +
       `<table class="summary-table">` +
-      `<tr><td class="lbl">${this.escapeHtml(this.i18n.translate('report.total'))}</td><td class="amt">${farmerTotal}</td></tr>` +
+      `<tr><td class="lbl">${esc(t('report.total'))}</td><td class="amt">${farmerTotal}</td></tr>` +
       `</table>` +
-      `<div class="page-break"></div>` +
-      `<div class="section-title">${this.escapeHtml(this.i18n.translate('inactive.list.print.buyers'))} (${buyers.length})</div>` +
+      `<div class="section-title">${esc(t('inactive.list.print.buyers'))} (${buyers.length})</div>` +
       `<table>` +
       `<thead><tr>` +
-      `<th class="left" style="width:10%">${this.escapeHtml(this.i18n.translate('txn.sno'))}</th>` +
-      `<th class="left">${this.escapeHtml(this.i18n.translate('buyer.name'))}</th>` +
-      `<th class="right" style="width:35%">${this.escapeHtml(this.i18n.translate('ledger.list.col.outstanding.balance'))}</th>` +
+      `<th class="left sno">${esc(t('txn.sno'))}</th>` +
+      `<th class="left">${esc(t('buyer.name'))}</th>` +
+      `<th class="right" style="width:32%">${esc(t('ledger.list.col.outstanding.balance'))}</th>` +
       `</tr></thead><tbody>${buyerRows}</tbody></table>` +
       `<table class="summary-table">` +
-      `<tr><td class="lbl">${this.escapeHtml(this.i18n.translate('report.total'))}</td><td class="amt">${buyerTotal}</td></tr>` +
-      `</table>` +
-      `<div class="footer">${this.escapeHtml(this.i18n.translate('print.thankyou'))}</div>`;
+      `<tr><td class="lbl">${esc(t('report.total'))}</td><td class="amt">${buyerTotal}</td></tr>` +
+      `</table>`;
 
-    openPrintWindow(html, 900, 700);
+    const output = await this.receipt.output(content, {
+      title: t('inactive.list.print.title'),
+      fileBase: 'inactive-list',
+      format,
+    });
+    if (output.status !== 'ok') {
+      this.toast.error(output.message);
+    }
   }
 
   private loadFarmers(): void {
@@ -221,31 +259,5 @@ export class InactiveListComponent implements OnInit {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
-  }
-
-  private printStyle(): string {
-    return (
-      `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>` +
-      `@page{size:A4;margin:8mm;}` +
-      `body{margin:0;font-family:"Courier New",monospace;font-size:11px;line-height:1.5;color:#000;background:#fff;}` +
-      `.print-header{text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:10px;}` +
-      `.print-header h2{font-size:16px;margin:0 0 3px;font-weight:700;letter-spacing:0.5px;}` +
-      `.print-header p{font-size:11px;margin:1px 0;color:#333;}` +
-      `.section-title{font-size:12px;font-weight:700;margin:10px 0 4px;text-transform:uppercase;letter-spacing:0.4px;border-bottom:1px solid #000;padding-bottom:2px;}` +
-      `table{width:100%;border-collapse:collapse;margin:0 0 6px;font-size:10px;}` +
-      `th,td{padding:4px 4px;vertical-align:top;}` +
-      `th{border-bottom:1.5px solid #000;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;}` +
-      `th.left,td.left{text-align:left;}` +
-      `th.right,td.right{text-align:right;}` +
-      `tbody tr{border-bottom:0.5px dotted #aaa;}` +
-      `tbody tr:last-child{border-bottom:none;}` +
-      `.summary-table{width:100%;border-collapse:collapse;font-size:10px;margin:0 0 8px;}` +
-      `.summary-table td{padding:3px 4px;border:none;}` +
-      `.summary-table td.lbl{text-align:right;font-weight:700;}` +
-      `.summary-table td.amt{width:35%;text-align:right;font-weight:700;border-top:1.5px solid #000;}` +
-      `.page-break{page-break-before:always;}` +
-      `.footer{text-align:center;font-size:10px;margin-top:12px;}` +
-      `</style></head><body>`
-    );
   }
 }

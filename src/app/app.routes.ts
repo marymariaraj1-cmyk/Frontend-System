@@ -61,6 +61,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'cash-book-field-config',
+        loadComponent: () =>
+          import('./features/cash-book-field-config/cash-book-field-config.component').then(
+            (m) => m.CashBookFieldConfigComponent,
+          ),
+      },
+      {
         path: 'tamilnadu-flower-price-report',
         loadComponent: () =>
           import('./features/vayal-agro-flower-price/vayal-agro-flower-price.component').then(

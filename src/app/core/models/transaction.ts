@@ -39,9 +39,23 @@ export interface FarmerTransactionRequest {
   paymentMode: string;
 }
 
+export interface FarmerTransactionUpdateRequest {
+  farmerTransactionId: number;
+  excessDebitAmt: string;
+  debitAmt: string;
+  paymentMode: string;
+}
+
 export interface BuyerTransactionRequest {
   buyerName: string;
   transactionDate: string;
+  amountReceived: string;
+  discountAmt: string;
+  paymentMode: string;
+}
+
+export interface BuyerTransactionUpdateRequest {
+  buyerTransactionId: number;
   amountReceived: string;
   discountAmt: string;
   paymentMode: string;

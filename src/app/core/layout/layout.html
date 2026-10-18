@@ -124,6 +124,17 @@
                   <span class="nav-label">{{ 'sidebar.flower.market.price.config' | i18n }}</span>
                 </a>
               </li>
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  routerLink="/cash-book-field-config"
+                  routerLinkActive="active"
+                  [attr.title]="collapsed() ? ('sidebar.cash.book.field.config' | i18n) : null"
+                >
+                  <span class="nav-icon material-symbols-rounded">tune</span>
+                  <span class="nav-label">{{ 'sidebar.cash.book.field.config' | i18n }}</span>
+                </a>
+              </li>
             }
             @if (auth.user()?.role === 'ROLE_ADMIN') {
               <li class="nav-item">

@@ -222,58 +222,150 @@
       }
 
       @if (searched()) {
-        <div class="table-container">
-          <table class="report-table">
-            <thead>
-              <tr>
-                <th style="width: 50px">{{ 'txn.sno' | i18n }}</th>
-                <th style="width: 130px">{{ 'txn.date' | i18n }}</th>
-                <th>{{ 'buyer.name' | i18n }}</th>
-                <th class="ob-amount-col">{{ 'buyer.txn.amount.received' | i18n }}</th>
-                <th class="ob-amount-col">{{ 'buyer.txn.discount' | i18n }}</th>
-                <th style="width: 110px">{{ 'txn.payment.mode.col' | i18n }}</th>
+        <app-data-table
+          [columns]="historyColumns"
+          [data]="transactions()"
+          trackKey="buyerTransactionId"
+          tableClasses="report-table tx-fixed-cols"
+          wrapperClasses="table-container tx-grid-wrap"
+          emptyKey="msg.no.records"
+        >
+          <ng-template #row let-txn let-idx="idx" let-pageStart="pageStart">
+            <tr>
+              <td class="tx-sno">{{ pageStart + idx + 1 }}</td>
+              <td class="tx-date">{{ txn.transactionDate | dateFormat }}</td>
+              <td class="ob-amount-col"><span class="tx-amt chip-received">{{ formatCurrency(txn.cashPaidAmt) }}</span></td>
+              <td class="ob-amount-col"><span class="tx-amt chip-discount">{{ formatCurrency(txn.disAmt) }}</span></td>
+              <td>
+                @if (txn.paymentMode === 'U') {
+                  <span class="payment-badge upi"><span class="material-symbols-rounded">qr_code_2</span> {{ 'txn.payment.upi' | i18n }}</span>
+                } @else {
+                  <span class="payment-badge cash"><span class="material-symbols-rounded">payments</span> {{ 'txn.payment.cash' | i18n }}</span>
+                }
+              </td>
+              <td class="text-center action-cell">
+                <span
+                  class="action-icon edit-row-icon"
+                  [title]="'btn.edit' | i18n"
+                  (click)="openEdit(txn)"
+                >
+                  <span class="material-symbols-rounded">edit</span>
+                </span>
+                <span
+                  class="action-icon delete-row-icon"
+                  [title]="'btn.delete' | i18n"
+                  (click)="openDelete(txn)"
+                >
+                  <span class="material-symbols-rounded">delete</span>
+                </span>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template #footer let-all>
+            @if (all.length > 0) {
+              <tr class="tx-total-row">
+                <td colspan="2" class="amount-col">{{ 'report.total' | i18n }}</td>
+                <td class="ob-amount-col">{{ formatCurrency(historyTotalReceived(all)) }}</td>
+                <td class="ob-amount-col">{{ formatCurrency(historyTotalDiscount(all)) }}</td>
+                <td></td>
+                <td></td>
               </tr>
-            </thead>
-            <tbody>
-              @for (txn of transactions(); track txn.buyerTransactionId; let i = $index) {
-                <tr>
-                  <td class="tx-sno">{{ i + 1 }}</td>
-                  <td class="tx-date">{{ txn.transactionDate }}</td>
-                  <td>
-                    <div class="tx-name-cell">
-                      <span class="tx-avatar">{{ initials(txn.buyerName) }}</span>
-                      <span class="tx-name">{{ txn.buyerName }}</span>
-                    </div>
-                  </td>
-                  <td class="ob-amount-col"><span class="tx-amt chip-received">{{ formatCurrency(txn.cashPaidAmt) }}</span></td>
-                  <td class="ob-amount-col"><span class="tx-amt chip-discount">{{ formatCurrency(txn.disAmt) }}</span></td>
-                  <td>
-                    @if (txn.paymentMode === 'U') {
-                      <span class="payment-badge upi"><span class="material-symbols-rounded">qr_code_2</span> {{ 'txn.payment.upi' | i18n }}</span>
-                    } @else {
-                      <span class="payment-badge cash"><span class="material-symbols-rounded">payments</span> {{ 'txn.payment.cash' | i18n }}</span>
-                    }
-                  </td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="6" class="no-records">{{ 'msg.no.records' | i18n }}</td>
-                </tr>
-              }
-            </tbody>
-            @if (transactions().length > 0) {
-              <tfoot>
-                <tr class="tx-total-row">
-                  <td colspan="3" class="amount-col">{{ 'report.total' | i18n }}</td>
-                  <td class="ob-amount-col">{{ formatCurrency(historyTotalReceived()) }}</td>
-                  <td class="ob-amount-col">{{ formatCurrency(historyTotalDiscount()) }}</td>
-                  <td></td>
-                </tr>
-              </tfoot>
             }
-          </table>
-        </div>
+          </ng-template>
+        </app-data-table>
       }
+    </div>
+  </div>
+}
+
+@if (editTarget()) {
+  <div class="report-popup-overlay" (click)="onEditOverlayClick($event)">
+    <div class="report-popup" appDraggable>
+      <div class="report-popup-header">
+        <div class="report-popup-title-col">
+          <h3>{{ 'txn.edit.title' | i18n }}</h3>
+          <div class="report-popup-name">{{ editTarget()?.buyerName }}</div>
+        </div>
+        <button class="report-popup-close" (click)="closeEdit()">&times;</button>
+      </div>
+      <div class="report-popup-body">
+        <div class="edit-form">
+          <div class="form-group">
+            <label for="editBtxDate">{{ 'txn.date' | i18n }}</label>
+            <input id="editBtxDate" name="editBtxDate" type="date" [ngModel]="editTarget()?.transactionDate" disabled />
+          </div>
+          <div class="form-group">
+            <label for="editAmountReceived">{{ 'buyer.txn.amount.received' | i18n }}</label>
+            <div class="input-with-icon">
+              <span class="input-icon">&#8377;</span>
+              <input
+                id="editAmountReceived"
+                name="editAmountReceived"
+                type="text"
+                autocomplete="off"
+                [ngModel]="editAmount()"
+                (ngModelChange)="sanitizeEditAmount($event)"
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="editDiscountAmt">{{ 'buyer.txn.discount' | i18n }}</label>
+            <div class="input-with-icon">
+              <span class="input-icon">&#8377;</span>
+              <input
+                id="editDiscountAmt"
+                name="editDiscountAmt"
+                type="text"
+                autocomplete="off"
+                [ngModel]="editDiscount()"
+                (ngModelChange)="sanitizeEditDiscount($event)"
+              />
+            </div>
+          </div>
+          <div class="payment-mode-group">
+            <span class="payment-mode-label"><span class="material-symbols-rounded">credit_card</span> {{ 'txn.payment.mode' | i18n }}</span>
+            <div class="radio-group">
+              <label class="radio-option" [class.active]="editMode() === 'C'">
+                <input type="radio" name="editBuyerPaymentMode" value="C" [checked]="editMode() === 'C'" (change)="editMode.set('C')" />
+                <span class="radio-custom"></span>
+                <span class="material-symbols-rounded radio-icon">payments</span>
+                {{ 'txn.payment.cash' | i18n }}
+              </label>
+              <label class="radio-option" [class.active]="editMode() === 'U'">
+                <input type="radio" name="editBuyerPaymentMode" value="U" [checked]="editMode() === 'U'" (change)="editMode.set('U')" />
+                <span class="radio-custom"></span>
+                <span class="material-symbols-rounded radio-icon">qr_code_2</span>
+                {{ 'txn.payment.upi' | i18n }}
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="confirm-actions">
+          <button type="button" class="btn btn-secondary" [disabled]="updating()" (click)="closeEdit()">{{ 'btn.cancel' | i18n }}</button>
+          <button type="button" class="btn btn-primary" [disabled]="updating()" (click)="confirmUpdate()">{{ 'btn.update' | i18n }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+@if (deleteTarget()) {
+  <div class="report-popup-overlay" (click)="onDeleteOverlayClick($event)">
+    <div class="report-popup" appDraggable>
+      <div class="report-popup-header">
+        <div class="report-popup-title-col">
+          <h3>{{ 'btn.delete' | i18n }}</h3>
+          <div class="report-popup-name">{{ deleteTarget()?.buyerName }} &middot; {{ deleteTarget()?.transactionDate | dateFormat }}</div>
+        </div>
+        <button class="report-popup-close" (click)="closeDelete()">&times;</button>
+      </div>
+      <div class="report-popup-body">
+        <div class="confirm-text">{{ 'msg.confirm.delete' | i18n }}</div>
+        <div class="confirm-actions">
+          <button type="button" class="btn btn-secondary" [disabled]="deleting()" (click)="closeDelete()">{{ 'btn.cancel' | i18n }}</button>
+          <button type="button" class="btn btn-danger" [disabled]="deleting()" (click)="confirmDelete()">{{ 'btn.delete' | i18n }}</button>
+        </div>
+      </div>
     </div>
   </div>
 }

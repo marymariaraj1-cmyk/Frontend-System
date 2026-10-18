@@ -79,12 +79,12 @@
 
 .bcl-col-limit {
   width: 110px;
-  text-align: center;
+  text-align: right;
 }
 
 .bcl-col-date {
   width: 140px;
-  text-align: center;
+  text-align: left;
 }
 
 .bcl-col-action {

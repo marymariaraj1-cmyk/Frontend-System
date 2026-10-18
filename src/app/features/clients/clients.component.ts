@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
+import { DataTableComponent, DataTableColumn } from '../../core/components/data-table/data-table.component';
 import { Client, emptyClient } from '../../core/models/client';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
 import { ClientService } from '../../core/services/client.service';
@@ -10,7 +11,7 @@ import { ToastService } from '../../core/services/toast.service';
 @Component({
   selector: 'app-clients',
   standalone: true,
-  imports: [FormsModule, I18nPipe],
+  imports: [FormsModule, I18nPipe, DataTableComponent],
   templateUrl: './clients.html',
   styleUrl: './clients.css',
 })
@@ -21,6 +22,47 @@ export class ClientsComponent implements OnInit {
 
   protected readonly rows = signal<Client[]>([]);
   protected readonly showForm = signal(false);
+
+  protected readonly columns: DataTableColumn[] = [
+    {
+      key: 'sno',
+      header: 'client.sno',
+      type: 'text',
+      align: 'center',
+      width: '50px',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'clientUsername',
+      header: 'client.username',
+      type: 'text',
+    },
+    {
+      key: 'clientShopName',
+      header: 'client.shop.name',
+      type: 'text',
+    },
+    {
+      key: 'clientContactNo',
+      header: 'client.contact',
+      type: 'text',
+    },
+    {
+      key: 'clientMailId',
+      header: 'client.mail',
+      type: 'text',
+    },
+    {
+      key: 'actions',
+      header: 'client.actions',
+      type: 'text',
+      align: 'center',
+      width: '100px',
+      sortable: false,
+      filterable: false,
+    },
+  ];
   protected initials(name: string): string {
     return (name || '').trim().split(/\s+/).slice(0, 2).map((part) => part.charAt(0)).join('').toUpperCase() || '?';
   }

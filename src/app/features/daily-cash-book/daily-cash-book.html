@@ -61,90 +61,26 @@
             <h3>{{ 'dcb.debit.title' | i18n }}</h3>
           </div>
 
-          <div class="dcb-row">
-            <span class="dcb-label">{{ 'dcb.rent' | i18n }}</span>
-            <input
-              class="dcb-input"
-              type="text"
-              inputmode="decimal"
-              [ngModel]="rent()"
-              (ngModelChange)="rent.set($event)"
-              (input)="sanitize('rent')"
-              [readonly]="!isToday()"
-            />
-          </div>
-          <div class="dcb-row">
-            <span class="dcb-label">{{ 'dcb.expense' | i18n }}</span>
-            <input
-              class="dcb-input"
-              type="text"
-              inputmode="decimal"
-              [ngModel]="expense()"
-              (ngModelChange)="expense.set($event)"
-              (input)="sanitize('expense')"
-              [readonly]="!isToday()"
-            />
-          </div>
-          <div class="dcb-row">
-            <span class="dcb-label">{{ 'dcb.chit' | i18n }}</span>
-            <input
-              class="dcb-input"
-              type="text"
-              inputmode="decimal"
-              [ngModel]="chit()"
-              (ngModelChange)="chit.set($event)"
-              (input)="sanitize('chit')"
-              [readonly]="!isToday()"
-            />
-          </div>
-          <div class="dcb-row">
-            <span class="dcb-label">{{ 'dcb.finance' | i18n }}</span>
-            <input
-              class="dcb-input"
-              type="text"
-              inputmode="decimal"
-              [ngModel]="finance()"
-              (ngModelChange)="finance.set($event)"
-              (input)="sanitize('finance')"
-              [readonly]="!isToday()"
-            />
-          </div>
-          <div class="dcb-row">
-            <span class="dcb-label">{{ 'dcb.note' | i18n }}</span>
-            <input
-              class="dcb-input"
-              type="text"
-              inputmode="decimal"
-              [ngModel]="note()"
-              (ngModelChange)="note.set($event)"
-              (input)="sanitize('note')"
-              [readonly]="!isToday()"
-            />
-          </div>
-          <div class="dcb-row">
-            <span class="dcb-label">{{ 'dcb.salary' | i18n }}</span>
-            <input
-              class="dcb-input"
-              type="text"
-              inputmode="decimal"
-              [ngModel]="salary()"
-              (ngModelChange)="salary.set($event)"
-              (input)="sanitize('salary')"
-              [readonly]="!isToday()"
-            />
-          </div>
-          <div class="dcb-row">
-            <span class="dcb-label">{{ 'dcb.coin' | i18n }}</span>
-            <input
-              class="dcb-input"
-              type="text"
-              inputmode="decimal"
-              [ngModel]="coin()"
-              (ngModelChange)="coin.set($event)"
-              (input)="sanitize('coin')"
-              [readonly]="!isToday()"
-            />
-          </div>
+          @for (row of manualDebit(); track row.key) {
+            <div class="dcb-row">
+              <span class="dcb-label">
+                {{ fieldLabel(row) }}
+                @if (row.removed) {
+                  <em class="dcb-removed">{{ 'dcb.field.removed' | i18n }}</em>
+                }
+              </span>
+              <input
+                class="dcb-input"
+                type="text"
+                inputmode="decimal"
+                [value]="row.amount"
+                (input)="onAmountInput(row, $event)"
+                [readonly]="!isToday()"
+              />
+            </div>
+          } @empty {
+            <p class="no-records">{{ 'cbcfg.no.fields' | i18n }}</p>
+          }
 
           <div class="dcb-row dcb-auto">
             <span class="dcb-label">{{ 'dcb.balance' | i18n }}</span>
@@ -169,30 +105,26 @@
             <h3>{{ 'dcb.credit.title' | i18n }}</h3>
           </div>
 
-          <div class="dcb-row">
-            <span class="dcb-label">{{ 'dcb.cash.in.hand' | i18n: shopName() }}</span>
-            <input
-              class="dcb-input"
-              type="text"
-              inputmode="decimal"
-              [ngModel]="cashInHand()"
-              (ngModelChange)="cashInHand.set($event)"
-              (input)="sanitize('cashInHand')"
-              [readonly]="!isToday()"
-            />
-          </div>
-          <div class="dcb-row">
-            <span class="dcb-label">{{ 'dcb.opening.balance' | i18n }}</span>
-            <input
-              class="dcb-input"
-              type="text"
-              inputmode="decimal"
-              [ngModel]="opening()"
-              (ngModelChange)="opening.set($event)"
-              (input)="sanitize('opening')"
-              [readonly]="!isToday()"
-            />
-          </div>
+          @for (row of manualCredit(); track row.key) {
+            <div class="dcb-row">
+              <span class="dcb-label">
+                {{ fieldLabel(row) }}
+                @if (row.removed) {
+                  <em class="dcb-removed">{{ 'dcb.field.removed' | i18n }}</em>
+                }
+              </span>
+              <input
+                class="dcb-input"
+                type="text"
+                inputmode="decimal"
+                [value]="row.amount"
+                (input)="onAmountInput(row, $event)"
+                [readonly]="!isToday()"
+              />
+            </div>
+          } @empty {
+            <p class="no-records">{{ 'cbcfg.no.fields' | i18n }}</p>
+          }
 
           <div class="dcb-row dcb-auto">
             <span class="dcb-label">{{ 'dcb.credit.balance' | i18n }}</span>

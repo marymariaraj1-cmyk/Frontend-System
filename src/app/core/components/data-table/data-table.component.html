@@ -1,0 +1,186 @@
+<div class="dt-root">
+  @if (enableFilter && showClearFilters && anyFilterActive()) {
+    <div class="dt-filter-bar">
+      <button type="button" class="dt-clear-filters" (click)="clearFilters()">
+        <span class="material-symbols-rounded">filter_alt_off</span>
+        <span>{{ 'table.clear.filters' | i18n }}</span>
+      </button>
+    </div>
+  }
+
+  <div [class]="wrapperClasses" class="dt-table-wrap">
+    <table [class]="tableClasses">
+      <thead>
+        @if (enableSort || enableFilter) {
+          <tr class="dt-sort-row">
+            @for (col of columnsSig(); track col.key) {
+              <th
+                [class]="col.className"
+                [class.dt-sortable]="enableSort && col.sortable !== false"
+                [class.dt-sorted]="sortActive(col)"
+                [class.dt-th-wrap]="col.headerWrap"
+                [style.width]="col.width"
+                [style.text-align]="colAlign(col)"
+                (click)="enableSort && col.sortable !== false && onSort(col)"
+              >
+                <span class="dt-th-inner">
+                  @if (col.icon) {
+                    <span class="dt-th-icon material-symbols-rounded">{{ col.icon }}</span>
+                  }
+                  <span>{{ col.header | i18n }}</span>
+                  @if (enableSort && col.sortable !== false) {
+                    <span class="material-symbols-rounded dt-sort-icon">{{ sortIcon(col) }}</span>
+                  }
+                </span>
+              </th>
+            }
+          </tr>
+          @if (enableFilter) {
+            <tr class="dt-filter-row">
+              @for (col of columnsSig(); track col.key) {
+                <th
+                  [class]="col.className"
+                  [class.dt-filter-head]="true"
+                  [class.dt-filter-col-active]="filterActive(col)"
+                  [style.width]="col.width"
+                >
+                  @if (col.filterable !== false && filterTypeFor(col) !== 'none') {
+                    @if (filterTypeFor(col) === 'select') {
+                      <select
+                        class="dt-filter-input dt-filter-select"
+                        [class.dt-filter-input-active]="filterActive(col)"
+                        [value]="selectFilter(col)"
+                        (change)="onSelectFilter(col, $event)"
+                      >
+                        <option value="">{{ 'table.filter.all' | i18n }}</option>
+                        @for (opt of filterOptions(col); track opt.value) {
+                          <option [value]="opt.value">{{ opt.label | i18n }}</option>
+                        }
+                      </select>
+                    } @else {
+                      <input
+                        type="text"
+                        class="dt-filter-input"
+                        [class.dt-filter-input-active]="filterActive(col)"
+                        [style.text-align]="colAlign(col)"
+                        [placeholder]="'table.filter.text' | i18n"
+                        [value]="textFilter(col)"
+                        (input)="onTextInput(col, $event)"
+                      />
+                    }
+                  }
+                </th>
+              }
+            </tr>
+          }
+        } @else {
+          <tr>
+            @for (col of columnsSig(); track col.key) {
+                <th
+                  [class]="col.className"
+                  [class.dt-th-wrap]="col.headerWrap"
+                  [style.width]="col.width"
+                  [style.text-align]="colAlign(col)"
+                >
+                  @if (col.icon) {
+                  <span class="dt-th-inner">
+                    <span class="dt-th-icon material-symbols-rounded">{{ col.icon }}</span>
+                    <span>{{ col.header | i18n }}</span>
+                  </span>
+                } @else {
+                  {{ col.header | i18n }}
+                }
+              </th>
+            }
+          </tr>
+        }
+      </thead>
+      <tbody>
+        @for (row of pagedRows(); track trackRow(row, $index); let idx = $index) {
+          <ng-container *ngTemplateOutlet="rowTemplate ?? null; context: { $implicit: row, idx: idx, pageStart: startIndex() }" />
+        } @empty {
+          <tr>
+            <td [attr.colspan]="columnsSig().length" class="no-records">{{ emptyKey | i18n }}</td>
+          </tr>
+        }
+        @if (bodyFooterTemplate) {
+          <ng-container
+            *ngTemplateOutlet="bodyFooterTemplate; context: { $implicit: sortedRows(), rows: sortedRows() }"
+          />
+        }
+      </tbody>
+      @if (footerTemplate) {
+        <tfoot>
+          <ng-container *ngTemplateOutlet="footerTemplate; context: { $implicit: dataSig(), rows: dataSig() }" />
+        </tfoot>
+      }
+    </table>
+  </div>
+
+  @if (enablePagination && shouldShowPager()) {
+    <div class="dt-pager">
+      @if (pageSizeSelector) {
+        <label class="dt-page-size-label">
+          <span>{{ 'table.page.size' | i18n }}:</span>
+          <select class="dt-page-size-select" [value]="pageSizeSig()" (change)="onPageSize($event)">
+            @for (opt of pageSizeOptions; track opt) {
+              <option [value]="opt">{{ opt }}</option>
+            }
+          </select>
+        </label>
+      }
+      @if (resultInfo) {
+        <span class="dt-range-label">{{ rangeLabel() }}</span>
+      }
+      <div class="dt-nav">
+        <button
+          type="button"
+          class="dt-nav-btn"
+          [attr.title]="'table.first.page' | i18n"
+          [disabled]="pageSig() === 1"
+          (click)="goFirst()"
+        >
+          <span class="material-symbols-rounded">first_page</span>
+        </button>
+        <button
+          type="button"
+          class="dt-nav-btn"
+          [attr.title]="'table.prev.page' | i18n"
+          [disabled]="pageSig() === 1"
+          (click)="goPrev()"
+        >
+          <span class="material-symbols-rounded">navigate_before</span>
+        </button>
+        @for (p of pageNumbers(); track p) {
+          <button
+            type="button"
+            class="dt-nav-btn dt-nav-num"
+            [class.dt-nav-active]="p === pageSig()"
+            [disabled]="typeof p === 'string'"
+            (click)="goTo(p)"
+          >
+            {{ p }}
+          </button>
+        }
+        <button
+          type="button"
+          class="dt-nav-btn"
+          [attr.title]="'table.next.page' | i18n"
+          [disabled]="pageSig() === pageCount()"
+          (click)="goNext()"
+        >
+          <span class="material-symbols-rounded">navigate_next</span>
+        </button>
+        <button
+          type="button"
+          class="dt-nav-btn"
+          [attr.title]="'table.last.page' | i18n"
+          [disabled]="pageSig() === pageCount()"
+          (click)="goLast()"
+        >
+          <span class="material-symbols-rounded">last_page</span>
+        </button>
+      </div>
+    </div>
+  }
+</div>

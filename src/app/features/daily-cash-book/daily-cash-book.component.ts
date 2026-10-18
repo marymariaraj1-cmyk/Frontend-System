@@ -3,13 +3,29 @@ import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 
 import { CashBookFarmerRow, CashBookRecord } from '../../core/models/daily-cash-book';
+import { CashBookFieldConfig } from '../../core/models/cash-book-field-config';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
+import { CashBookFieldConfigService } from '../../core/services/cash-book-field-config.service';
 import { DailyCashBookService } from '../../core/services/daily-cash-book.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatCurrency } from '../../core/utils/currency-format.util';
+import { formatDate } from '../../core/utils/date.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
 import { formatApiDate } from '../../core/utils/sales.util';
+
+interface ManualEntryPayload {
+  label: string;
+  amount: number;
+}
+
+interface ManualRow {
+  key: string;
+  label: string;
+  labelTa: string | null;
+  amount: string;
+  removed: boolean;
+}
 
 @Component({
   selector: 'app-daily-cash-book',
@@ -20,6 +36,7 @@ import { formatApiDate } from '../../core/utils/sales.util';
 })
 export class DailyCashBookComponent implements OnInit {
   private readonly service = inject(DailyCashBookService);
+  private readonly fieldConfigService = inject(CashBookFieldConfigService);
   private readonly i18n = inject(I18nService);
   private readonly toast = inject(ToastService);
 
@@ -28,16 +45,9 @@ export class DailyCashBookComponent implements OnInit {
   protected readonly todayStr = formatApiDate(new Date());
   protected readonly bookDate = signal(this.todayStr);
 
-  // Manual entry fields (left: 7 expenses, right: cash in hand + opening balance)
-  protected readonly rent = signal('');
-  protected readonly expense = signal('');
-  protected readonly chit = signal('');
-  protected readonly finance = signal('');
-  protected readonly note = signal('');
-  protected readonly salary = signal('');
-  protected readonly coin = signal('');
-  protected readonly cashInHand = signal('');
-  protected readonly opening = signal('');
+  // Dynamic manual rows (built from the client's field configuration)
+  protected readonly manualDebit = signal<ManualRow[]>([]);
+  protected readonly manualCredit = signal<ManualRow[]>([]);
   protected readonly remarks = signal('');
 
   // System-calculated blocks
@@ -47,12 +57,13 @@ export class DailyCashBookComponent implements OnInit {
   protected readonly commissionTotal = signal(0);
   protected readonly installmentTotal = signal(0);
   protected readonly nonCashList = signal<CashBookFarmerRow[]>([]);
-  protected readonly shopName = signal('');
 
   protected readonly saved = signal<CashBookRecord | null>(null);
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
   protected readonly loaded = signal(false);
+
+  private readonly configFields = signal<CashBookFieldConfig[]>([]);
 
   ngOnInit(): void {
     this.load();
@@ -68,7 +79,7 @@ export class DailyCashBookComponent implements OnInit {
       return this.bookDate();
     }
     const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-    const dd = `${parts[2]}-${parts[1]}-${parts[0]}`;
+    const dd = formatDate(this.bookDate());
     const weekday = d.toLocaleDateString('en-US', { weekday: 'long' });
     return `${dd} ${weekday}`;
   }
@@ -81,19 +92,24 @@ export class DailyCashBookComponent implements OnInit {
     this.load();
   }
 
+  protected fieldLabel(row: ManualRow): string {
+    if (this.i18n.lang() === 'ta' && row.labelTa) {
+      return row.labelTa;
+    }
+    return row.label;
+  }
+
+  protected onAmountInput(row: ManualRow, event: Event): void {
+    row.amount = sanitizeAmount((event.target as HTMLInputElement).value);
+  }
+
   protected excessCashTotal(): number {
     return this.excessCashList().reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
   }
 
   protected leftTotal(): number {
     return (
-      this.num(this.rent()) +
-      this.num(this.expense()) +
-      this.num(this.chit()) +
-      this.num(this.finance()) +
-      this.num(this.note()) +
-      this.num(this.salary()) +
-      this.num(this.coin()) +
+      this.sumManual(this.manualDebit()) +
       (Number(this.buyerPurchaseTotal()) || 0) +
       this.excessCashTotal()
     );
@@ -101,8 +117,7 @@ export class DailyCashBookComponent implements OnInit {
 
   protected rightTotal(): number {
     return (
-      this.num(this.cashInHand()) +
-      this.num(this.opening()) +
+      this.sumManual(this.manualCredit()) +
       (Number(this.buyerReceivedTotal()) || 0) +
       (Number(this.commissionTotal()) || 0) +
       (Number(this.installmentTotal()) || 0)
@@ -113,27 +128,6 @@ export class DailyCashBookComponent implements OnInit {
     return this.leftTotal() - this.rightTotal();
   }
 
-  protected sanitize(field: 'rent' | 'expense' | 'chit' | 'finance' | 'note' | 'salary' | 'coin' | 'cashInHand' | 'opening'): void {
-    const current: Record<string, ReturnType<typeof signal<string>>> = {
-      rent: this.rent,
-      expense: this.expense,
-      chit: this.chit,
-      finance: this.finance,
-      note: this.note,
-      salary: this.salary,
-      coin: this.coin,
-      cashInHand: this.cashInHand,
-      opening: this.opening,
-    };
-    const target = current[field];
-    target.set(
-      target()
-        .replace(/[^0-9.]/g, '')
-        .replace(/(\..*)\./g, '$1')
-        .replace(/(\.\d{2})\d+/g, '$1'),
-    );
-  }
-
   protected save(): void {
     if (this.saving() || !this.isToday()) {
       return;
@@ -142,15 +136,8 @@ export class DailyCashBookComponent implements OnInit {
     this.service
       .save({
         bookDate: this.bookDate(),
-        rentAmt: this.num(this.rent()),
-        expenseAmt: this.num(this.expense()),
-        chitAmt: this.num(this.chit()),
-        financeAmt: this.num(this.finance()),
-        noteAmt: this.num(this.note()),
-        salaryAmt: this.num(this.salary()),
-        coinAmt: this.num(this.coin()),
-        cashInHandAmt: this.num(this.cashInHand()),
-        openingBalance: this.num(this.opening()),
+        manualDebitEntries: this.toPayload(this.manualDebit()),
+        manualCreditEntries: this.toPayload(this.manualCredit()),
         remarks: this.remarks().trim(),
       })
       .subscribe({
@@ -175,10 +162,15 @@ export class DailyCashBookComponent implements OnInit {
     this.loading.set(true);
     this.loaded.set(false);
     if (this.isToday()) {
-      forkJoin({ blocks: this.service.compute(date), saved: this.service.load(date) }).subscribe({
-        next: ({ blocks, saved }) => {
+      forkJoin({
+        config: this.fieldConfigService.list(),
+        blocks: this.service.compute(date),
+        saved: this.service.load(date),
+      }).subscribe({
+        next: ({ config, blocks, saved }) => {
           this.loading.set(false);
           this.loaded.set(true);
+          this.configFields.set(config.success ? config.data : []);
           if (blocks.success && blocks.data) {
             this.applyBlocks(
               blocks.data.buyerPurchaseTotal,
@@ -187,14 +179,17 @@ export class DailyCashBookComponent implements OnInit {
               blocks.data.commissionTotal,
               blocks.data.installmentTotal,
               blocks.data.farmerExcessDebitNonCashList ?? [],
-              blocks.data.shopName ?? '',
             );
           }
           if (saved.success && saved.data) {
             this.applySaved(saved.data);
           } else {
             this.saved.set(null);
-            this.clearManual();
+            this.remarks.set('');
+            this.buildManualToday(this.configFields(), null);
+          }
+          if (!config.success) {
+            this.toast.error(config.message);
           }
           if (!blocks.success) {
             this.toast.error(blocks.message);
@@ -207,19 +202,28 @@ export class DailyCashBookComponent implements OnInit {
         },
       });
     } else {
-      this.service.load(date).subscribe({
-        next: (response) => {
+      forkJoin({
+        config: this.fieldConfigService.list(),
+        saved: this.service.load(date),
+      }).subscribe({
+        next: ({ config, saved }) => {
           this.loading.set(false);
           this.loaded.set(true);
-          if (response.success && response.data) {
-            this.applySaved(response.data);
+          this.configFields.set(config.success ? config.data : []);
+          if (saved.success && saved.data) {
+            this.applySaved(saved.data);
           } else {
             this.saved.set(null);
-            this.clearManual();
-            this.applyBlocks(0, [], 0, 0, 0, [], '');
-            if (!response.success) {
-              this.toast.error(response.message);
+            this.manualDebit.set([]);
+            this.manualCredit.set([]);
+            this.remarks.set('');
+            this.applyBlocks(0, [], 0, 0, 0, []);
+            if (!saved.success) {
+              this.toast.error(saved.message);
             }
+          }
+          if (!config.success) {
+            this.toast.error(config.message);
           }
         },
         error: (error) => {
@@ -238,7 +242,6 @@ export class DailyCashBookComponent implements OnInit {
     commissionTotal: number,
     installmentTotal: number,
     nonCashList: CashBookFarmerRow[],
-    shopName: string | null,
   ): void {
     this.buyerPurchaseTotal.set(Number(buyerPurchaseTotal) || 0);
     this.excessCashList.set(cashList);
@@ -246,9 +249,6 @@ export class DailyCashBookComponent implements OnInit {
     this.commissionTotal.set(Number(commissionTotal) || 0);
     this.installmentTotal.set(Number(installmentTotal) || 0);
     this.nonCashList.set(nonCashList);
-    if (shopName) {
-      this.shopName.set(shopName);
-    }
   }
 
   private applySaved(record: CashBookRecord): void {
@@ -260,40 +260,111 @@ export class DailyCashBookComponent implements OnInit {
       record.commissionTotal,
       record.installmentTotal,
       record.farmerExcessDebitNonCashList ?? [],
-      record.shopName ?? '',
     );
-    this.rent.set(this.str(record.rentAmt));
-    this.expense.set(this.str(record.expenseAmt));
-    this.chit.set(this.str(record.chitAmt));
-    this.finance.set(this.str(record.financeAmt));
-    this.note.set(this.str(record.noteAmt));
-    this.salary.set(this.str(record.salaryAmt));
-    this.coin.set(this.str(record.coinAmt));
-    this.cashInHand.set(this.str(record.cashInHandAmt));
-    this.opening.set(this.str(record.openingBalance));
     this.remarks.set(record.remarks ?? '');
+    if (this.isToday()) {
+      this.buildManualToday(this.configFields(), record);
+    } else {
+      this.manualDebit.set(pastRows(record.manualDebitEntries ?? [], this.configFields(), 'DEBIT'));
+      this.manualCredit.set(
+        pastRows(record.manualCreditEntries ?? [], this.configFields(), 'CREDIT'),
+      );
+    }
   }
 
-  private clearManual(): void {
-    this.rent.set('');
-    this.expense.set('');
-    this.chit.set('');
-    this.finance.set('');
-    this.note.set('');
-    this.salary.set('');
-    this.coin.set('');
-    this.cashInHand.set('');
-    this.opening.set('');
-    this.remarks.set('');
+  /** Today: configured fields in display order, then saved labels that no longer exist. */
+  private buildManualToday(configs: CashBookFieldConfig[], record: CashBookRecord | null): void {
+    this.manualDebit.set(
+      mergeRows(
+        configs.filter((f) => f.fieldType === 'DEBIT'),
+        record?.manualDebitEntries ?? [],
+        'DEBIT',
+      ),
+    );
+    this.manualCredit.set(
+      mergeRows(
+        configs.filter((f) => f.fieldType === 'CREDIT'),
+        record?.manualCreditEntries ?? [],
+        'CREDIT',
+      ),
+    );
   }
 
-  private num(value: string): number {
-    const n = Number(value);
-    return Number.isFinite(n) && n >= 0 ? n : 0;
+  private sumManual(rows: ManualRow[]): number {
+    return rows.reduce((sum, row) => sum + num(row.amount), 0);
   }
 
-  private str(value: number | null | undefined): string {
-    const n = Number(value) || 0;
-    return n === 0 ? '' : String(n);
+  private toPayload(rows: ManualRow[]): ManualEntryPayload[] {
+    return rows.map((row) => ({ label: row.label, amount: num(row.amount) }));
   }
+}
+
+function mergeRows(
+  configs: CashBookFieldConfig[],
+  savedEntries: ManualEntryPayload[],
+  side: string,
+): ManualRow[] {
+  const rows: ManualRow[] = configs.map((f, idx) => ({
+    key: `${side}-cfg-${f.fieldConfigId}-${idx}`,
+    label: f.label,
+    labelTa: f.labelTa,
+    amount: '',
+    removed: false,
+  }));
+  for (const entry of savedEntries) {
+    const normalized = entry.label.trim().toLowerCase();
+    if (normalized === '') {
+      continue;
+    }
+    const match = rows.find((r) => !r.removed && r.label.trim().toLowerCase() === normalized);
+    if (match) {
+      match.amount = strAmount(entry.amount);
+    } else if (!rows.some((r) => r.removed && r.label.trim().toLowerCase() === normalized)) {
+      rows.push({
+        key: `${side}-saved-${rows.length}-${normalized}`,
+        label: entry.label.trim(),
+        labelTa: null,
+        amount: strAmount(entry.amount),
+        removed: true,
+      });
+    }
+  }
+  return rows;
+}
+
+function pastRows(
+  savedEntries: ManualEntryPayload[],
+  configs: CashBookFieldConfig[],
+  side: string,
+): ManualRow[] {
+  return savedEntries.map((entry, idx) => {
+    const normalized = entry.label.trim().toLowerCase();
+    const match = configs.find(
+      (f) => f.fieldType === side && f.label.trim().toLowerCase() === normalized,
+    );
+    return {
+      key: `${side}-past-${idx}-${normalized}`,
+      label: entry.label.trim(),
+      labelTa: match ? match.labelTa : null,
+      amount: strAmount(entry.amount),
+      removed: false,
+    };
+  });
+}
+
+function sanitizeAmount(value: string): string {
+  return value
+    .replace(/[^0-9.]/g, '')
+    .replace(/(\..*)\./g, '$1')
+    .replace(/(\.\d{2})\d+/g, '$1');
+}
+
+function num(value: string): number {
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
+function strAmount(value: number | null | undefined): string {
+  const n = Number(value) || 0;
+  return n === 0 ? '' : String(n);
 }

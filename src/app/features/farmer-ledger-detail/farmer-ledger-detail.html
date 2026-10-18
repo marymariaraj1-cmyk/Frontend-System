@@ -129,116 +129,105 @@
         </button>
       </div>
     }
-    <div class="table-container">
-      <table class="report-table">
-        <thead>
-          <tr>
-            <th style="width: 50px">{{ 'txn.sno' | i18n }}</th>
-            <th>{{ 'ledger.report.col.sales.date' | i18n }}</th>
+    @if (displayRows().length > 0) {
+      <app-data-table
+        [columns]="columns()"
+        [data]="displayRows()"
+        tableClasses="report-table"
+        wrapperClasses="table-container"
+        emptyKey="msg.no.records"
+      >
+        <ng-template #row let-row let-idx="idx" let-pageStart="pageStart">
+          <tr [class.inactive-row]="row.ledgerActive === 'N'" [class.adj-row]="isAccountAdjustment(row)">
+            <td>{{ pageStart + idx + 1 }}</td>
+            <td>{{ row.salesDate | dateFormat }}</td>
             @if (isReport()) {
-              <th class="amount-col">{{ 'ledger.report.col.credit.amt' | i18n }}</th>
-              <th class="amount-col">{{ 'ledger.report.col.debit.amt' | i18n }}</th>
+              <td class="amount-col">
+                <span class="amt-credit">
+                  {{ formatCurrency(row.sales) }}
+                  @if (hasSaleDetail(row)) {
+                    <a class="view-link" (click)="openPopup(row.salesDate, row.ledgerActive, row.sales)" title="View">
+                      <span class="material-symbols-rounded view-icon">visibility</span>
+                    </a>
+                  } @else {
+                    <span class="view-slot" aria-hidden="true"></span>
+                  }
+                  @if (isAccountAdjustment(row) && row.sales > 0) {
+                    <span class="adj-pill">{{ 'fac.adjustment.label' | i18n }}</span>
+                  }
+                </span>
+              </td>
+              <td class="amount-col">
+                <span class="amt-debit">
+                  {{ formatCurrency(row.creditAmount) }}
+                  @if (isAccountAdjustment(row) && row.creditAmount > 0) {
+                    <span class="adj-pill">{{ 'fac.adjustment.label' | i18n }}</span>
+                  }
+                </span>
+              </td>
             } @else {
-              <th class="amount-col">{{ 'ledger.detail.col.opening.balance' | i18n }}</th>
-              <th class="amount-col">{{ 'farmer.ledger.detail.col.sales' | i18n }}</th>
-              <th class="amount-col">{{ 'farmer.ledger.detail.col.received' | i18n }}</th>
-              <th class="amount-col">{{ 'ledger.detail.col.closing.balance' | i18n }}</th>
+              <td class="amount-col">{{ formatCurrency(row.openingBalance) }}</td>
+              <td class="amount-col">
+                <span class="amt-credit">
+                  {{ formatCurrency(row.sales) }}
+                  @if (hasSaleDetail(row)) {
+                    <a class="view-link" (click)="openPopup(row.salesDate, row.ledgerActive, row.sales)" title="View">
+                      <span class="material-symbols-rounded view-icon">visibility</span>
+                    </a>
+                  } @else {
+                    <span class="view-slot" aria-hidden="true"></span>
+                  }
+                  @if (isAccountAdjustment(row) && row.sales > 0) {
+                    <span class="adj-pill">{{ 'fac.adjustment.label' | i18n }}</span>
+                  }
+                </span>
+              </td>
+              <td class="amount-col">
+                <span class="amt-debit">
+                  {{ formatCurrency(row.creditAmount) }}
+                  @if (isAccountAdjustment(row) && row.creditAmount > 0) {
+                    <span class="adj-pill">{{ 'fac.adjustment.label' | i18n }}</span>
+                  }
+                </span>
+              </td>
+              <td class="amount-col">{{ formatCurrency(row.closingBalance) }}</td>
             }
           </tr>
-        </thead>
-        <tbody>
-          @for (row of displayRows(); track $index; let i = $index) {
-            <tr [class.inactive-row]="row.ledgerActive === 'N'" [class.adj-row]="isAccountAdjustment(row)">
-              <td>{{ i + 1 }}</td>
-              <td>{{ row.salesDate }}</td>
-              @if (isReport()) {
-                <td class="amount-col">
-                  <span class="amt-credit">
-                    {{ formatCurrency(row.sales) }}
-                    @if (row.sales > 0) {
-                      <a class="view-link" (click)="openPopup(row.salesDate, row.ledgerActive, row.sales)" title="View">
-                        <span class="material-symbols-rounded view-icon">visibility</span>
-                      </a>
-                    }
-                    @if (isAccountAdjustment(row) && row.sales > 0) {
-                      <span class="adj-pill">{{ 'fac.adjustment.label' | i18n }}</span>
-                    }
-                  </span>
-                </td>
-                <td class="amount-col">
-                  <span class="amt-debit">
-                    {{ formatCurrency(row.creditAmount) }}
-                    @if (isAccountAdjustment(row) && row.creditAmount > 0) {
-                      <span class="adj-pill">{{ 'fac.adjustment.label' | i18n }}</span>
-                    }
-                  </span>
-                </td>
-              } @else {
-                <td class="amount-col">{{ formatCurrency(row.openingBalance) }}</td>
-                <td class="amount-col">
-                  <span class="amt-credit">
-                    {{ formatCurrency(row.sales) }}
-                    @if (row.sales > 0) {
-                      <a class="view-link" (click)="openPopup(row.salesDate, row.ledgerActive, row.sales)" title="View">
-                        <span class="material-symbols-rounded view-icon">visibility</span>
-                      </a>
-                    }
-                    @if (isAccountAdjustment(row) && row.sales > 0) {
-                      <span class="adj-pill">{{ 'fac.adjustment.label' | i18n }}</span>
-                    }
-                  </span>
-                </td>
-                <td class="amount-col">
-                  <span class="amt-debit">
-                    {{ formatCurrency(row.creditAmount) }}
-                    @if (isAccountAdjustment(row) && row.creditAmount > 0) {
-                      <span class="adj-pill">{{ 'fac.adjustment.label' | i18n }}</span>
-                    }
-                  </span>
-                </td>
-                <td class="amount-col">{{ formatCurrency(row.closingBalance) }}</td>
-              }
-            </tr>
-          } @empty {
-            <tr>
-              <td [attr.colspan]="isReport() ? 4 : 6" class="no-records">
-                @if (loaded()) {
-                  @if (!isReport() && hasInactiveRows() && !showClosed()) {
-                    <div class="no-active-ledger">
-                      <p>{{ 'ledger.no.active.message' | i18n }}</p>
-                      <button type="button" class="btn btn-sm btn-secondary" (click)="toggleClosed()">
-                        {{ 'btn.view.closed.ledger' | i18n }}
-                      </button>
-                    </div>
-                  } @else {
-                    {{ 'msg.no.records' | i18n }}
-                  }
-                }
-              </td>
-            </tr>
-          }
-        </tbody>
-        @if (displayRows().length > 0) {
-          <tfoot>
+        </ng-template>
+        <ng-template #footer let-all>
+          @if (all.length > 0) {
             @if (isReport()) {
               <tr class="report-total-row">
                 <td colspan="2" class="amount-col">{{ 'report.total' | i18n }}</td>
-                <td class="amount-col"><span class="amt-credit">{{ formatCurrency(totalSales()) }}</span></td>
+                <td class="amount-col"><span class="amt-credit">{{ formatCurrency(totalSales()) }}</span><span class="view-slot" aria-hidden="true"></span></td>
                 <td class="amount-col"><span class="amt-debit">{{ formatCurrency(totalReceived()) }}</span></td>
               </tr>
             } @else {
               <tr class="report-total-row">
                 <td colspan="2" class="amount-col">{{ 'report.total' | i18n }}</td>
                 <td class="amount-col"></td>
-                <td class="amount-col"><span class="amt-credit">{{ formatCurrency(totalSales()) }}</span></td>
+                <td class="amount-col"><span class="amt-credit">{{ formatCurrency(totalSales()) }}</span><span class="view-slot" aria-hidden="true"></span></td>
                 <td class="amount-col"><span class="amt-debit">{{ formatCurrency(totalReceived()) }}</span></td>
                 <td class="amount-col"></td>
               </tr>
             }
-          </tfoot>
+          }
+        </ng-template>
+      </app-data-table>
+    } @else {
+      @if (loaded()) {
+        @if (!isReport() && hasInactiveRows() && !showClosed()) {
+          <div class="no-active-ledger">
+            <p>{{ 'ledger.no.active.message' | i18n }}</p>
+            <button type="button" class="btn btn-sm btn-secondary" (click)="toggleClosed()">
+              {{ 'btn.view.closed.ledger' | i18n }}
+            </button>
+          </div>
+        } @else {
+          <div class="no-records-box">{{ 'msg.no.records' | i18n }}</div>
         }
-      </table>
-    </div>
+      }
+    }
     @if (!isReport() && displayRows().length > 0) {
       <div class="ledger-summary">
         <div class="ledger-summary-title">
@@ -275,80 +264,68 @@
         <button class="report-popup-close" (click)="closePopup()">&times;</button>
       </div>
       <div class="report-popup-body">
-        <div class="table-container">
-          <table class="report-table">
-            <thead>
-              <tr>
-                <th>{{ 'buyer.sales.report.detail.sales.date' | i18n }}</th>
-                <th>{{ 'buyer.sales.report.detail.flower.type' | i18n }}</th>
-                <th class="amount-col">{{ 'buyer.sales.report.detail.weight' | i18n }}</th>
-                <th class="amount-col">{{ 'buyer.sales.report.detail.price' | i18n }}</th>
-                <th class="amount-col">{{ 'buyer.sales.report.detail.total' | i18n }}</th>
+        <app-data-table
+          [columns]="popupColumns"
+          [data]="popupItems()"
+          [enableFilter]="false"
+          tableClasses="report-table"
+          wrapperClasses="table-container"
+          [emptyKey]="popupLoading() ? '' : 'msg.no.records'"
+        >
+          <ng-template #row let-item>
+            <tr>
+              <td>{{ item.flowerType }}</td>
+              <td class="amount-col">{{ formatDecimal(item.totalWeight) }}</td>
+              <td class="amount-col">{{ formatCurrency(item.perKgRate) }}</td>
+              <td class="amount-col">{{ formatCurrency(item.price) }}</td>
+            </tr>
+          </ng-template>
+          <ng-template #bodyFooter>
+            @if (popupAdjustment() > 0) {
+              <tr class="adj-row">
+                <td>{{ 'fac.adjustment.label' | i18n }}</td>
+                <td class="amount-col">-</td>
+                <td class="amount-col">-</td>
+                <td class="amount-col">{{ formatCurrency(popupAdjustment()) }}</td>
               </tr>
-            </thead>
-            <tbody>
-              @for (item of popupItems(); track $index) {
-                <tr>
-                  <td>{{ item.salesDate }}</td>
-                  <td>{{ item.flowerType }}</td>
-                  <td class="amount-col">{{ formatDecimal(item.totalWeight) }}</td>
-                  <td class="amount-col">{{ formatCurrency(item.perKgRate) }}</td>
-                  <td class="amount-col">{{ formatCurrency(item.price) }}</td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="5" class="no-records">
-                    {{ popupLoading() ? '' : ('msg.no.records' | i18n) }}
-                  </td>
-                </tr>
-              }
-              @if (popupAdjustment() > 0) {
-                <tr class="adj-row">
-                  <td>{{ currentSalesDate() }}</td>
-                  <td>{{ 'fac.adjustment.label' | i18n }}</td>
-                  <td class="amount-col">-</td>
-                  <td class="amount-col">-</td>
-                  <td class="amount-col">{{ formatCurrency(popupAdjustment()) }}</td>
-                </tr>
-              }
-            </tbody>
-            <tfoot>
-              <tr class="report-footer-row">
-                <td colspan="4" class="amount-col">
-                  {{ 'farmer.sales.daily.report.detail.total' | i18n }}
-                </td>
-                <td class="amount-col">{{ formatCurrency(popupTotal()) }}</td>
-              </tr>
-              <tr class="report-footer-row">
-                <td colspan="4" class="amount-col">
-                  {{ 'farmer.sales.daily.report.detail.commission' | i18n }}
-                </td>
-                <td class="amount-col">{{ formatCurrency(popupCommission()) }}</td>
-              </tr>
-              <tr class="report-footer-row">
-                <td colspan="4" class="amount-col">
-                  {{ 'farmer.sales.daily.report.detail.net.amount' | i18n }}
-                </td>
-                <td class="amount-col">{{ formatCurrency(popupNetAmount()) }}</td>
-              </tr>
-              <tr class="report-footer-row">
-                <td colspan="4" class="amount-col">
-                  {{ 'farmer.sales.daily.report.detail.debit.amount' | i18n }}
-                  @if (popupDebitBreakdown()) {
-                    <span class="debit-breakdown"> ({{ popupDebitBreakdown() }})</span>
-                  }
-                </td>
-                <td class="amount-col">{{ formatCurrency(popupDebit()) }}</td>
-              </tr>
-              <tr class="report-footer-row">
-                <td colspan="4" class="amount-col">
-                  {{ 'farmer.sales.daily.report.detail.final.total' | i18n }}
-                </td>
-                <td class="amount-col">{{ formatCurrency(popupFinalTotal()) }}</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
+            }
+          </ng-template>
+          <ng-template #footer>
+            <tr class="report-footer-row">
+              <td colspan="3" class="amount-col">
+                {{ 'farmer.sales.daily.report.detail.total' | i18n }}
+              </td>
+              <td class="amount-col">{{ formatCurrency(popupTotal()) }}</td>
+            </tr>
+            <tr class="report-footer-row">
+              <td colspan="3" class="amount-col">
+                {{ 'farmer.sales.daily.report.detail.commission' | i18n }}
+              </td>
+              <td class="amount-col">{{ formatCurrency(popupCommission()) }}</td>
+            </tr>
+            <tr class="report-footer-row">
+              <td colspan="3" class="amount-col">
+                {{ 'farmer.sales.daily.report.detail.net.amount' | i18n }}
+              </td>
+              <td class="amount-col">{{ formatCurrency(popupNetAmount()) }}</td>
+            </tr>
+            <tr class="report-footer-row">
+              <td colspan="3" class="amount-col">
+                {{ 'farmer.sales.daily.report.detail.debit.amount' | i18n }}
+                @if (popupDebitBreakdown()) {
+                  <span class="debit-breakdown"> ({{ popupDebitBreakdown() }})</span>
+                }
+              </td>
+              <td class="amount-col">{{ formatCurrency(popupDebit()) }}</td>
+            </tr>
+            <tr class="report-footer-row">
+              <td colspan="3" class="amount-col">
+                {{ 'farmer.sales.daily.report.detail.final.total' | i18n }}
+              </td>
+              <td class="amount-col">{{ formatCurrency(popupFinalTotal()) }}</td>
+            </tr>
+          </ng-template>
+        </app-data-table>
         <div class="form-actions">
           <app-receipt-print-buttons [cssClass]="'btn btn-secondary'" (print)="printPopup($event)" />
         </div>

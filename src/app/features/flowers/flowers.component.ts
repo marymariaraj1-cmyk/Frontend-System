@@ -1,6 +1,7 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
+import { DataTableComponent, DataTableColumn } from '../../core/components/data-table/data-table.component';
 import { Flower, emptyFlower } from '../../core/models/flower';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
 import { FlowerService } from '../../core/services/flower.service';
@@ -10,7 +11,7 @@ import { ToastService } from '../../core/services/toast.service';
 @Component({
   selector: 'app-flowers',
   standalone: true,
-  imports: [FormsModule, I18nPipe],
+  imports: [FormsModule, I18nPipe, DataTableComponent],
   templateUrl: './flowers.html',
   styleUrl: './flowers.css',
 })
@@ -21,16 +22,32 @@ export class FlowersComponent implements OnInit {
 
   protected readonly rows = signal<Flower[]>([]);
   protected readonly showForm = signal(false);
-  protected readonly nameFilter = signal('');
-  protected readonly filteredRows = computed(() => {
-    const name = this.nameFilter().trim().toLowerCase();
-    if (!name) {
-      return this.rows();
-    }
-    return this.rows().filter((row) =>
-      (row.flowerName ?? '').toLowerCase().includes(name),
-    );
-  });
+
+  protected readonly columns: DataTableColumn[] = [
+    {
+      key: 'sno',
+      header: 'flower.sno',
+      type: 'text',
+      align: 'center',
+      width: '50px',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'flowerName',
+      header: 'flower.name',
+      type: 'text',
+    },
+    {
+      key: 'actions',
+      header: 'flower.actions',
+      type: 'text',
+      align: 'center',
+      width: '100px',
+      sortable: false,
+      filterable: false,
+    },
+  ];
   protected initials(name: string): string {
     return (name || '').trim().split(/\s+/).slice(0, 2).map((part) => part.charAt(0)).join('').toUpperCase() || '?';
   }

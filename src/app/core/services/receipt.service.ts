@@ -118,24 +118,25 @@ export class ReceiptService {
       `html{margin:0;padding:0;}` +
       `body{margin:0;padding:2mm 1.5mm;width:${spec.bodyWidth};box-sizing:border-box;` +
       `font-family:"Courier New",monospace;font-size:9px;line-height:1.4;color:#000;background:#fff;}` +
-      `.rcpt-shop{text-align:center;border-bottom:1px dashed #000;padding-bottom:4px;margin-bottom:4px;}` +
+      `.rcpt-shop{text-align:center;border-bottom:1px solid #000;padding-bottom:4px;margin-bottom:4px;}` +
       `.rcpt-shop h2{font-size:13px;margin:0 0 2px;font-weight:700;letter-spacing:0.5px;}` +
       `.rcpt-shop p{font-size:8px;margin:1px 0;color:#222;}` +
-      `.rcpt-meta{border-bottom:1px dashed #000;padding-bottom:4px;margin-bottom:5px;font-size:8px;line-height:1.5;text-align:right;}` +
+      `.rcpt-meta{border-bottom:1px solid #000;padding-bottom:4px;margin-bottom:5px;font-size:8px;line-height:1.5;text-align:right;}` +
       `.rcpt-meta span{display:block;}` +
       `table{width:100%;border-collapse:collapse;margin:0 0 6px;font-size:8.5px;table-layout:fixed;}` +
       `th,td{padding:3px 2.5px;vertical-align:top;word-wrap:break-word;overflow-wrap:break-word;}` +
       `th{border-bottom:1.5px solid #000;font-weight:700;font-size:8px;text-transform:uppercase;letter-spacing:0.3px;}` +
       `th.left,td.left{text-align:left;}` +
       `th.right,td.right{text-align:right;}` +
-      `tbody tr{border-bottom:0.5px dotted #ccc;}` +
-      `tbody tr:last-child{border-bottom:none;}` +
-      `.divider{border-top:1px dashed #000;margin:6px 0;}` +
-      `.rcpt-footer{text-align:center;margin-top:8px;font-size:8px;line-height:1.5;border-top:1px dashed #000;padding-top:5px;}` +
+      `tbody tr{border-top:0.5px dotted #ccc;}` +
+      `tbody tr:first-child{border-top:none;}` +
+      `table:not(.summary-table) th.sno,table:not(.summary-table) td.sno{width:26px;}` +
+      `.divider{border-top:1px solid #000;margin:6px 0;}` +
+      `.rcpt-footer{text-align:center;margin-top:8px;font-size:8px;line-height:1.5;border-top:1px solid #000;padding-top:5px;}` +
       `.print-info{margin-bottom:6px;font-size:8px;line-height:1.5;}` +
       `.print-info span{display:block;}` +
       `.print-info strong{font-size:8px;}` +
-      `.print-header{text-align:center;border-bottom:1px dashed #000;padding-bottom:5px;margin-bottom:5px;}` +
+      `.print-header{text-align:center;border-bottom:1px solid #000;padding-bottom:5px;margin-bottom:5px;}` +
       `.print-header h2{font-size:12px;margin:0 0 2px;font-weight:700;letter-spacing:0.5px;}` +
       `.print-header p{font-size:8px;margin:1px 0;color:#333;}` +
       `.summary-table{width:100%;border-collapse:collapse;font-size:8px;margin:0 0 4px;}` +
@@ -147,8 +148,8 @@ export class ReceiptService {
       `.summary-table td.desc{width:46%;text-align:left;font-size:7px;color:#555;}` +
       `.total-row td{border-top:1px solid #000;padding-top:3px;}` +
       `.summary-line{margin:8px 0 4px;text-align:right;font-weight:700;font-size:10px;border-top:1px solid #000;padding-top:6px;}` +
-      `.bl-title{font-size:8px;font-weight:700;text-align:center;text-transform:uppercase;letter-spacing:0.4px;margin:6px 0 3px;border-top:1px dashed #000;padding-top:5px;}` +
-      `.section-title{font-size:9px;font-weight:700;text-align:center;text-transform:uppercase;letter-spacing:0.4px;margin:6px 0 3px;border-top:1px dashed #000;padding-top:5px;}` +
+      `.bl-title{font-size:8px;font-weight:700;text-align:center;text-transform:uppercase;letter-spacing:0.4px;margin:6px 0 3px;border-top:1px solid #000;padding-top:5px;}` +
+      `.section-title{font-size:9px;font-weight:700;text-align:center;text-transform:uppercase;letter-spacing:0.4px;margin:6px 0 3px;border-top:1px solid #000;padding-top:5px;}` +
       `.summary{margin:0 0 4px;}` +
       `.summary p{display:flex;justify-content:flex-end;gap:8px;margin:2px 0;font-size:8px;line-height:1.4;}` +
       `.summary p strong{min-width:40px;text-align:right;}` +

@@ -1,0 +1,254 @@
+.dt-root {
+  display: block;
+  width: 100%;
+}
+
+.dt-table-wrap {
+  width: 100%;
+}
+
+/* ---------- sortable headers ---------- */
+
+.dt-sortable {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.dt-th-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+/* Opt-in (column.headerWrap) for narrow columns whose header text is too long
+   to fit on one line: lets it wrap instead of overflowing into the next column. */
+.dt-th-wrap .dt-th-inner {
+  white-space: normal;
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.dt-th-icon {
+  font-size: 13px;
+  line-height: 1;
+  color: inherit;
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+
+.dt-sort-icon {
+  font-size: 15px;
+  color: #b8c0e0;
+  transition: color 0.15s, opacity 0.15s;
+  opacity: 0.8;
+}
+
+.dt-sortable:hover .dt-sort-icon {
+  color: var(--sd-primary);
+}
+
+.dt-sorted .dt-sort-icon {
+  color: var(--sd-primary);
+  opacity: 1;
+}
+
+.dt-sorted.dt-sortable.dt-th-inner {
+  color: var(--sd-primary);
+}
+
+/* ---------- per-column filters ---------- */
+
+.dt-filter-head {
+  background: #fbfcff;
+  padding: 6px 8px !important;
+  vertical-align: top;
+}
+
+.dt-filter-input {
+  width: 100%;
+  padding: 5px 8px;
+  border: 1px solid #dfe3f2;
+  border-radius: 8px;
+  font-size: 12px;
+  background: #fff;
+  color: #33415c;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+}
+
+.dt-filter-input::placeholder {
+  color: #aab3cc;
+}
+
+.dt-filter-input:focus {
+  border-color: var(--sd-primary);
+  box-shadow: 0 0 0 3px rgba(114, 103, 239, 0.15);
+}
+
+.dt-filter-input-active {
+  border-color: var(--sd-primary) !important;
+}
+
+.dt-filter-col-active .dt-filter-input {
+  border-color: var(--sd-primary);
+}
+
+.dt-filter-select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 22px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='12' viewBox='0 -960 960 960' width='12' fill='%23aab3cc'%3E%3Cpath d='M480-344L216-608l56-56 208 208 208-208 56 56-264 264Z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  cursor: pointer;
+}
+
+.dt-filter-range {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.dt-filter-dates .dt-filter-input {
+  padding: 4px 6px;
+  font-size: 11.5px;
+}
+
+/* ---------- clear filters bar ---------- */
+
+.dt-filter-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.dt-clear-filters {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border: 1px solid var(--sd-primary-tint-strong);
+  background: var(--sd-primary-tint);
+  color: var(--sd-primary-700);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.dt-clear-filters .material-symbols-rounded {
+  font-size: 16px;
+}
+
+.dt-clear-filters:hover {
+  background: var(--sd-primary);
+  color: #fff;
+  border-color: var(--sd-primary);
+}
+
+/* ---------- pagination bar ---------- */
+
+.dt-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  padding: 12px 2px 2px;
+  font-size: 12.5px;
+  color: #59627c;
+}
+
+.dt-page-size-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-weight: 500;
+}
+
+.dt-page-size-select {
+  padding: 5px 8px;
+  border: 1px solid #dfe3f2;
+  border-radius: 8px;
+  font-size: 12.5px;
+  background: #fff;
+  color: #33415c;
+  outline: none;
+  cursor: pointer;
+}
+
+.dt-page-size-select:focus {
+  border-color: var(--sd-primary);
+  box-shadow: 0 0 0 3px rgba(114, 103, 239, 0.15);
+}
+
+.dt-range-label {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.dt-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.dt-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 6px;
+  border: 1px solid #e0e4f1;
+  border-radius: 8px;
+  background: #fff;
+  color: #4c5c96;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.dt-nav-btn .material-symbols-rounded {
+  font-size: 18px;
+}
+
+.dt-nav-btn:hover:not(:disabled):not(.dt-nav-active) {
+  border-color: var(--sd-primary);
+  color: var(--sd-primary);
+  background: var(--sd-primary-tint);
+}
+
+.dt-nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dt-nav-num.dt-nav-active {
+  background: linear-gradient(135deg, #7267ef 0%, #4c65ee 100%);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(114, 103, 239, 0.35);
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 600px) {
+  .dt-pager {
+    justify-content: center;
+  }
+  .dt-nav {
+    gap: 3px;
+  }
+  .dt-nav-btn {
+    min-width: 28px;
+    height: 28px;
+  }
+}

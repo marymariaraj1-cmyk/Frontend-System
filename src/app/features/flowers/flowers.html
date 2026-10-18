@@ -51,52 +51,32 @@
       </h3>
     </div>
     <div class="card-body">
-      <div class="table-container mst-table-wrap">
-        <table class="report-table mst-table">
-          <thead>
-            <tr>
-              <th style="width: 50px">{{ 'flower.sno' | i18n }}</th>
-              <th>{{ 'flower.name' | i18n }}</th>
-              <th style="width: 100px">{{ 'flower.actions' | i18n }}</th>
-            </tr>
-            <tr class="filter-row">
-              <td></td>
-              <td>
-                <input
-                  type="text"
-                  [placeholder]="'search.placeholder' | i18n"
-                  [(ngModel)]="nameFilter"
-                />
-              </td>
-              <td></td>
-            </tr>
-          </thead>
-          <tbody>
-            @for (row of filteredRows(); track row.flowerId; let i = $index) {
-              <tr>
-                <td>{{ i + 1 }}</td>
-                <td>
-                  <div class="mst-name-cell">
-                    <span class="row-avatar">{{ initials(row.flowerName) }}</span>
-                    <span>{{ row.flowerName }}</span>
-                  </div>
-                </td>
-                <td>
-                  <div class="action-btns">
-                    <button type="button" class="icon-btn icon-btn-secondary icon-btn-sm" [attr.title]="'btn.edit' | i18n" [attr.aria-label]="'btn.edit' | i18n" (click)="startEdit(row)">
-                      <span class="material-symbols-rounded">edit</span>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="3" class="no-records">{{ 'common.no.records' | i18n }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+      <app-data-table
+        [columns]="columns"
+        [data]="rows()"
+        tableClasses="report-table mst-table"
+        wrapperClasses="table-container mst-table-wrap"
+        trackKey="flowerId"
+      >
+        <ng-template #row let-row let-idx="idx" let-pageStart="pageStart">
+          <tr>
+            <td>{{ pageStart + idx + 1 }}</td>
+            <td>
+              <div class="mst-name-cell">
+                <span class="row-avatar">{{ initials(row.flowerName) }}</span>
+                <span>{{ row.flowerName }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="action-btns">
+                <button type="button" class="icon-btn icon-btn-secondary icon-btn-sm" [attr.title]="'btn.edit' | i18n" [attr.aria-label]="'btn.edit' | i18n" (click)="startEdit(row)">
+                  <span class="material-symbols-rounded">edit</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </app-data-table>
     </div>
   </div>
 </div>

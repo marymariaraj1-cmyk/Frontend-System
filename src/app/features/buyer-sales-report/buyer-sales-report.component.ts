@@ -1,15 +1,18 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { BuyerSalesReportItem, BuyerSalesReportRow } from '../../core/models/report';
 import { ReceiptPrintButtonsComponent } from '../../core/components/receipt-print-buttons/receipt-print-buttons.component';
+import { DataTableComponent, DataTableColumn } from '../../core/components/data-table/data-table.component';
 import { DraggableDirective } from '../../core/directives/draggable.directive';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
+import { DateFormatPipe } from '../../core/pipes/date-format.pipe';
 import { ReceiptFormat, ReceiptService } from '../../core/services/receipt.service';
 import { SalesReportService } from '../../core/services/sales-report.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatCurrency } from '../../core/utils/currency-format.util';
+import { formatDate } from '../../core/utils/date.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
 import { formatDecimal } from '../../core/utils/round-off.util';
 import { formatApiDate } from '../../core/utils/sales.util';
@@ -19,7 +22,7 @@ type ReportPeriod = 'daily' | 'monthly' | 'yearly' | 'custom';
 @Component({
   selector: 'app-buyer-sales-report',
   standalone: true,
-  imports: [FormsModule, DraggableDirective, I18nPipe, ReceiptPrintButtonsComponent],
+  imports: [FormsModule, DraggableDirective, I18nPipe, DateFormatPipe, ReceiptPrintButtonsComponent, DataTableComponent],
   templateUrl: './buyer-sales-report.html',
   styleUrl: './buyer-sales-report.css',
 })
@@ -39,20 +42,90 @@ export class BuyerSalesReportComponent {
   protected readonly loading = signal(false);
   protected readonly searched = signal(false);
 
+  protected readonly gridColumns: DataTableColumn[] = [
+    {
+      key: 'sno',
+      header: 'txn.sno',
+      type: 'text',
+      align: 'center',
+      width: '50px',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'buyerName',
+      header: 'buyer.sales.report.col.buyer',
+      type: 'text',
+    },
+    {
+      key: 'totalWeight',
+      header: 'buyer.sales.report.col.total.weight',
+      type: 'number',
+      className: 'amount-col',
+    },
+    {
+      key: 'discount',
+      header: 'buyer.sales.report.col.discount',
+      type: 'number',
+      className: 'amount-col',
+    },
+    {
+      key: 'totalAmount',
+      header: 'buyer.sales.report.col.total.amount',
+      type: 'number',
+      className: 'amount-col',
+    },
+  ];
+
+  protected readonly detailColumns: DataTableColumn[] = [
+    {
+      key: 'salesDate',
+      header: 'buyer.sales.report.detail.sales.date',
+      type: 'date',
+    },
+    {
+      key: 'flowerType',
+      header: 'buyer.sales.report.detail.flower.type',
+      type: 'text',
+    },
+    {
+      key: 'totalWeight',
+      header: 'buyer.sales.report.detail.weight',
+      type: 'number',
+      className: 'amount-col',
+    },
+    {
+      key: 'perKgRate',
+      header: 'buyer.sales.report.detail.price',
+      type: 'number',
+      className: 'amount-col',
+    },
+    {
+      key: 'price',
+      header: 'buyer.sales.report.detail.total',
+      type: 'number',
+      className: 'amount-col',
+    },
+  ];
+
+  protected readonly sourceRows = computed<BuyerSalesReportRow[]>(() => {
+    const q = this.buyerSearch().trim().toLowerCase();
+    if (!q) {
+      return this.rows();
+    }
+    return this.rows().filter((row) => (row.buyerName || '').toLowerCase().includes(q));
+  });
+
+  protected onBuyerSearch(event: Event): void {
+    this.buyerSearch.set((event.target as HTMLInputElement).value);
+  }
+
   protected readonly popupOpen = signal(false);
   protected readonly popupTitle = signal('');
   protected readonly popupBuyer = signal<BuyerSalesReportRow | null>(null);
   protected readonly popupItems = signal<BuyerSalesReportItem[]>([]);
 
   private applyingPeriod = false;
-
-  protected filteredRows(): BuyerSalesReportRow[] {
-    const q = this.buyerSearch().trim().toLowerCase();
-    if (!q) {
-      return this.rows();
-    }
-    return this.rows().filter((row) => (row.buyerName || '').toLowerCase().includes(q));
-  }
 
   protected setPeriod(period: ReportPeriod): void {
     this.applyingPeriod = true;
@@ -131,16 +204,16 @@ export class BuyerSalesReportComponent {
     });
   }
 
-  protected totalWeight(): number {
-    return this.rows().reduce((sum, row) => sum + (Number(row.totalWeight) || 0), 0);
+  protected totalWeight(rows: BuyerSalesReportRow[]): number {
+    return rows.reduce((sum, row) => sum + (Number(row.totalWeight) || 0), 0);
   }
 
-  protected totalDiscount(): number {
-    return this.rows().reduce((sum, row) => sum + (Number(row.discount) || 0), 0);
+  protected totalDiscount(rows: BuyerSalesReportRow[]): number {
+    return rows.reduce((sum, row) => sum + (Number(row.discount) || 0), 0);
   }
 
-  protected totalAmount(): number {
-    return this.rows().reduce((sum, row) => sum + (Number(row.totalAmount) || 0), 0);
+  protected totalAmount(rows: BuyerSalesReportRow[]): number {
+    return rows.reduce((sum, row) => sum + (Number(row.totalAmount) || 0), 0);
   }
 
   protected initials(name: string | undefined): string {
@@ -193,8 +266,7 @@ export class BuyerSalesReportComponent {
       .map(
         (item, i) =>
           `<tr>` +
-          `<td class="left">${i + 1}</td>` +
-          `<td class="left">${this.escapeHtml(item.salesDate || '-')}</td>` +
+          `<td class="left">${this.escapeHtml(item.salesDate ? formatDate(item.salesDate) : '-')}</td>` +
           `<td class="left">${this.escapeHtml(item.flowerType || '-')}</td>` +
           `<td class="right">${this.formatDecimal(item.totalWeight)}</td>` +
           `<td class="right">${this.formatNum(item.perKgRate)}</td>` +
@@ -215,14 +287,12 @@ export class BuyerSalesReportComponent {
       `</div>` +
       `<table>` +
       `<thead><tr>` +
-      `<th class="left">#</th>` +
       `<th class="left">${this.escapeHtml(this.i18n.translate('buyer.sales.report.detail.sales.date'))}</th>` +
       `<th class="left">${this.escapeHtml(this.i18n.translate('report.col.flower.type'))}</th>` +
       `<th class="right">${this.escapeHtml(this.i18n.translate('report.col.weight'))}</th>` +
       `<th class="right">${this.escapeHtml(this.i18n.translate('report.col.price'))}</th>` +
       `<th class="right">${this.escapeHtml(this.i18n.translate('report.col.total'))}</th>` +
       `</tr></thead><tbody>${rowsHtml}</tbody></table>` +
-      `<div class="divider"></div>` +
       `<table class="summary-table">` +
       `<tr class="final"><td class="lbl">${this.escapeHtml(this.i18n.translate('buyer.sales.report.detail.total'))}</td><td class="amt">${this.formatNum(total)}</td></tr>` +
       `</table>`;
@@ -242,14 +312,7 @@ export class BuyerSalesReportComponent {
   }
 
   private formatDateStr(dateStr: string): string {
-    if (!dateStr) {
-      return '';
-    }
-    const parts = dateStr.split('-');
-    if (parts.length !== 3) {
-      return dateStr;
-    }
-    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    return formatDate(dateStr);
   }
 
   private escapeHtml(value: string | null | undefined): string {

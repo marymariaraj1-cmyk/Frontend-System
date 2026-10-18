@@ -2,8 +2,11 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { AutocompleteComponent } from '../../core/components/autocomplete/autocomplete.component';
+import { DataTableComponent, DataTableColumn } from '../../core/components/data-table/data-table.component';
+import { DraggableDirective } from '../../core/directives/draggable.directive';
 import { BuyerMasterData, BuyerTransaction } from '../../core/models/transaction';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
+import { DateFormatPipe } from '../../core/pipes/date-format.pipe';
 import { BuyerTransactionService } from '../../core/services/buyer-transaction.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -21,7 +24,7 @@ type PeriodType = 'daily' | 'monthly' | 'yearly';
 @Component({
   selector: 'app-buyer-transaction',
   standalone: true,
-  imports: [FormsModule, I18nPipe, AutocompleteComponent],
+  imports: [FormsModule, I18nPipe, DateFormatPipe, AutocompleteComponent, DraggableDirective, DataTableComponent],
   templateUrl: './buyer-transaction.html',
   styleUrl: './buyer-transaction.css',
 })
@@ -56,6 +59,69 @@ export class BuyerTransactionComponent implements OnInit {
   protected readonly transactions = signal<BuyerTransaction[]>([]);
   protected readonly loading = signal(false);
   protected readonly searched = signal(false);
+
+  // --- History tab: edit / delete ---
+  protected readonly editTarget = signal<BuyerTransaction | null>(null);
+  protected readonly editAmount = signal('');
+  protected readonly editDiscount = signal('');
+  protected readonly editMode = signal<'C' | 'U'>('C');
+  protected readonly updating = signal(false);
+  protected readonly deleteTarget = signal<BuyerTransaction | null>(null);
+  protected readonly deleting = signal(false);
+
+  protected readonly historyColumns: DataTableColumn[] = [
+    {
+      key: 'sno',
+      header: 'txn.sno',
+      type: 'text',
+      align: 'center',
+      width: '50px',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'transactionDate',
+      header: 'txn.date',
+      type: 'date',
+      width: '130px',
+    },
+    {
+      key: 'cashPaidAmt',
+      header: 'buyer.txn.amount.received',
+      type: 'currency',
+      className: 'ob-amount-col',
+      width: '150px',
+    },
+    {
+      key: 'disAmt',
+      header: 'buyer.txn.discount',
+      type: 'currency',
+      className: 'ob-amount-col',
+      width: '120px',
+    },
+    {
+      key: 'paymentMode',
+      header: 'txn.payment.mode.col',
+      type: 'text',
+      width: '110px',
+      sortable: false,
+      filterType: 'select',
+      options: [
+        { value: 'C', label: 'txn.payment.cash' },
+        { value: 'U', label: 'txn.payment.upi' },
+      ],
+    },
+    {
+      key: 'actions',
+      header: 'flower.actions',
+      icon: 'more_horiz',
+      type: 'text',
+      align: 'center',
+      width: '100px',
+      sortable: false,
+      filterable: false,
+    },
+  ];
 
   ngOnInit(): void {
     this.loadMasterData();
@@ -338,12 +404,125 @@ export class BuyerTransactionComponent implements OnInit {
     return years;
   }
 
-  protected historyTotalReceived(): number {
-    return this.transactions().reduce((sum, t) => sum + (Number(t.cashPaidAmt) || 0), 0);
+  protected historyTotalReceived(rows: BuyerTransaction[]): number {
+    return rows.reduce((sum, t) => sum + (Number(t.cashPaidAmt) || 0), 0);
   }
 
-  protected historyTotalDiscount(): number {
-    return this.transactions().reduce((sum, t) => sum + (Number(t.disAmt) || 0), 0);
+  protected historyTotalDiscount(rows: BuyerTransaction[]): number {
+    return rows.reduce((sum, t) => sum + (Number(t.disAmt) || 0), 0);
+  }
+
+  // ---- History tab: edit / delete ----
+
+  protected openEdit(txn: BuyerTransaction): void {
+    this.editTarget.set(txn);
+    this.editAmount.set(txn.cashPaidAmt ? String(txn.cashPaidAmt) : '');
+    this.editDiscount.set(txn.disAmt ? String(txn.disAmt) : '');
+    this.editMode.set(txn.paymentMode === 'U' ? 'U' : 'C');
+  }
+
+  protected sanitizeEditAmount(value: string): void {
+    this.editAmount.set(this.sanitizeAmount(value));
+  }
+
+  protected sanitizeEditDiscount(value: string): void {
+    this.editDiscount.set(this.sanitizeAmount(value));
+  }
+
+  protected closeEdit(): void {
+    this.editTarget.set(null);
+  }
+
+  protected onEditOverlayClick(event: Event): void {
+    if (event.target === event.currentTarget) {
+      this.closeEdit();
+    }
+  }
+
+  protected confirmUpdate(): void {
+    const target = this.editTarget();
+    if (!target || this.updating()) {
+      return;
+    }
+    const amountReceived = this.editAmount();
+    const discount = this.editDiscount();
+    if (amountReceived && !AMOUNT_RE.test(amountReceived)) {
+      this.toast.error(this.i18n.translate('txn.error.amount.invalid'));
+      return;
+    }
+    if (discount && !AMOUNT_RE.test(discount)) {
+      this.toast.error(this.i18n.translate('txn.error.amount.invalid'));
+      return;
+    }
+    if (!amountReceived && !discount) {
+      this.toast.error(this.i18n.translate('txn.error.amount.or.discount.required'));
+      return;
+    }
+
+    this.updating.set(true);
+    this.service
+      .update({
+        buyerTransactionId: target.buyerTransactionId,
+        amountReceived,
+        discountAmt: discount,
+        paymentMode: this.editMode(),
+      })
+      .subscribe({
+        next: (response) => {
+          this.updating.set(false);
+          if (response.success) {
+            this.closeEdit();
+            this.toast.success(response.message);
+            this.searchHistory();
+          } else {
+            this.toast.error(response.message);
+          }
+        },
+        error: (error) => {
+          this.updating.set(false);
+          this.closeEdit();
+          this.toast.error(extractErrorMessage(error, this.i18n.translate('common.save.failed')));
+        },
+      });
+  }
+
+  protected openDelete(txn: BuyerTransaction): void {
+    this.deleteTarget.set(txn);
+  }
+
+  protected closeDelete(): void {
+    this.deleteTarget.set(null);
+  }
+
+  protected onDeleteOverlayClick(event: Event): void {
+    if (event.target === event.currentTarget) {
+      this.closeDelete();
+    }
+  }
+
+  protected confirmDelete(): void {
+    const target = this.deleteTarget();
+    if (!target || this.deleting()) {
+      return;
+    }
+    this.deleting.set(true);
+    this.service.remove(target.buyerTransactionId).subscribe({
+      next: (response) => {
+        this.deleting.set(false);
+        if (response.success) {
+          this.closeDelete();
+          this.toast.success(response.message);
+          this.searchHistory();
+        } else {
+          this.toast.error(response.message);
+        }
+      },
+      error: (error) => {
+        this.deleting.set(false);
+        this.closeDelete();
+        this.toast.error(extractErrorMessage(error, this.i18n.translate('common.delete.failed')));
+      },
+    });
   }
 
   protected initials(name: string | undefined): string {
