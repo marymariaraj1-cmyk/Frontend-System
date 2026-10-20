@@ -14,6 +14,7 @@ import { ReceiptPrintButtonsComponent } from '../../core/components/receipt-prin
 import { DataTableComponent, DataTableColumn } from '../../core/components/data-table/data-table.component';
 import { DraggableDirective } from '../../core/directives/draggable.directive';
 import { FarmerLedgerService } from '../../core/services/farmer-ledger.service';
+import { FarmerCommissionConfigService } from '../../core/services/farmer-commission-config.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { LedgerNavService } from '../../core/services/ledger-nav.service';
 import { ReceiptFormat, ReceiptService } from '../../core/services/receipt.service';
@@ -37,6 +38,7 @@ export class FarmerLedgerDetailComponent implements OnInit {
   private readonly i18n = inject(I18nService);
   private readonly toast = inject(ToastService);
   private readonly receipt = inject(ReceiptService);
+  protected readonly commissionConfig = inject(FarmerCommissionConfigService);
 
   protected readonly formatCurrency = formatCurrency;
   protected readonly formatDecimal = formatDecimal;
@@ -144,6 +146,11 @@ export class FarmerLedgerDetailComponent implements OnInit {
       type: 'text',
     },
     {
+      key: 'custName',
+      header: 'buyer.sales.report.detail.buyer',
+      type: 'text',
+    },
+    {
       key: 'totalWeight',
       header: 'buyer.sales.report.detail.weight',
       type: 'number',
@@ -170,6 +177,7 @@ export class FarmerLedgerDetailComponent implements OnInit {
   private applyingPeriod = false;
 
   ngOnInit(): void {
+    this.commissionConfig.load();
     const ctx = this.ledgerNav.farmer();
     if (ctx) {
       this.farmerId.set(ctx.id);
@@ -324,7 +332,7 @@ export class FarmerLedgerDetailComponent implements OnInit {
     const sTotal = this.popupItems().reduce((sum, item) => sum + (Number(item.price) || 0), 0);
     return this.popupSummary()?.commission != null
       ? Number(this.popupSummary()!.commission)
-      : Math.round(sTotal * 0.1);
+      : Math.round(sTotal * this.commissionConfig.rate());
   }
 
   protected popupNetAmount(): number {
@@ -456,7 +464,7 @@ export class FarmerLedgerDetailComponent implements OnInit {
     const sTotal = items.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
     const fAdjust = Number(summary?.adjustmentAmt) || 0;
     const fTotal = (summary?.total != null ? Number(summary.total) : sTotal) + fAdjust;
-    const fCommission = summary?.commission != null ? Number(summary.commission) : Math.round(sTotal * 0.1);
+    const fCommission = summary?.commission != null ? Number(summary.commission) : Math.round(sTotal * this.commissionConfig.rate());
     const fNet = (summary?.netAmount != null ? Number(summary.netAmount) : sTotal - fCommission) + fAdjust;
     const fDebit = summary?.debit != null ? Number(summary.debit) : 0;
     const fDebitBreakdown = (summary as any)?.debitBreakdown ?? '';
@@ -499,7 +507,7 @@ export class FarmerLedgerDetailComponent implements OnInit {
       `<div class="divider"></div>` +
       `<table class="summary-table">` +
       `<tr><td class="lbl">${this.escapeHtml(this.i18n.translate('farmer.sales.daily.report.detail.total'))}</td><td class="amt">${this.formatNum(fTotal)}</td></tr>` +
-      `<tr><td class="lbl">${this.escapeHtml(this.i18n.translate('farmer.sales.daily.report.detail.commission'))}</td><td class="amt">${this.formatNum(fCommission)}</td></tr>` +
+      `<tr><td class="lbl">${this.escapeHtml(this.i18n.translate('farmer.sales.daily.report.detail.commission').replace('{pct}', this.commissionConfig.percentLabel()))}</td><td class="amt">${this.formatNum(fCommission)}</td></tr>` +
       `<tr><td class="lbl">${this.escapeHtml(this.i18n.translate('farmer.sales.daily.report.detail.net.amount'))}</td><td class="amt">${this.formatNum(fNet)}</td></tr>` +
       `<tr><td class="lbl">${this.escapeHtml(this.i18n.translate('farmer.sales.daily.report.detail.debit.amount'))}${fDebitBreakdown ? ' (' + this.escapeHtml(fDebitBreakdown) + ')' : ''}</td><td class="amt">${this.formatNum(fDebit)}</td></tr>` +
       `<tr class="final"><td class="lbl">${this.escapeHtml(this.i18n.translate('farmer.sales.daily.report.detail.final.total'))}</td><td class="amt">${this.formatNum(fFinal)}</td></tr>` +
@@ -592,6 +600,11 @@ export class FarmerLedgerDetailComponent implements OnInit {
 
   protected balanceAbs(): number {
     return Math.abs(this.balance());
+  }
+
+  protected absValue(value: unknown): number {
+    const num = Number(value);
+    return Number.isFinite(num) ? Math.abs(num) : 0;
   }
 
   protected balanceIsDebit(): boolean {

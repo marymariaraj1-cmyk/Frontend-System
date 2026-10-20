@@ -25,6 +25,7 @@ export interface FarmerSalesReportRow {
 
 export interface BuyerSalesReportItem {
   buyerId: string;
+  farmerName: string;
   salesDate: string;
   flowerType: string;
   totalWeight: number;

@@ -19,7 +19,7 @@
         <span class="ms-stat-value">{{ formatCurrency(summary().total) }}</span>
       </div>
       <div class="ms-stat">
-        <span class="ms-stat-label">{{ 'sales.commission' | i18n }}</span>
+        <span class="ms-stat-label">{{ ('sales.commission' | i18n).replace('{pct}', commissionConfig.percentLabel()) }}</span>
         <span class="ms-stat-value">{{ formatCurrency(summary().commission) }}</span>
       </div>
       <div class="ms-stat">
@@ -187,7 +187,7 @@
         <span class="calc-value">{{ formatCurrency(summary().total) }}</span>
       </div>
       <div class="calc-row">
-        <span class="calc-label">{{ 'sales.commission' | i18n }}:</span>
+        <span class="calc-label">{{ ('sales.commission' | i18n).replace('{pct}', commissionConfig.percentLabel()) }}:</span>
         <span class="calc-value">{{ formatCurrency(summary().commission) }}</span>
       </div>
       <div class="calc-row">

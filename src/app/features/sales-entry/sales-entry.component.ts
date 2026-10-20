@@ -10,6 +10,7 @@ import { I18nPipe } from '../../core/pipes/i18n.pipe';
 import { DateFormatPipe } from '../../core/pipes/date-format.pipe';
 import { AuthService } from '../../core/services/auth.service';
 import { BagCountConfigService } from '../../core/services/bag-count-config.service';
+import { FarmerCommissionConfigService } from '../../core/services/farmer-commission-config.service';
 import { FarmerLedgerService } from '../../core/services/farmer-ledger.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { ReceiptFormat, ReceiptService } from '../../core/services/receipt.service';
@@ -47,6 +48,7 @@ export class SalesEntryComponent implements OnInit {
   private readonly toast = inject(ToastService);
   private readonly bagCountConfigService = inject(BagCountConfigService);
   private readonly receipt = inject(ReceiptService);
+  protected readonly commissionConfig = inject(FarmerCommissionConfigService);
 
   protected readonly master = signal<SalesMasterData>({
     farmers: [],
@@ -204,7 +206,7 @@ export class SalesEntryComponent implements OnInit {
       }
     }
     const totalRounded = roundOff(total);
-    const commission = roundOff(total * 0.1);
+    const commission = roundOff(total * this.commissionConfig.rate());
     const net = totalRounded - commission;
     const debitValue = parseFloat(this.debit());
     const debitAmount = Number.isNaN(debitValue) ? 0 : debitValue;
@@ -213,6 +215,7 @@ export class SalesEntryComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.commissionConfig.load();
     this.loadMasterData();
     this.loadBagConfigs();
     this.addRow();
@@ -653,7 +656,7 @@ export class SalesEntryComponent implements OnInit {
       '<div class="divider"></div>' +
       '<div class="summary">' +
       '<p><span>' + t('report.total') + '</span><strong>' + this.formatCurrency(summary.total) + '</strong></p>' +
-      '<p><span>' + t('report.commission') + '</span><strong>' + this.formatCurrency(summary.commission) + '</strong></p>' +
+      '<p><span>' + t('report.commission').replace('{pct}', this.commissionConfig.percentLabel()) + '</span><strong>' + this.formatCurrency(summary.commission) + '</strong></p>' +
       '<p><span>' + t('report.net.amount') + '</span><strong>' + this.formatCurrency(summary.net) + '</strong></p>' +
       '<p><span>' + t('report.debit') + '</span><strong>' + this.formatCurrency(summary.debit) + '</strong></p>' +
       '<p class="final"><span>' + t('report.final.total') + '</span><strong>' + this.formatCurrency(summary.final) + '</strong></p>' +
@@ -701,7 +704,7 @@ export class SalesEntryComponent implements OnInit {
 
     lines.push('');
     lines.push(t('report.total') + this.formatCurrency(this.summary().total));
-    lines.push(t('report.commission') + this.formatCurrency(this.summary().commission));
+    lines.push(t('report.commission').replace('{pct}', this.commissionConfig.percentLabel()) + this.formatCurrency(this.summary().commission));
     lines.push(t('report.net.amount') + this.formatCurrency(this.summary().net));
     lines.push(t('report.debit') + this.formatCurrency(this.summary().debit));
     lines.push(t('report.final.total') + this.formatCurrency(this.summary().final));

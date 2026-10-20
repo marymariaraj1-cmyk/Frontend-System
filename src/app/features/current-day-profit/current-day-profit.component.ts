@@ -6,6 +6,7 @@ import { DataTableComponent, DataTableColumn } from '../../core/components/data-
 import { DraggableDirective } from '../../core/directives/draggable.directive';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
 import { SalesReportService } from '../../core/services/sales-report.service';
+import { FarmerCommissionConfigService } from '../../core/services/farmer-commission-config.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatCurrency } from '../../core/utils/currency-format.util';
@@ -23,6 +24,11 @@ export class CurrentDayProfitComponent {
   private readonly service = inject(SalesReportService);
   private readonly i18n = inject(I18nService);
   private readonly toast = inject(ToastService);
+  protected readonly commissionConfig = inject(FarmerCommissionConfigService);
+
+  constructor() {
+    this.commissionConfig.load();
+  }
 
   protected readonly formatCurrency = formatCurrency;
   protected readonly formatDecimal = formatDecimal;
@@ -219,6 +225,6 @@ export class CurrentDayProfitComponent {
   }
 
   protected popupCommission(): number {
-    return this.popupTotal() * 0.1;
+    return this.popupTotal() * this.commissionConfig.rate();
   }
 }

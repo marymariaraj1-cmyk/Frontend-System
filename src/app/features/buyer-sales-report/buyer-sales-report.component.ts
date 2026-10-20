@@ -89,6 +89,11 @@ export class BuyerSalesReportComponent {
       type: 'text',
     },
     {
+      key: 'farmerName',
+      header: 'farmer.sales.daily.report.detail.farmer',
+      type: 'text',
+    },
+    {
       key: 'totalWeight',
       header: 'buyer.sales.report.detail.weight',
       type: 'number',

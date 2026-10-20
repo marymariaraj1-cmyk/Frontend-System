@@ -33,7 +33,7 @@
         <span class="ldg-stat-icon material-symbols-rounded">flag</span>
         <div class="ldg-stat-meta">
           <span class="ldg-stat-label">{{ 'ledger.detail.col.opening.balance' | i18n }}</span>
-          <span class="ldg-stat-value">{{ formatCurrency(startOpening()) }}</span>
+          <span class="ldg-stat-value" [class.ldg-bal-debit]="startOpening() < 0" [class.ldg-bal-credit]="startOpening() > 0">{{ formatCurrency(absValue(startOpening())) }}</span>
         </div>
       </div>
       <div class="ldg-stat-chip">
@@ -167,7 +167,7 @@
                 </span>
               </td>
             } @else {
-              <td class="amount-col">{{ formatCurrency(row.openingBalance) }}</td>
+              <td class="amount-col" [class.bal-negative]="row.openingBalance < 0" [class.bal-positive]="row.openingBalance > 0">{{ formatCurrency(absValue(row.openingBalance)) }}</td>
               <td class="amount-col">
                 <span class="amt-debit">
                   {{ formatCurrency(row.purchase) }}
@@ -190,7 +190,7 @@
                   }
                 </span>
               </td>
-              <td class="amount-col">{{ formatCurrency(row.closingBalance) }}</td>
+              <td class="amount-col" [class.bal-negative]="row.closingBalance < 0" [class.bal-positive]="row.closingBalance > 0">{{ formatCurrency(absValue(row.closingBalance)) }}</td>
             }
           </tr>
         </ng-template>
@@ -273,7 +273,7 @@
             <div class="ledger-summary-row balance">
               <span class="ledger-summary-icon balance-icon"><span class="material-symbols-rounded">account_balance_wallet</span></span>
               <span class="ledger-summary-label">{{ 'ledger.detail.col.closing.balance' | i18n }}</span>
-              <span class="ledger-summary-value">{{ formatCurrency(last.closingBalance) }}</span>
+              <span class="ledger-summary-value" [class.bal-negative]="last.closingBalance < 0" [class.bal-positive]="last.closingBalance > 0">{{ formatCurrency(absValue(last.closingBalance)) }}</span>
             </div>
           </div>
         }
@@ -304,6 +304,7 @@
           <ng-template #row let-item let-idx="idx" let-pageStart="pageStart">
             <tr>
               <td>{{ item.flowerType }}</td>
+              <td>{{ item.farmerName?.trim() || ('common.fls.label' | i18n) }}</td>
               <td class="amount-col">{{ formatDecimal(item.totalWeight) }}</td>
               <td class="amount-col">{{ formatCurrency(item.perKgRate) }}</td>
               <td class="amount-col">{{ formatCurrency(item.price) }}</td>
@@ -313,43 +314,43 @@
             @if (all.length > 0) {
               @let s = popupSummary();
               <tr class="report-footer-row">
-                <td colspan="3" class="amount-col">
+                <td colspan="4" class="amount-col">
                   {{ 'buyer.ledger.summary.today.purchase' | i18n }}
                 </td>
                 <td class="amount-col">{{ formatCurrency(s.todayPurchase) }}</td>
               </tr>
               <tr class="report-footer-row">
-                <td colspan="3" class="amount-col">
+                <td colspan="4" class="amount-col">
                   {{ 'buyer.ledger.detail.col.discount' | i18n }}
                 </td>
                 <td class="amount-col">{{ formatCurrency(s.discount) }}</td>
               </tr>
               <tr class="report-footer-row">
-                <td colspan="3" class="amount-col">
+                <td colspan="4" class="amount-col">
                   {{ 'buyer.ledger.summary.final.today.purchase' | i18n }}
                 </td>
                 <td class="amount-col">{{ formatCurrency(s.finalTodayPurchase) }}</td>
               </tr>
               <tr class="report-footer-row">
-                <td colspan="3" class="amount-col">
+                <td colspan="4" class="amount-col">
                   {{ 'buyer.ledger.summary.opening' | i18n }}
                 </td>
                 <td class="amount-col">{{ formatCurrency(s.opening) }}</td>
               </tr>
               <tr class="report-footer-row ledger-summary-total">
-                <td colspan="3" class="amount-col">
+                <td colspan="4" class="amount-col">
                   {{ 'buyer.ledger.summary.total' | i18n }}
                 </td>
                 <td class="amount-col">{{ formatCurrency(s.total) }}</td>
               </tr>
               <tr class="report-footer-row">
-                <td colspan="3" class="amount-col">
+                <td colspan="4" class="amount-col">
                   {{ 'buyer.ledger.summary.received' | i18n }}
                 </td>
                 <td class="amount-col">{{ formatCurrency(s.received) }}</td>
               </tr>
               <tr class="report-footer-row ledger-summary-total">
-                <td colspan="3" class="amount-col">
+                <td colspan="4" class="amount-col">
                   {{ 'buyer.ledger.summary.balance' | i18n }}
                   @if (s.balanceBadge) {
                     <span

@@ -23,6 +23,14 @@
   font-variant-numeric: tabular-nums;
 }
 
+.bal-negative {
+  color: #dc2626;
+}
+
+.bal-positive {
+  color: #059669;
+}
+
 /* ==================== DETAIL HERO ==================== */
 .ldg-hero {
   position: relative;

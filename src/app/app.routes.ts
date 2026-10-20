@@ -89,6 +89,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'farmer-commission-config',
+          loadComponent: () =>
+            import('./features/farmer-commission-config/farmer-commission-config.component').then(
+              (m) => m.FarmerCommissionConfigComponent,
+            ),
+      },
+      {
         path: 'sales-details-edit',
         loadComponent: () =>
           import('./features/sales-details-edit/sales-details-edit.component').then(

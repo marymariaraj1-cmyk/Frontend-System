@@ -126,7 +126,7 @@
             </tr>
             <tr class="report-footer-row rpt-total-row">
               <td colspan="5" class="amount-col">
-                {{ 'current.day.total.commission.popup.commission' | i18n }}
+                {{ ('current.day.total.commission.popup.commission' | i18n).replace('{pct}', commissionConfig.percentLabel()) }}
               </td>
               <td class="amount-col">{{ formatCurrency(popupCommission()) }}</td>
             </tr>

@@ -10,6 +10,7 @@ import { DateFormatPipe } from '../../core/pipes/date-format.pipe';
 import { ReceiptFormat, ReceiptService } from '../../core/services/receipt.service';
 import { SalesReportService } from '../../core/services/sales-report.service';
 import { I18nService } from '../../core/services/i18n.service';
+import { FarmerCommissionConfigService } from '../../core/services/farmer-commission-config.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatCurrency } from '../../core/utils/currency-format.util';
 import { formatDate } from '../../core/utils/date.util';
@@ -31,6 +32,11 @@ export class FarmerSalesReportComponent {
   private readonly i18n = inject(I18nService);
   private readonly toast = inject(ToastService);
   private readonly receipt = inject(ReceiptService);
+  protected readonly commissionConfig = inject(FarmerCommissionConfigService);
+
+  constructor() {
+    this.commissionConfig.load();
+  }
 
   protected readonly formatCurrency = formatCurrency;
   protected readonly formatDecimal = formatDecimal;
@@ -104,6 +110,11 @@ export class FarmerSalesReportComponent {
     {
       key: 'flowerType',
       header: 'buyer.sales.report.detail.flower.type',
+      type: 'text',
+    },
+    {
+      key: 'custName',
+      header: 'buyer.sales.report.detail.buyer',
       type: 'text',
     },
     {
@@ -325,7 +336,7 @@ export class FarmerSalesReportComponent {
       `<div class="divider"></div>` +
       `<table class="summary-table">` +
       `<tr><td class="lbl">${this.escapeHtml(this.i18n.translate('farmer.sales.daily.report.detail.total'))}</td><td class="wgt"></td><td class="amt">${this.formatNum(this.popupTotal())}</td></tr>` +
-      `<tr><td class="lbl">${this.escapeHtml(this.i18n.translate('farmer.sales.daily.report.detail.commission'))}</td><td class="wgt"></td><td class="amt">${this.formatNum(this.popupCommission())}</td></tr>` +
+      `<tr><td class="lbl">${this.escapeHtml(this.i18n.translate('farmer.sales.daily.report.detail.commission').replace('{pct}', this.commissionConfig.percentLabel()))}</td><td class="wgt"></td><td class="amt">${this.formatNum(this.popupCommission())}</td></tr>` +
       `<tr><td class="lbl">${this.escapeHtml(this.i18n.translate('farmer.sales.daily.report.detail.net.amount'))}</td><td class="wgt"></td><td class="amt">${this.formatNum(this.popupNetAmount())}</td></tr>` +
       `<tr><td class="lbl">${this.escapeHtml(this.i18n.translate('farmer.sales.daily.report.detail.debit.amount'))}${debitBreakdown ? ' (' + this.escapeHtml(debitBreakdown) + ')' : ''}</td><td class="wgt"></td><td class="amt">${this.formatNum(this.popupDebit())}</td></tr>` +
       `<tr class="final"><td class="lbl">${this.escapeHtml(this.i18n.translate('farmer.sales.daily.report.detail.final.total'))}</td><td class="wgt"></td><td class="amt">${this.formatNum(this.popupFinalTotal())}</td></tr>` +

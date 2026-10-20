@@ -9,6 +9,7 @@ import { MultiSalesLine, SalesMasterData } from '../../core/models/sales';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
 import { AuthService } from '../../core/services/auth.service';
 import { BagCountConfigService } from '../../core/services/bag-count-config.service';
+import { FarmerCommissionConfigService } from '../../core/services/farmer-commission-config.service';
 import { FarmerLedgerService } from '../../core/services/farmer-ledger.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { MultiSalesEntryService } from '../../core/services/multi-sales.service';
@@ -50,6 +51,7 @@ export class MultiSalesComponent implements OnInit {
   private readonly toast = inject(ToastService);
   private readonly bagCountConfigService = inject(BagCountConfigService);
   private readonly receipt = inject(ReceiptService);
+  protected readonly commissionConfig = inject(FarmerCommissionConfigService);
 
   protected readonly master = signal<SalesMasterData>({
     farmers: [],
@@ -223,12 +225,13 @@ export class MultiSalesComponent implements OnInit {
       }
     }
     const totalRounded = roundOff(total);
-    const commission = roundOff(totalRounded * 0.1);
+    const commission = roundOff(totalRounded * this.commissionConfig.rate());
     const net = totalRounded - commission;
     return { total: totalRounded, commission, net, final: net };
   });
 
   ngOnInit(): void {
+    this.commissionConfig.load();
     this.loadMasterData();
     this.loadBagConfigs();
     this.loadTodayEntries();

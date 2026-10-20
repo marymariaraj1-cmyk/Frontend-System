@@ -185,6 +185,11 @@ export class BuyerLedgerDetailComponent implements OnInit {
       type: 'text',
     },
     {
+      key: 'farmerName',
+      header: 'farmer.sales.daily.report.detail.farmer',
+      type: 'text',
+    },
+    {
       key: 'totalWeight',
       header: 'buyer.sales.report.detail.weight',
       type: 'number',
@@ -584,6 +589,11 @@ export class BuyerLedgerDetailComponent implements OnInit {
 
   protected balanceAbs(): number {
     return Math.abs(this.balance());
+  }
+
+  protected absValue(value: unknown): number {
+    const num = Number(value);
+    return Number.isFinite(num) ? Math.abs(num) : 0;
   }
 
   protected balanceIsDebit(): boolean {
