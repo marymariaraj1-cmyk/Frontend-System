@@ -216,6 +216,50 @@
                 <span class="nav-label">{{ 'sidebar.flower.loot.sale.edit' | i18n }}</span>
               </a>
             </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/flower-intake-sale"
+                routerLinkActive="active"
+                [attr.title]="collapsed() ? ('sidebar.flower.intake.sale' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">move_to_inbox</span>
+                <span class="nav-label">{{ 'sidebar.flower.intake.sale' | i18n }}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/flower-intake-sale-edit"
+                routerLinkActive="active"
+                [attr.title]="collapsed() ? ('sidebar.flower.intake.sale.edit' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">edit_note</span>
+                <span class="nav-label">{{ 'sidebar.flower.intake.sale.edit' | i18n }}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/buyer-direct-sale"
+                routerLinkActive="active"
+                [attr.title]="collapsed() ? ('sidebar.buyer.direct.sale' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">outbox</span>
+                <span class="nav-label">{{ 'sidebar.buyer.direct.sale' | i18n }}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/buyer-direct-sale-edit"
+                routerLinkActive="active"
+                [attr.title]="collapsed() ? ('sidebar.buyer.direct.sale.edit' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">edit_note</span>
+                <span class="nav-label">{{ 'sidebar.buyer.direct.sale.edit' | i18n }}</span>
+              </a>
+            </li>
           </ul>
         </div>
 

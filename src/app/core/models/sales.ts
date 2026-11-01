@@ -159,3 +159,73 @@ export interface FlowerLootSaleEditRequest {
   buyerRows: FlowerLootSaleEditRow[];
   farmerRows: FlowerLootSaleEditRow[];
 }
+
+export interface IntakeDirectRowInput {
+  flowerType: string;
+  bagCount?: string;
+  totalWeight: string;
+  rate: string;
+  amount: string;
+}
+
+export interface FlowerIntakeSaleRequest {
+  farmerName: string;
+  salesDate: string;
+  debitAmount: string;
+  totalSalesAmt?: string;
+  commissionAmt?: string;
+  netAmount?: string;
+  finalTotal?: string;
+  rows: IntakeDirectRowInput[];
+}
+
+export interface BuyerDirectSaleRequest {
+  buyerName: string;
+  salesDate: string;
+  rows: IntakeDirectRowInput[];
+}
+
+export interface IntakeDirectEditRow {
+  salesId: number;
+  flowerType: string;
+  bag?: string;
+  totalWeight: string;
+  rate: string;
+  amount: string;
+}
+
+export interface FlowerIntakeSaleEditFetchData {
+  farmerId: string;
+  farmerName: string;
+  salesDate: string;
+  rows: IntakeDirectEditRow[];
+  summary: SalesEditSummary | null;
+}
+
+export interface BuyerDirectSaleEditFetchData {
+  buyerId: string;
+  buyerName: string;
+  salesDate: string;
+  rows: IntakeDirectEditRow[];
+}
+
+export interface IntakeEditRowRequest {
+  salesId: number;
+  flowerType: string;
+  bagCount?: string;
+  totalWeight: string;
+  rate: string;
+  amount: string;
+}
+
+export interface FlowerIntakeSaleEditRequest {
+  farmerName: string;
+  salesDate: string;
+  rows: IntakeEditRowRequest[];
+}
+
+export interface BuyerDirectSaleEditRequest {
+  buyerName: string;
+  salesDate: string;
+  rows: IntakeEditRowRequest[];
+}

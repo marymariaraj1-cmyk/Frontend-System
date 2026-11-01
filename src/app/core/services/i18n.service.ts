@@ -4,6 +4,11 @@ import { ApiService } from './api.service';
 
 export type Language = 'en' | 'ta';
 
+const MARKER_ALIASES: Record<string, string> = {
+  'Flower Intake Sale': 'marker.flower.intake.sale',
+  'Buyer Direct Sale': 'marker.buyer.direct.sale',
+};
+
 @Injectable({ providedIn: 'root' })
 export class I18nService {
   private readonly api = inject(ApiService);
@@ -27,7 +32,8 @@ export class I18nService {
 
   translate(key: string, ...args: (string | number)[]): string {
     this.lang();
-    const message = this.messages()[key] ?? key;
+    const resolvedKey = MARKER_ALIASES[key] ?? key;
+    const message = this.messages()[resolvedKey] ?? resolvedKey;
     return message.replace(/\{(\d+)\}/g, (match, index: string) => {
       const arg = args[Number(index)];
       return arg !== undefined ? String(arg) : match;

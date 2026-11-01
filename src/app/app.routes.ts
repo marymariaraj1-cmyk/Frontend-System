@@ -117,6 +117,34 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'flower-intake-sale',
+        loadComponent: () =>
+          import('./features/flower-intake-sale/flower-intake-sale.component').then(
+            (m) => m.FlowerIntakeSaleComponent,
+          ),
+      },
+      {
+        path: 'flower-intake-sale-edit',
+        loadComponent: () =>
+          import('./features/flower-intake-sale-edit/flower-intake-sale-edit.component').then(
+            (m) => m.FlowerIntakeSaleEditComponent,
+          ),
+      },
+      {
+        path: 'buyer-direct-sale',
+        loadComponent: () =>
+          import('./features/buyer-direct-sale/buyer-direct-sale.component').then(
+            (m) => m.BuyerDirectSaleComponent,
+          ),
+      },
+      {
+        path: 'buyer-direct-sale-edit',
+        loadComponent: () =>
+          import('./features/buyer-direct-sale-edit/buyer-direct-sale-edit.component').then(
+            (m) => m.BuyerDirectSaleEditComponent,
+          ),
+      },
+      {
         path: 'farmer-transaction',
         loadComponent: () =>
           import('./features/farmer-transaction/farmer-transaction.component').then(

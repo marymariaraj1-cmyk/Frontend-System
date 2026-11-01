@@ -9,6 +9,7 @@ import { I18nPipe } from '../../core/pipes/i18n.pipe';
 import { DateFormatPipe } from '../../core/pipes/date-format.pipe';
 import { FarmerAccountCheckService } from '../../core/services/farmer-account-check.service';
 import { FarmerLedgerService } from '../../core/services/farmer-ledger.service';
+import { FarmerService } from '../../core/services/farmer.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { ReceiptFormat, ReceiptService } from '../../core/services/receipt.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -41,6 +42,7 @@ interface ModelResult {
 export class FarmerAccountCheckComponent {
   private readonly accountCheckService = inject(FarmerAccountCheckService);
   private readonly ledgerService = inject(FarmerLedgerService);
+  private readonly farmerService = inject(FarmerService);
   private readonly i18n = inject(I18nService);
   private readonly toast = inject(ToastService);
   private readonly receipt = inject(ReceiptService);
@@ -165,7 +167,9 @@ export class FarmerAccountCheckComponent {
     this.selectedModel.set(null);
     this.modelResult.set(null);
 
-    this.ledgerService.getFarmerList().subscribe({
+    // Resolve the ID from Farmer Master (not the ledger list) so a farmer who exists but has no
+    // sales/ledger rows is reported as "no sales" rather than "not found in master".
+    this.farmerService.getFarmers().subscribe({
       next: (listResponse) => {
         if (!listResponse.success) {
           this.loading.set(false);
