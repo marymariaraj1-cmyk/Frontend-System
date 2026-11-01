@@ -2,7 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { ApiResponse } from '../models/api-response';
-import { FlowerLootSaveRequest, SalesMasterData, SalesRecord, SalesRequest } from '../models/sales';
+import {
+  BuyerDirectSaleRequest,
+  FlowerIntakeSaleRequest,
+  FlowerLootSaveRequest,
+  SalesMasterData,
+  SalesRecord,
+  SalesRequest,
+} from '../models/sales';
 import { ApiService } from './api.service';
 
 @Injectable({ providedIn: 'root' })
@@ -24,5 +31,40 @@ export class SalesService {
 
   saveFlowerLoot(request: FlowerLootSaveRequest): Observable<ApiResponse<SalesRecord[]>> {
     return this.api.post<SalesRecord[]>('/flower-loot-sale/save', request);
+  }
+
+  saveFlowerIntake(request: FlowerIntakeSaleRequest): Observable<ApiResponse<SalesRecord[]>> {
+    const payload = {
+      farmerName: request.farmerName,
+      salesDate: request.salesDate,
+      debitAmount: request.debitAmount,
+      totalSalesAmt: request.totalSalesAmt,
+      commissionAmt: request.commissionAmt,
+      netAmount: request.netAmount,
+      finalTotal: request.finalTotal,
+      rows: request.rows.map((row) => ({
+        flowerType: row.flowerType,
+        bagCount: row.bagCount,
+        totalWeight: row.totalWeight,
+        price: row.rate,
+        amount: row.amount,
+      })),
+    };
+    return this.api.post<SalesRecord[]>('/flower-intake-sale/save', payload);
+  }
+
+  saveBuyerDirect(request: BuyerDirectSaleRequest): Observable<ApiResponse<SalesRecord[]>> {
+    const payload = {
+      buyerName: request.buyerName,
+      salesDate: request.salesDate,
+      rows: request.rows.map((row) => ({
+        flowerType: row.flowerType,
+        bagCount: row.bagCount,
+        totalWeight: row.totalWeight,
+        rate: row.rate,
+        amount: row.amount,
+      })),
+    };
+    return this.api.post<SalesRecord[]>('/buyer-direct-sale/save', payload);
   }
 }

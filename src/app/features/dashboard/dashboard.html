@@ -88,22 +88,6 @@
   </div>
   <div class="kpi-grid">
     <div class="kpi-card">
-      <div class="kpi-tile kpi-tile-sales"><span class="material-symbols-rounded">payments</span></div>
-      <div class="kpi-body">
-        <div class="kpi-label">{{ 'dashboard.kpi.today.sales' | i18n }}</div>
-        <div class="kpi-value">{{ formatCurrency(d.kpis.todaySales) }}</div>
-        @if (salesDelta(); as delta) {
-          <div class="kpi-delta" [class.delta-down]="!delta.up">
-            <span class="material-symbols-rounded">{{ delta.up ? 'trending_up' : 'trending_down' }}</span>
-            {{ delta.pct }}% {{ 'dashboard.kpi.vs.yesterday' | i18n }}
-          </div>
-        } @else {
-          <div class="kpi-sub">{{ 'dashboard.kpi.no.previous' | i18n }}</div>
-        }
-      </div>
-    </div>
-
-    <div class="kpi-card">
       <div class="kpi-tile kpi-tile-kg"><span class="material-symbols-rounded">scale</span></div>
       <div class="kpi-body">
         <div class="kpi-label">{{ 'dashboard.kpi.total.kg' | i18n }}</div>
@@ -235,38 +219,33 @@
       </a>
     </div>
     @if (todayRates().length > 0) {
-      <div class="table-container">
-        <table class="report-table dash-rates-table">
-          <thead>
-            <tr>
-              <th>{{ 'dashboard.rates.col.flower' | i18n }}</th>
-              <th class="amount-col">{{ 'dashboard.rates.col.today' | i18n }}</th>
-              <th class="amount-col">{{ 'dashboard.rates.col.previous' | i18n }}</th>
-              <th class="amount-col">{{ 'dashboard.rates.col.trend' | i18n }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (rate of todayRates(); track rate.flowerId) {
-              <tr>
-                <td>{{ rate.flowerName }}</td>
-                <td class="amount-col">{{ formatCurrency(rate.price) }}</td>
-                <td class="amount-col">{{ rate.previousPrice == null ? '—' : formatCurrency(rate.previousPrice) }}</td>
-                <td class="amount-col">
-                  <span
-                    class="dash-rate-trend"
-                    [class.trend-up]="rate.trend === 'up'"
-                    [class.trend-down]="rate.trend === 'down'"
-                    [class.trend-flat]="rate.trend === 'flat'"
-                  >
-                    <span aria-hidden="true">{{ rate.trend === 'up' ? '▲' : rate.trend === 'down' ? '▼' : '—' }}</span>
-                    <span>{{ rate.trend === 'up' ? ('dashboard.rates.trend.up' | i18n) : rate.trend === 'down' ? ('dashboard.rates.trend.down' | i18n) : ('dashboard.rates.trend.same' | i18n) }}</span>
-                  </span>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+      <app-data-table
+        [columns]="rateColumns"
+        [data]="todayRates()"
+        tableClasses="report-table dash-rates-table"
+        wrapperClasses="table-container"
+        trackKey="flowerId"
+        emptyKey="dashboard.rates.empty"
+      >
+        <ng-template #row let-rate>
+          <tr>
+            <td>{{ rate.flowerName }}</td>
+            <td class="amount-col">{{ formatCurrency(rate.price) }}</td>
+            <td class="amount-col">{{ rate.previousPrice == null ? '—' : formatCurrency(rate.previousPrice) }}</td>
+            <td class="amount-col">
+              <span
+                class="dash-rate-trend"
+                [class.trend-up]="rate.trend === 'up'"
+                [class.trend-down]="rate.trend === 'down'"
+                [class.trend-flat]="rate.trend === 'flat'"
+              >
+                <span aria-hidden="true">{{ rate.trend === 'up' ? '▲' : rate.trend === 'down' ? '▼' : '—' }}</span>
+                <span>{{ rate.trend === 'up' ? ('dashboard.rates.trend.up' | i18n) : rate.trend === 'down' ? ('dashboard.rates.trend.down' | i18n) : ('dashboard.rates.trend.same' | i18n) }}</span>
+              </span>
+            </td>
+          </tr>
+        </ng-template>
+      </app-data-table>
     } @else {
       <div class="no-records">{{ 'dashboard.rates.empty' | i18n }}</div>
     }
@@ -314,7 +293,7 @@
                 class="trend-dot"
                 [style.left.%]="trendPoints()[i].x"
                 [style.top.%]="trendPoints()[i].y"
-                [attr.title]="row.salesDate + ' - ' + formatCurrency(row.amount)"
+                [attr.title]="(row.salesDate | dateFormat) + ' - ' + formatCurrency(row.amount)"
               ></span>
             }
           </div>

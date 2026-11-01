@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AutocompleteComponent } from '../../core/components/autocomplete/autocomplete.component';
 import { FarmerMasterData, FarmerTransaction } from '../../core/models/transaction';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
+import { DateFormatPipe } from '../../core/pipes/date-format.pipe';
 import { FarmerTransactionService } from '../../core/services/farmer-transaction.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -14,7 +15,7 @@ import { formatApiDate } from '../../core/utils/sales.util';
 @Component({
   selector: 'app-farmer-transaction-history',
   standalone: true,
-  imports: [FormsModule, I18nPipe, AutocompleteComponent],
+  imports: [FormsModule, I18nPipe, DateFormatPipe, AutocompleteComponent],
   templateUrl: './farmer-transaction-history.html',
   styleUrl: './farmer-transaction-history.css',
 })

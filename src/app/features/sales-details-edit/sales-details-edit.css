@@ -275,31 +275,10 @@
 }
 
 /* ---------- Grid ---------- */
-.sales-grid-table {
-  width: 100%;
-  table-layout: fixed;
-}
-
-.sales-grid-table th,
-.sales-grid-table td {
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  overflow: visible;
-  vertical-align: top;
-}
-
-.sales-grid-table th:nth-child(2),
-.sales-grid-table th:nth-child(7) {
-  min-width: 140px;
-}
-
-.sales-grid-table td:not(:first-child):not(:last-child) {
-  padding-top: 6px;
-  padding-bottom: 6px;
-}
+/* Column alignment / width / wrapping for this grid is shared in global styles.css (.sales-grid-table). */
 
 .sales-grid-table .bag-input {
-  width: 92px;
+  width: 100%;
   text-align: right;
   padding-left: 34px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='18' viewBox='0 -960 960 960' width='18' fill='%23a0a8ba'%3E%3Cpath d='M640-520h-60v130H450v60h130v130h60v-130h130v-60H640v-130ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v460H200v100h340v60H200Z'/%3E%3C/svg%3E");

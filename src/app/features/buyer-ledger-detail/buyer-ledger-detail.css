@@ -23,11 +23,46 @@
   font-variant-numeric: tabular-nums;
 }
 
+.bal-negative {
+  color: #dc2626;
+}
+
+.bal-positive {
+  color: #059669;
+}
+
 .discount-badge {
   display: block;
   font-size: 10px;
   color: #e53935;
   font-weight: 600;
+}
+
+.ledger-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  vertical-align: middle;
+}
+
+.ledger-badge-debit {
+  color: #dc2626;
+  background: #fee2e2;
+}
+
+.ledger-badge-credit {
+  color: #059669;
+  background: #d1fae5;
+}
+
+.report-footer-row.ledger-summary-total td {
+  background: #dbe4f7;
+  font-weight: 700;
 }
 
 /* ==================== DETAIL HERO (buyer: teal/cyan) ==================== */

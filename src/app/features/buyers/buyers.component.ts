@@ -1,6 +1,7 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
+import { DataTableComponent, DataTableColumn } from '../../core/components/data-table/data-table.component';
 import { Buyer, emptyBuyer } from '../../core/models/buyer';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
 import { BuyerService } from '../../core/services/buyer.service';
@@ -10,7 +11,7 @@ import { ToastService } from '../../core/services/toast.service';
 @Component({
   selector: 'app-buyers',
   standalone: true,
-  imports: [FormsModule, I18nPipe],
+  imports: [FormsModule, I18nPipe, DataTableComponent],
   templateUrl: './buyers.html',
   styleUrl: './buyers.css',
 })
@@ -21,20 +22,42 @@ export class BuyersComponent implements OnInit {
 
   protected readonly rows = signal<Buyer[]>([]);
   protected readonly showForm = signal(false);
-  protected readonly nameFilter = signal('');
-  protected readonly contactFilter = signal('');
-  protected readonly addressFilter = signal('');
-  protected readonly filteredRows = computed(() => {
-    const name = this.nameFilter().trim().toLowerCase();
-    const contact = this.contactFilter().trim().toLowerCase();
-    const address = this.addressFilter().trim().toLowerCase();
-    return this.rows().filter((row) => {
-      const matchName = !name || (row.buyerName ?? '').toLowerCase().includes(name);
-      const matchContact = !contact || (row.buyerContactNo ?? '').toLowerCase().includes(contact);
-      const matchAddress = !address || (row.buyerAddress ?? '').toLowerCase().includes(address);
-      return matchName && matchContact && matchAddress;
-    });
-  });
+
+  protected readonly columns: DataTableColumn[] = [
+    {
+      key: 'sno',
+      header: 'buyer.sno',
+      type: 'text',
+      align: 'center',
+      width: '50px',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'buyerName',
+      header: 'buyer.name',
+      type: 'text',
+    },
+    {
+      key: 'buyerContactNo',
+      header: 'buyer.contact',
+      type: 'text',
+    },
+    {
+      key: 'buyerAddress',
+      header: 'buyer.address',
+      type: 'text',
+    },
+    {
+      key: 'actions',
+      header: 'buyer.actions',
+      type: 'text',
+      align: 'center',
+      width: '100px',
+      sortable: false,
+      filterable: false,
+    },
+  ];
   protected initials(name: string): string {
     return (name || '').trim().split(/\s+/).slice(0, 2).map((part) => part.charAt(0)).join('').toUpperCase() || '?';
   }

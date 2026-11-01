@@ -79,7 +79,8 @@
             id="buyerSearch"
             name="buyerSearch"
             type="text"
-            [(ngModel)]="buyerSearch"
+            [value]="buyerSearch()"
+            (input)="onBuyerSearch($event)"
             [placeholder]="'buyer.sales.report.search.placeholder' | i18n"
           />
         </div>
@@ -105,60 +106,50 @@
     <div class="rpt-card-head">
       <span class="rpt-chip material-symbols-rounded">grid_view</span>
       <h3>{{ 'buyer.sales.report.grid.title' | i18n }}</h3>
-      @if (filteredRows().length > 0) {
-        <span class="rpt-count">{{ filteredRows().length }}</span>
+      @if (sourceRows().length > 0) {
+        <span class="rpt-count">{{ sourceRows().length }}</span>
       }
     </div>
     <div class="card-body">
-      <div class="table-container">
-        <table class="report-table">
-          <thead>
-            <tr>
-              <th style="width: 50px">{{ 'txn.sno' | i18n }}</th>
-              <th>{{ 'buyer.sales.report.col.buyer' | i18n }}</th>
-              <th class="amount-col">{{ 'buyer.sales.report.col.total.weight' | i18n }}</th>
-              <th class="amount-col">{{ 'buyer.sales.report.col.discount' | i18n }}</th>
-              <th class="amount-col">{{ 'buyer.sales.report.col.total.amount' | i18n }}</th>
+      <app-data-table
+        [columns]="gridColumns"
+        [data]="sourceRows()"
+        trackKey="buyerId"
+        tableClasses="report-table"
+        wrapperClasses="table-container"
+        emptyKey="buyer.sales.report.no.records"
+      >
+        <ng-template #row let-row let-idx="idx" let-pageStart="pageStart">
+          <tr>
+          <td class="rpt-sno">{{ pageStart + idx + 1 }}</td>
+          <td>
+            <div class="rpt-name-cell">
+              <span class="rpt-avatar">{{ initials(row.buyerName) }}</span>
+              <span class="rpt-name">{{ row.buyerName }}</span>
+            </div>
+          </td>
+          <td class="amount-col"><span class="rpt-amt chip-weight">{{ formatDecimal(row.totalWeight) }}</span></td>
+          <td class="amount-col"><span class="rpt-amt chip-discount">{{ formatCurrency(row.discount) }}</span></td>
+          <td class="amount-col">
+            <span class="rpt-amt chip-total">{{ formatCurrency(row.totalAmount) }}</span>
+            <a class="view-link" (click)="openPopup(row.buyerId)" [attr.title]="'btn.view' | i18n">
+              <span class="material-symbols-rounded view-icon">visibility</span>
+            </a>
+          </td>
+          </tr>
+        </ng-template>
+        <ng-template #footer let-all>
+          @if (all.length > 0) {
+            <tr class="report-footer-row rpt-total-row">
+              <td></td>
+              <td>{{ 'report.total' | i18n }}</td>
+              <td class="amount-col"><span class="rpt-amt chip-weight">{{ formatDecimal(totalWeight(all)) }}</span></td>
+              <td class="amount-col"><span class="rpt-amt chip-discount">{{ formatCurrency(totalDiscount(all)) }}</span></td>
+              <td class="amount-col"><span class="rpt-amt chip-total">{{ formatCurrency(totalAmount(all)) }}</span><span class="view-slot" aria-hidden="true"></span></td>
             </tr>
-          </thead>
-          <tbody>
-            @for (row of filteredRows(); track $index; let i = $index) {
-              <tr>
-                <td class="rpt-sno">{{ i + 1 }}</td>
-                <td>
-                  <div class="rpt-name-cell">
-                    <span class="rpt-avatar">{{ initials(row.buyerName) }}</span>
-                    <span class="rpt-name">{{ row.buyerName }}</span>
-                  </div>
-                </td>
-                <td class="amount-col"><span class="rpt-amt chip-weight">{{ formatDecimal(row.totalWeight) }}</span></td>
-                <td class="amount-col"><span class="rpt-amt chip-discount">{{ formatCurrency(row.discount) }}</span></td>
-                <td class="amount-col">
-                  <span class="rpt-amt chip-total">{{ formatCurrency(row.totalAmount) }}</span>
-                  <a class="view-link" (click)="openPopup(row.buyerId)" [attr.title]="'btn.view' | i18n">
-                    <span class="material-symbols-rounded view-icon">visibility</span>
-                  </a>
-                </td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="5" class="no-records">{{ 'buyer.sales.report.no.records' | i18n }}</td>
-              </tr>
-            }
-          </tbody>
-          @if (rows().length > 0) {
-            <tfoot>
-              <tr class="report-footer-row rpt-total-row">
-                <td></td>
-                <td>{{ 'report.total' | i18n }}</td>
-                <td class="amount-col">{{ formatDecimal(totalWeight()) }}</td>
-                <td class="amount-col">{{ formatCurrency(totalDiscount()) }}</td>
-                <td class="amount-col">{{ formatCurrency(totalAmount()) }}</td>
-              </tr>
-            </tfoot>
           }
-        </table>
-      </div>
+        </ng-template>
+      </app-data-table>
     </div>
   </div>
 }
@@ -171,40 +162,31 @@
         <button class="report-popup-close" (click)="closePopup()">&times;</button>
       </div>
       <div class="report-popup-body">
-        <div class="table-container">
-          <table class="report-table">
-            <thead>
+        <app-data-table
+              [columns]="detailColumns"
+              [data]="popupItems()"
+              [enableFilter]="false"
+              tableClasses="report-table"
+              wrapperClasses="table-container"
+              emptyKey="msg.no.records"
+            >
+<ng-template #row let-item>
               <tr>
-                <th>{{ 'buyer.sales.report.detail.sales.date' | i18n }}</th>
-                <th>{{ 'buyer.sales.report.detail.flower.type' | i18n }}</th>
-                <th class="amount-col">{{ 'buyer.sales.report.detail.weight' | i18n }}</th>
-                <th class="amount-col">{{ 'buyer.sales.report.detail.price' | i18n }}</th>
-                <th class="amount-col">{{ 'buyer.sales.report.detail.total' | i18n }}</th>
+              <td>{{ item.salesDate | dateFormat }}</td>
+              <td>{{ item.flowerType }}</td>
+              <td>{{ item.farmerName?.trim() || ('common.fls.label' | i18n) }}</td>
+              <td class="amount-col">{{ formatDecimal(item.totalWeight) }}</td>
+              <td class="amount-col">{{ formatCurrency(item.perKgRate) }}</td>
+              <td class="amount-col">{{ formatCurrency(item.price) }}</td>
               </tr>
-            </thead>
-            <tbody>
-              @for (item of popupItems(); track $index) {
-                <tr>
-                  <td>{{ item.salesDate }}</td>
-                  <td>{{ item.flowerType }}</td>
-                  <td class="amount-col">{{ formatDecimal(item.totalWeight) }}</td>
-                  <td class="amount-col">{{ formatCurrency(item.perKgRate) }}</td>
-                  <td class="amount-col">{{ formatCurrency(item.price) }}</td>
+            </ng-template>
+              <ng-template #footer>
+                <tr class="report-footer-row rpt-total-row">
+                  <td colspan="5" class="amount-col">{{ 'buyer.sales.report.detail.total' | i18n }}</td>
+                  <td class="amount-col">{{ formatCurrency(popupTotal()) }}</td>
                 </tr>
-              } @empty {
-                <tr>
-                  <td colspan="5" class="no-records">{{ 'msg.no.records' | i18n }}</td>
-                </tr>
-              }
-            </tbody>
-            <tfoot>
-              <tr class="report-footer-row rpt-total-row">
-                <td colspan="4" class="amount-col">{{ 'buyer.sales.report.detail.total' | i18n }}</td>
-                <td class="amount-col">{{ formatCurrency(popupTotal()) }}</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
+              </ng-template>
+            </app-data-table>
         <div class="form-actions">
           <app-receipt-print-buttons [cssClass]="'btn btn-secondary'" (print)="printPopup($event)" />
         </div>

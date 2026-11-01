@@ -48,7 +48,7 @@
           @for (txn of transactions(); track txn.farmerTransactionId; let i = $index) {
             <tr>
               <td>{{ i + 1 }}</td>
-              <td>{{ txn.transactionDate }}</td>
+              <td>{{ txn.transactionDate | dateFormat }}</td>
               <td>{{ txn.farmerName }}</td>
               <td class="ob-amount-col">{{ formatCurrency(txn.excessDebitAmt) }}</td>
               <td class="ob-amount-col">{{ formatCurrency(txn.debAmt) }}</td>

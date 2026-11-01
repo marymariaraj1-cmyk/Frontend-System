@@ -1,9 +1,11 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { DataTableComponent, DataTableColumn } from '../../core/components/data-table/data-table.component';
 import { DashboardData } from '../../core/models/dashboard-data';
 import { FlowerPriceTickerEntry } from '../../core/models/flower-price-config';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
+import { DateFormatPipe } from '../../core/pipes/date-format.pipe';
 import { AuthService } from '../../core/services/auth.service';
 import { DashboardService } from '../../core/services/dashboard.service';
 import { FlowerPriceConfigService } from '../../core/services/flower-price-config.service';
@@ -15,7 +17,7 @@ import { formatApiDate } from '../../core/utils/sales.util';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, I18nPipe],
+  imports: [RouterLink, I18nPipe, DateFormatPipe, DataTableComponent],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
@@ -28,6 +30,34 @@ export class DashboardComponent implements OnInit {
 
   protected readonly data = signal<DashboardData | null>(null);
   protected readonly flowerRates = signal<FlowerPriceTickerEntry[]>([]);
+
+  protected readonly rateColumns: DataTableColumn[] = [
+    {
+      key: 'flowerName',
+      header: 'dashboard.rates.col.flower',
+      type: 'text',
+    },
+    {
+      key: 'price',
+      header: 'dashboard.rates.col.today',
+      type: 'number',
+      className: 'amount-col',
+    },
+    {
+      key: 'previousPrice',
+      header: 'dashboard.rates.col.previous',
+      type: 'number',
+      className: 'amount-col',
+    },
+    {
+      key: 'trend',
+      header: 'dashboard.rates.col.trend',
+      type: 'text',
+      sortable: false,
+      filterable: false,
+      className: 'amount-col',
+    },
+  ];
 
   protected readonly trendRange = signal<'week' | 'month'>('week');
 
@@ -137,16 +167,6 @@ export class DashboardComponent implements OnInit {
       return '';
     }
     return pts.map((p, i) => `${i === 0 ? '' : ' '}${p.x.toFixed(2)},${p.y.toFixed(2)}`).join('');
-  }
-
-  protected salesDelta(): { pct: number; up: boolean } | null {
-    const d = this.data();
-    if (!d || d.kpis.yesterdaySales <= 0) {
-      return null;
-    }
-    const diff = d.kpis.todaySales - d.kpis.yesterdaySales;
-    const pct = Math.round((diff / d.kpis.yesterdaySales) * 100);
-    return { pct: Math.abs(pct), up: diff >= 0 };
   }
 
   protected todayLabel(): string {

@@ -111,47 +111,35 @@
       </h3>
     </div>
     <div class="card-body">
-      <div class="table-container mst-table-wrap">
-        <table class="report-table mst-table">
-          <thead>
-            <tr>
-              <th style="width: 50px">{{ 'client.sno' | i18n }}</th>
-              <th>{{ 'client.username' | i18n }}</th>
-              <th>{{ 'client.shop.name' | i18n }}</th>
-              <th>{{ 'client.contact' | i18n }}</th>
-              <th>{{ 'client.mail' | i18n }}</th>
-              <th style="width: 100px">{{ 'client.actions' | i18n }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (row of rows(); track row.clientId; let i = $index) {
-              <tr>
-                <td>{{ i + 1 }}</td>
-                <td>{{ row.clientUsername }}</td>
-                <td>
-                  <div class="mst-name-cell">
-                    <span class="row-avatar">{{ initials(row.clientShopName) }}</span>
-                    <span>{{ row.clientShopName }}</span>
-                  </div>
-                </td>
-                <td>{{ row.clientContactNo || '-' }}</td>
-                <td>{{ row.clientMailId || '-' }}</td>
-                <td>
-                  <div class="action-btns">
-                    <button type="button" class="icon-btn icon-btn-secondary icon-btn-sm" [attr.title]="'btn.edit' | i18n" [attr.aria-label]="'btn.edit' | i18n" (click)="startEdit(row)">
-                      <span class="material-symbols-rounded">edit</span>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="6" class="no-records">{{ 'common.no.records' | i18n }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+      <app-data-table
+        [columns]="columns"
+        [data]="rows()"
+        tableClasses="report-table mst-table"
+        wrapperClasses="table-container mst-table-wrap"
+        trackKey="clientId"
+      >
+        <ng-template #row let-row let-idx="idx" let-pageStart="pageStart">
+          <tr>
+            <td>{{ pageStart + idx + 1 }}</td>
+            <td>{{ row.clientUsername }}</td>
+            <td>
+              <div class="mst-name-cell">
+                <span class="row-avatar">{{ initials(row.clientShopName) }}</span>
+                <span>{{ row.clientShopName }}</span>
+              </div>
+            </td>
+            <td>{{ row.clientContactNo || '-' }}</td>
+            <td>{{ row.clientMailId || '-' }}</td>
+            <td>
+              <div class="action-btns">
+                <button type="button" class="icon-btn icon-btn-secondary icon-btn-sm" [attr.title]="'btn.edit' | i18n" [attr.aria-label]="'btn.edit' | i18n" (click)="startEdit(row)">
+                  <span class="material-symbols-rounded">edit</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </app-data-table>
     </div>
   </div>
 </div>

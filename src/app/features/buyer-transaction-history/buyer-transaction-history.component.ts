@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AutocompleteComponent } from '../../core/components/autocomplete/autocomplete.component';
 import { BuyerMasterData, BuyerTransaction } from '../../core/models/transaction';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
+import { DateFormatPipe } from '../../core/pipes/date-format.pipe';
 import { BuyerTransactionService } from '../../core/services/buyer-transaction.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -16,7 +17,7 @@ const PAYMENT_EXCLUDE = ['cash', 'upi', 'google pay', 'gpay', 'phonepe', 'paytm'
 @Component({
   selector: 'app-buyer-transaction-history',
   standalone: true,
-  imports: [FormsModule, I18nPipe, AutocompleteComponent],
+  imports: [FormsModule, I18nPipe, DateFormatPipe, AutocompleteComponent],
   templateUrl: './buyer-transaction-history.html',
   styleUrl: './buyer-transaction-history.css',
 })

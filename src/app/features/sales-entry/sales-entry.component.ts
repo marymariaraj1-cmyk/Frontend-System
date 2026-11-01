@@ -3,17 +3,21 @@ import { FormsModule } from '@angular/forms';
 
 import { AutocompleteComponent } from '../../core/components/autocomplete/autocomplete.component';
 import { ReceiptPrintButtonsComponent } from '../../core/components/receipt-print-buttons/receipt-print-buttons.component';
+import { DataTableComponent, DataTableColumn } from '../../core/components/data-table/data-table.component';
 import { BagCountConfigRow } from '../../core/models/bag-count-config';
 import { SalesLineInput, SalesMasterData } from '../../core/models/sales';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
+import { DateFormatPipe } from '../../core/pipes/date-format.pipe';
 import { AuthService } from '../../core/services/auth.service';
 import { BagCountConfigService } from '../../core/services/bag-count-config.service';
+import { FarmerCommissionConfigService } from '../../core/services/farmer-commission-config.service';
 import { FarmerLedgerService } from '../../core/services/farmer-ledger.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { ReceiptFormat, ReceiptService } from '../../core/services/receipt.service';
 import { SalesService } from '../../core/services/sales.service';
 import { ToastService } from '../../core/services/toast.service';
-import { formatCurrency } from '../../core/utils/currency-format.util';
+import { formatCurrency, formatTotalWithPrecision, maxDecimalPlaces } from '../../core/utils/currency-format.util';
+import { formatDate } from '../../core/utils/date.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
 import { roundOff } from '../../core/utils/round-off.util';
 import { formatApiDate, isDecimal } from '../../core/utils/sales.util';
@@ -32,7 +36,7 @@ interface SalesRow {
 @Component({
   selector: 'app-sales-entry',
   standalone: true,
-  imports: [FormsModule, I18nPipe, AutocompleteComponent, ReceiptPrintButtonsComponent],
+  imports: [FormsModule, I18nPipe, DateFormatPipe, AutocompleteComponent, ReceiptPrintButtonsComponent, DataTableComponent],
   templateUrl: './sales-entry.html',
   styleUrl: './sales-entry.css',
 })
@@ -44,6 +48,7 @@ export class SalesEntryComponent implements OnInit {
   private readonly toast = inject(ToastService);
   private readonly bagCountConfigService = inject(BagCountConfigService);
   private readonly receipt = inject(ReceiptService);
+  protected readonly commissionConfig = inject(FarmerCommissionConfigService);
 
   protected readonly master = signal<SalesMasterData>({
     farmers: [],
@@ -54,6 +59,94 @@ export class SalesEntryComponent implements OnInit {
   protected readonly farmerInvalid = signal(false);
   protected readonly salesDate = signal(formatApiDate(new Date()));
   protected readonly rows = signal<SalesRow[]>([]);
+  protected readonly columns: DataTableColumn[] = [
+    {
+      key: 'sno',
+      header: 'flower.sno',
+      icon: 'format_list_numbered',
+      type: 'text',
+      align: 'center',
+      width: '56px',
+      className: 'col-center',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'bagCount',
+      header: 'sales.bag',
+      icon: 'shopping_basket',
+      type: 'text',
+      align: 'right',
+      width: '90px',
+      className: 'col-num',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'flowerType',
+      header: 'sales.flower',
+      icon: 'local_florist',
+      type: 'text',
+      width: '15%',
+      className: 'col-text',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'totalWeight',
+      header: 'sales.qty',
+      icon: 'weight',
+      type: 'text',
+      align: 'right',
+      width: '100px',
+      className: 'col-num',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'price',
+      header: 'sales.rate',
+      icon: 'payments',
+      type: 'text',
+      align: 'right',
+      width: '100px',
+      className: 'col-num',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'amount',
+      header: 'sales.amount',
+      icon: 'currency_rupee',
+      type: 'text',
+      align: 'right',
+      width: '110px',
+      className: 'col-num',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'customerName',
+      header: 'sales.customer',
+      icon: 'storefront',
+      type: 'text',
+      width: '24%',
+      className: 'col-text col-name',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'actions',
+      header: 'flower.actions',
+      icon: 'more_horiz',
+      type: 'text',
+      align: 'center',
+      width: '110px',
+      className: 'col-center col-actions',
+      sortable: false,
+      filterable: false,
+    },
+  ];
   protected readonly debit = signal('0');
   protected readonly calcOpen = signal(true);
   protected readonly saving = signal(false);
@@ -75,6 +168,35 @@ export class SalesEntryComponent implements OnInit {
 
   protected readonly bagLimitNotice = computed(() => this.bagLimits().length > 0);
 
+  protected readonly gridTotals = computed(() => {
+    let bag = 0;
+    let qty = 0;
+    let amount = 0;
+    const qtyValues: string[] = [];
+    const amountValues: string[] = [];
+    for (const row of this.rows()) {
+      const b = parseInt(row.bagCount, 10);
+      if (!Number.isNaN(b)) {
+        bag += b;
+      }
+      const q = parseFloat(row.totalWeight);
+      if (!Number.isNaN(q)) {
+        qty += q;
+        qtyValues.push(row.totalWeight);
+      }
+      const a = parseFloat(row.amount);
+      if (!Number.isNaN(a)) {
+        amount += a;
+        amountValues.push(row.amount);
+      }
+    }
+    return {
+      bag: String(bag),
+      qty: formatTotalWithPrecision(qty, maxDecimalPlaces(qtyValues)),
+      amount: formatTotalWithPrecision(amount, maxDecimalPlaces(amountValues)),
+    };
+  });
+
   protected readonly summary = computed(() => {
     let total = 0;
     for (const row of this.rows()) {
@@ -84,7 +206,7 @@ export class SalesEntryComponent implements OnInit {
       }
     }
     const totalRounded = roundOff(total);
-    const commission = roundOff(total * 0.1);
+    const commission = roundOff(total * this.commissionConfig.rate());
     const net = totalRounded - commission;
     const debitValue = parseFloat(this.debit());
     const debitAmount = Number.isNaN(debitValue) ? 0 : debitValue;
@@ -93,6 +215,7 @@ export class SalesEntryComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.commissionConfig.load();
     this.loadMasterData();
     this.loadBagConfigs();
     this.addRow();
@@ -503,7 +626,7 @@ export class SalesEntryComponent implements OnInit {
           '</div>';
       });
       bagSideHtml =
-        '<div style="min-width:90px; max-width:110px; text-align:left; border-left:1px dashed #000; padding-left:6px; margin-left:6px;">' +
+        '<div style="min-width:90px; max-width:110px; text-align:left; border-left:1px solid #000; padding-left:6px; margin-left:6px;">' +
         '<div style="font-size:8px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; text-align:center; margin-bottom:3px;">' +
         t('bag.limit.title') +
         '</div>' +
@@ -515,7 +638,7 @@ export class SalesEntryComponent implements OnInit {
       '<div class="bl-head">' +
       '<div class="print-info">' +
       '<span><strong>' + t('report.farmer') + '</strong> ' + this.farmer() + '</span>' +
-      '<span><strong>' + t('report.date') + '</strong> ' + this.salesDate() + '</span>' +
+      '<span><strong>' + t('report.date') + '</strong> ' + formatDate(this.salesDate()) + '</span>' +
       '</div>' +
       bagSideHtml +
       '</div>' +
@@ -533,7 +656,7 @@ export class SalesEntryComponent implements OnInit {
       '<div class="divider"></div>' +
       '<div class="summary">' +
       '<p><span>' + t('report.total') + '</span><strong>' + this.formatCurrency(summary.total) + '</strong></p>' +
-      '<p><span>' + t('report.commission') + '</span><strong>' + this.formatCurrency(summary.commission) + '</strong></p>' +
+      '<p><span>' + t('report.commission').replace('{pct}', this.commissionConfig.percentLabel()) + '</span><strong>' + this.formatCurrency(summary.commission) + '</strong></p>' +
       '<p><span>' + t('report.net.amount') + '</span><strong>' + this.formatCurrency(summary.net) + '</strong></p>' +
       '<p><span>' + t('report.debit') + '</span><strong>' + this.formatCurrency(summary.debit) + '</strong></p>' +
       '<p class="final"><span>' + t('report.final.total') + '</span><strong>' + this.formatCurrency(summary.final) + '</strong></p>' +
@@ -567,7 +690,7 @@ export class SalesEntryComponent implements OnInit {
     lines.push('');
     lines.push('=== ' + t('report.sales.collection') + ' ===');
     lines.push(t('report.farmer') + this.farmer());
-    lines.push(t('report.date') + this.salesDate());
+    lines.push(t('report.date') + formatDate(this.salesDate()));
     lines.push('');
     lines.push(t('report.col.sno') + ' | ' + t('sales.flower') + ' | ' + t('report.col.weight') + ' | ' + t('report.col.price') + ' | ' + t('report.col.total') + ' | ' + t('report.col.customer'));
     lines.push('-----------------------------------------------');
@@ -581,7 +704,7 @@ export class SalesEntryComponent implements OnInit {
 
     lines.push('');
     lines.push(t('report.total') + this.formatCurrency(this.summary().total));
-    lines.push(t('report.commission') + this.formatCurrency(this.summary().commission));
+    lines.push(t('report.commission').replace('{pct}', this.commissionConfig.percentLabel()) + this.formatCurrency(this.summary().commission));
     lines.push(t('report.net.amount') + this.formatCurrency(this.summary().net));
     lines.push(t('report.debit') + this.formatCurrency(this.summary().debit));
     lines.push(t('report.final.total') + this.formatCurrency(this.summary().final));

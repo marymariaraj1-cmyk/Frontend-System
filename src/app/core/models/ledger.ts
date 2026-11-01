@@ -78,6 +78,7 @@ export interface PreviewResponse {
 
 export interface BuyerSalesItem {
   buyerId: string;
+  farmerName: string;
   salesDate: string;
   flowerType: string;
   totalWeight: number;

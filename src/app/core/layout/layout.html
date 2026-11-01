@@ -18,7 +18,7 @@
       </div>
       <div class="sidebar-lang">
         <button type="button" [class.active]="i18n.lang() === 'en'" (click)="switchLang('en')">EN</button>
-        <button type="button" [class.active]="i18n.lang() === 'ta'" (click)="switchLang('ta')">த</button>
+        <button type="button" [class.active]="i18n.lang() === 'ta'" (click)="switchLang('ta')">தமிழ்</button>
       </div>
       <div class="sidebar-lang" [attr.title]="'print.paper.size' | i18n">
         <button type="button" [class.active]="paper.size() === '3in'" (click)="setPaperSize('3in')">3 {{ 'print.paper.inch' | i18n }}</button>
@@ -124,17 +124,26 @@
                   <span class="nav-label">{{ 'sidebar.flower.market.price.config' | i18n }}</span>
                 </a>
               </li>
-            }
-            @if (auth.user()?.role === 'ROLE_ADMIN') {
               <li class="nav-item">
                 <a
                   class="nav-link"
-                  routerLink="/clients"
+                  routerLink="/cash-book-field-config"
                   routerLinkActive="active"
-                  [attr.title]="collapsed() ? ('sidebar.client.master' | i18n) : null"
+                  [attr.title]="collapsed() ? ('sidebar.cash.book.field.config' | i18n) : null"
                 >
-                  <span class="nav-icon material-symbols-rounded">store</span>
-                  <span class="nav-label">{{ 'sidebar.client.master' | i18n }}</span>
+                  <span class="nav-icon material-symbols-rounded">tune</span>
+                  <span class="nav-label">{{ 'sidebar.cash.book.field.config' | i18n }}</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  routerLink="/farmer-commission-config"
+                  routerLinkActive="active"
+                  [attr.title]="collapsed() ? ('sidebar.farmer.commission.config' | i18n) : null"
+                >
+                  <span class="nav-icon material-symbols-rounded">percent</span>
+                  <span class="nav-label">{{ 'sidebar.farmer.commission.config' | i18n }}</span>
                 </a>
               </li>
             }
@@ -205,6 +214,50 @@
               >
                 <span class="nav-icon material-symbols-rounded">edit_note</span>
                 <span class="nav-label">{{ 'sidebar.flower.loot.sale.edit' | i18n }}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/flower-intake-sale"
+                routerLinkActive="active"
+                [attr.title]="collapsed() ? ('sidebar.flower.intake.sale' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">move_to_inbox</span>
+                <span class="nav-label">{{ 'sidebar.flower.intake.sale' | i18n }}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/flower-intake-sale-edit"
+                routerLinkActive="active"
+                [attr.title]="collapsed() ? ('sidebar.flower.intake.sale.edit' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">edit_note</span>
+                <span class="nav-label">{{ 'sidebar.flower.intake.sale.edit' | i18n }}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/buyer-direct-sale"
+                routerLinkActive="active"
+                [attr.title]="collapsed() ? ('sidebar.buyer.direct.sale' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">outbox</span>
+                <span class="nav-label">{{ 'sidebar.buyer.direct.sale' | i18n }}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/buyer-direct-sale-edit"
+                routerLinkActive="active"
+                [attr.title]="collapsed() ? ('sidebar.buyer.direct.sale.edit' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">edit_note</span>
+                <span class="nav-label">{{ 'sidebar.buyer.direct.sale.edit' | i18n }}</span>
               </a>
             </li>
           </ul>
@@ -329,28 +382,6 @@
             <li class="nav-item">
               <a
                 class="nav-link"
-                routerLink="/farmer-ledger-report"
-                routerLinkActive="active"
-                [attr.title]="collapsed() ? ('sidebar.farmer.ledger.report' | i18n) : null"
-              >
-                <span class="nav-icon material-symbols-rounded">book</span>
-                <span class="nav-label">{{ 'sidebar.farmer.ledger.report' | i18n }}</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a
-                class="nav-link"
-                routerLink="/buyer-ledger-report"
-                routerLinkActive="active"
-                [attr.title]="collapsed() ? ('sidebar.buyer.ledger.report' | i18n) : null"
-              >
-                <span class="nav-icon material-symbols-rounded">receipt_long</span>
-                <span class="nav-label">{{ 'sidebar.buyer.ledger.report' | i18n }}</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a
-                class="nav-link"
                 routerLink="/farmer-sales-report"
                 routerLinkActive="active"
                 [attr.title]="collapsed() ? ('sidebar.farmer.sales.report' | i18n) : null"
@@ -368,6 +399,28 @@
               >
                 <span class="nav-icon material-symbols-rounded">monitoring</span>
                 <span class="nav-label">{{ 'sidebar.buyer.sales.report' | i18n }}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/farmer-ledger-report"
+                routerLinkActive="active"
+                [attr.title]="collapsed() ? ('sidebar.farmer.ledger.report' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">book</span>
+                <span class="nav-label">{{ 'sidebar.farmer.ledger.report' | i18n }}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/buyer-ledger-report"
+                routerLinkActive="active"
+                [attr.title]="collapsed() ? ('sidebar.buyer.ledger.report' | i18n) : null"
+              >
+                <span class="nav-icon material-symbols-rounded">receipt_long</span>
+                <span class="nav-label">{{ 'sidebar.buyer.ledger.report' | i18n }}</span>
               </a>
             </li>
             <li class="nav-item">

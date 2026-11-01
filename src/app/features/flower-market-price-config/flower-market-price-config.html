@@ -58,50 +58,41 @@
           </div>
         </div>
 
-        <div class="table-container mst-table-wrap fmpc-table-wrap">
-          <table class="report-table mst-table">
-            <thead>
-              <tr>
-                <th class="fmpc-col-sno">{{ 'common.sno' | i18n }}</th>
-                <th class="fmpc-col-flower">{{ 'fmpc.flower.name' | i18n }}</th>
-                <th class="fmpc-col-price">{{ 'fmpc.price' | i18n }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (flower of flowers(); track flower.flowerId; let i = $index) {
-                <tr>
-                  <td class="fmpc-col-sno">{{ i + 1 }}</td>
-                  <td class="fmpc-col-flower">
-                    <div class="fmpc-flower-cell">
-                      <span class="material-symbols-rounded fmpc-flower-icon">local_florist</span>
-                      <span class="fmpc-flower-name">{{ flower.flowerName }}</span>
-                    </div>
-                  </td>
-                  <td class="fmpc-col-price">
-                    <div class="fmpc-price-wrap">
-                      <input
-                        class="fmpc-input fmpc-price-input"
-                        [class.fmpc-input-error]="priceInvalidByFlower[flower.flowerId]"
-                        type="text"
-                        inputmode="decimal"
-                        placeholder="0.00"
-                        [value]="priceTextByFlower[flower.flowerId]"
-                        (input)="onPriceInput($event, flower.flowerId)"
-                      />
-                      @if (priceInvalidByFlower[flower.flowerId]) {
-                        <span class="fmpc-error-text">{{ 'fmpc.price.invalid' | i18n }}</span>
-                      }
-                    </div>
-                  </td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="3" class="no-records">{{ 'common.no.records' | i18n }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
+        <app-data-table
+          [columns]="addColumns"
+          [data]="flowers()"
+          tableClasses="report-table mst-table"
+          wrapperClasses="table-container mst-table-wrap fmpc-table-wrap"
+          trackKey="flowerId"
+        >
+          <ng-template #row let-flower>
+            <tr>
+              <td class="fmpc-col-sno">{{ addSno(flower) }}</td>
+              <td class="fmpc-col-flower">
+                <div class="fmpc-flower-cell">
+                  <span class="material-symbols-rounded fmpc-flower-icon">local_florist</span>
+                  <span class="fmpc-flower-name">{{ flower.flowerName }}</span>
+                </div>
+              </td>
+              <td class="fmpc-col-price">
+                <div class="fmpc-price-wrap">
+                  <input
+                    class="fmpc-input fmpc-price-input"
+                    [class.fmpc-input-error]="priceInvalidByFlower[flower.flowerId]"
+                    type="text"
+                    inputmode="decimal"
+                    placeholder="0.00"
+                    [value]="priceTextByFlower[flower.flowerId]"
+                    (input)="onPriceInput($event, flower.flowerId)"
+                  />
+                  @if (priceInvalidByFlower[flower.flowerId]) {
+                    <span class="fmpc-error-text">{{ 'fmpc.price.invalid' | i18n }}</span>
+                  }
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </app-data-table>
 
         <div class="fmpc-save-row">
           <button
@@ -141,88 +132,78 @@
         </div>
 
         @if (searched()) {
-          <div class="table-container mst-table-wrap fmpc-table-wrap">
-            <table class="report-table mst-table">
-              <thead>
-                <tr>
-                  <th class="fmpc-col-sno">{{ 'common.sno' | i18n }}</th>
-                  <th class="fmpc-col-flower">{{ 'fmpc.flower.name' | i18n }}</th>
-                  <th class="fmpc-col-price">{{ 'fmpc.price' | i18n }}</th>
-                  <th class="fmpc-col-action">{{ 'fmpc.actions' | i18n }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (row of viewRows(); track row.priceConfigId; let i = $index) {
-                  <tr
-                    [class.row-editing]="row.enabled"
-                    [class.row-edited]="row.enabled && row.price !== row.origPrice"
-                  >
-                    <td class="fmpc-col-sno">{{ i + 1 }}</td>
-                    <td class="fmpc-col-flower">
-                      <div class="fmpc-flower-cell">
-                        <span class="material-symbols-rounded fmpc-flower-icon">local_florist</span>
-                        <span class="fmpc-flower-name">{{ row.flowerName }}</span>
-                      </div>
-                    </td>
-                    <td class="fmpc-col-price">
-                      @if (row.enabled) {
-                        <div class="fmpc-price-wrap">
-                          <input
-                            class="fmpc-input fmpc-price-input"
-                            type="text"
-                            inputmode="decimal"
-                            [value]="row.price"
-                            (input)="onViewPriceInput($event, i)"
-                          />
-                        </div>
-                      } @else {
-                        <span class="fmpc-limit-value">{{ row.price }}</span>
-                      }
-                    </td>
-                    <td class="fmpc-col-action">
-                      <div class="fmpc-actions">
-                        @if (row.enabled) {
-                          <span
-                            class="action-icon edit-row-icon"
-                            title="{{ 'fmpc.save' | i18n }}"
-                            (click)="saveRowEdit(i)"
-                          >
-                            <span class="material-symbols-rounded">check</span>
-                          </span>
-                          <span
-                            class="action-icon edit-row-icon"
-                            title="{{ 'btn.cancel' | i18n }}"
-                            (click)="cancelRowEdit(i)"
-                          >
-                            <span class="material-symbols-rounded">close</span>
-                          </span>
-                        } @else {
-                          <span
-                            class="action-icon edit-row-icon"
-                            title="{{ 'fmpc.edit' | i18n }}"
-                            (click)="toggleRowEdit(i)"
-                          >
-                            <span class="material-symbols-rounded">edit</span>
-                          </span>
-                        }
-                        <span
-                          class="action-icon delete-row-icon"
-                          title="{{ 'fmpc.delete' | i18n }}"
-                          (click)="openDeleteConfirm(i)"
-                        >
-                          <span class="material-symbols-rounded">delete</span>
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                } @empty {
-                  <tr>
-                    <td colspan="4" class="no-records">{{ 'common.no.records' | i18n }}</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
+          <app-data-table
+            [columns]="viewColumns"
+            [data]="viewRows()"
+            tableClasses="report-table mst-table"
+            wrapperClasses="table-container mst-table-wrap fmpc-table-wrap"
+            trackKey="priceConfigId"
+          >
+            <ng-template #row let-row>
+              <tr
+                [class.row-editing]="row.enabled"
+                [class.row-edited]="row.enabled && row.price !== row.origPrice"
+              >
+                <td class="fmpc-col-sno">{{ viewSno(row) }}</td>
+                <td class="fmpc-col-flower">
+                  <div class="fmpc-flower-cell">
+                    <span class="material-symbols-rounded fmpc-flower-icon">local_florist</span>
+                    <span class="fmpc-flower-name">{{ row.flowerName }}</span>
+                  </div>
+                </td>
+                <td class="fmpc-col-price">
+                  @if (row.enabled) {
+                    <div class="fmpc-price-wrap">
+                      <input
+                        class="fmpc-input fmpc-price-input"
+                        type="text"
+                        inputmode="decimal"
+                        [value]="row.price"
+                        (input)="onViewPriceInput($event, row)"
+                      />
+                    </div>
+                  } @else {
+                    <span class="fmpc-limit-value">{{ row.price }}</span>
+                  }
+                </td>
+                <td class="fmpc-col-action">
+                  <div class="fmpc-actions">
+                    @if (row.enabled) {
+                      <span
+                        class="action-icon edit-row-icon"
+                        title="{{ 'fmpc.save' | i18n }}"
+                        (click)="saveRowEdit(row)"
+                      >
+                        <span class="material-symbols-rounded">check</span>
+                      </span>
+                      <span
+                        class="action-icon edit-row-icon"
+                        title="{{ 'btn.cancel' | i18n }}"
+                        (click)="cancelRowEdit(row)"
+                      >
+                        <span class="material-symbols-rounded">close</span>
+                      </span>
+                    } @else {
+                      <span
+                        class="action-icon edit-row-icon"
+                        title="{{ 'fmpc.edit' | i18n }}"
+                        (click)="toggleRowEdit(row)"
+                      >
+                        <span class="material-symbols-rounded">edit</span>
+                      </span>
+                    }
+                    <span
+                      class="action-icon delete-row-icon"
+                      title="{{ 'fmpc.delete' | i18n }}"
+                      (click)="openDeleteConfirm(row)"
+                    >
+                      <span class="material-symbols-rounded">delete</span>
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </app-data-table>
         }
       }
 
@@ -284,12 +265,12 @@
                     <path [attr.d]="trendLinePath()" fill="none" stroke="#7267ef" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path>
                   </svg>
                   @for (p of trendPoints(); track $index) {
-                    <span class="fmpc-dot" [style.left.%]="p.x" [style.top.%]="p.y" [attr.title]="p.label + ' - ₹' + p.price"></span>
+                    <span class="fmpc-dot" [style.left.%]="p.x" [style.top.%]="p.y" [attr.title]="(p.label | dateFormat) + ' - ₹' + p.price"></span>
                   }
                 </div>
                 <div class="fmpc-xlabels">
                   @for (r of trendData(); track r.priceConfigId) {
-                    <span>{{ r.priceDate }}</span>
+                    <span>{{ r.priceDate | dateFormat }}</span>
                   }
                 </div>
               }

@@ -39,68 +39,54 @@
       }
     </div>
     <div class="card-body">
-      <div class="table-container">
-        <table class="report-table">
-          <thead>
-            <tr>
-              <th style="width: 50px">{{ 'txn.sno' | i18n }}</th>
-              <th>{{ 'current.day.total.commission.col.farmer.name' | i18n }}</th>
-              <th class="amount-col">{{ 'current.day.total.commission.col.total.sales.amt' | i18n }}</th>
-              <th class="amount-col">{{ 'current.day.total.commission.col.total.net.amt' | i18n }}</th>
-              <th class="amount-col">{{ 'current.day.total.commission.col.debit.amt' | i18n }}</th>
-              <th class="amount-col">{{ 'current.day.total.commission.col.final.amt' | i18n }}</th>
-              <th class="amount-col">{{ 'current.day.total.commission.col.commission.amt' | i18n }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (row of rows(); track $index; let i = $index) {
-              <tr>
-                <td class="rpt-sno">{{ i + 1 }}</td>
-                <td>
-                  <div class="rpt-name-cell">
-                    <span class="rpt-avatar">{{ initials(row.farmerName) }}</span>
-                    <span class="rpt-name">{{ row.farmerName }}</span>
-                  </div>
-                </td>
-                <td class="amount-col"><span class="rpt-amt chip-sales">{{ formatCurrency(row.totalSalesAmt) }}</span></td>
-                <td class="amount-col"><span class="rpt-amt chip-net">{{ formatCurrency(row.totalNetAmt) }}</span></td>
-                <td class="amount-col"><span class="rpt-amt chip-debit">{{ formatCurrency(row.debitAmt) }}</span></td>
-                <td class="amount-col"><span class="rpt-amt chip-final">{{ formatCurrency(row.finalAmt) }}</span></td>
-                <td class="amount-col">
-                  <span class="rpt-amt chip-commission">{{ formatCurrency(row.commissionAmt) }}</span>
-                  <a class="view-link" (click)="openSalesDetail(row.farmerId, row.farmerName)" [attr.title]="'btn.view' | i18n">
-                    <span class="material-symbols-rounded view-icon">visibility</span>
-                  </a>
-                </td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="7" class="no-records">
-                  {{ 'current.day.total.commission.no.records' | i18n }}
-                </td>
-              </tr>
-            }
-          </tbody>
-          <tfoot>
-            <tr class="report-footer-row rpt-total-row">
-              <td></td>
-              <td>{{ 'report.total' | i18n }}</td>
-              <td class="amount-col">{{ formatCurrency(totalSales()) }}</td>
-              <td class="amount-col">{{ formatCurrency(totalNet()) }}</td>
-              <td class="amount-col">{{ formatCurrency(totalDebit()) }}</td>
-              <td class="amount-col">{{ formatCurrency(totalFinal()) }}</td>
-              <td class="amount-col">
-                {{ formatCurrency(totalCommission()) }}
-                @if (rows().length > 0) {
-                  <a class="view-link" (click)="openSalesDetail('', '')" [attr.title]="'btn.view' | i18n">
-                    <span class="material-symbols-rounded view-icon">visibility</span>
-                  </a>
-                }
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
+      <app-data-table
+        [columns]="columns"
+        [data]="rows()"
+        trackKey="farmerId"
+        tableClasses="report-table"
+        wrapperClasses="table-container"
+        emptyKey="current.day.total.commission.no.records"
+      >
+        <ng-template #row let-row let-idx="idx" let-pageStart="pageStart">
+          <tr>
+          <td class="rpt-sno">{{ pageStart + idx + 1 }}</td>
+          <td>
+            <div class="rpt-name-cell">
+              <span class="rpt-avatar">{{ initials(row.farmerName) }}</span>
+              <span class="rpt-name">{{ row.farmerName }}</span>
+            </div>
+          </td>
+          <td class="amount-col"><span class="rpt-amt chip-sales">{{ formatCurrency(row.totalSalesAmt) }}</span></td>
+          <td class="amount-col"><span class="rpt-amt chip-net">{{ formatCurrency(row.totalNetAmt) }}</span></td>
+          <td class="amount-col"><span class="rpt-amt chip-debit">{{ formatCurrency(row.debitAmt) }}</span></td>
+          <td class="amount-col"><span class="rpt-amt chip-final">{{ formatCurrency(row.finalAmt) }}</span></td>
+          <td class="amount-col">
+            <span class="rpt-amt chip-commission">{{ formatCurrency(row.commissionAmt) }}</span>
+            <a class="view-link" (click)="openSalesDetail(row.farmerId, row.farmerName)" [attr.title]="'btn.view' | i18n">
+              <span class="material-symbols-rounded view-icon">visibility</span>
+            </a>
+          </td>
+          </tr>
+        </ng-template>
+        <ng-template #footer let-all>
+          <tr class="report-footer-row rpt-total-row">
+            <td></td>
+            <td>{{ 'report.total' | i18n }}</td>
+            <td class="amount-col">{{ formatCurrency(totalSales(all)) }}</td>
+            <td class="amount-col">{{ formatCurrency(totalNet(all)) }}</td>
+            <td class="amount-col">{{ formatCurrency(totalDebit(all)) }}</td>
+            <td class="amount-col">{{ formatCurrency(totalFinal(all)) }}</td>
+            <td class="amount-col">
+              {{ formatCurrency(totalCommission(all)) }}
+              @if (all.length > 0) {
+                <a class="view-link" (click)="openSalesDetail('', '')" [attr.title]="'btn.view' | i18n">
+                  <span class="material-symbols-rounded view-icon">visibility</span>
+                </a>
+              }
+            </td>
+          </tr>
+        </ng-template>
+      </app-data-table>
     </div>
   </div>
 }
@@ -113,52 +99,39 @@
         <button class="report-popup-close" (click)="closePopup()">&times;</button>
       </div>
       <div class="report-popup-body">
-        <div class="table-container">
-          <table class="report-table">
-            <thead>
-              <tr>
-                <th>{{ 'current.day.total.commission.popup.col.farmer.name' | i18n }}</th>
-                <th>{{ 'current.day.total.commission.popup.col.customer.name' | i18n }}</th>
-                <th>{{ 'current.day.total.commission.popup.col.flower.type' | i18n }}</th>
-                <th class="amount-col">{{ 'current.day.total.commission.popup.col.quantity' | i18n }}</th>
-                <th class="amount-col">{{ 'current.day.total.commission.popup.col.rate' | i18n }}</th>
-                <th class="amount-col">{{ 'current.day.total.commission.popup.col.amount' | i18n }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (item of popupItems(); track $index) {
-                <tr>
-                  <td>{{ item.farmerName }}</td>
-                  <td>{{ item.custName }}</td>
-                  <td>{{ item.flowerType }}</td>
-                  <td class="amount-col">{{ formatDecimal(item.totalWeight) }}</td>
-                  <td class="amount-col">{{ formatCurrency(item.perKgRate) }}</td>
-                  <td class="amount-col">{{ formatCurrency(item.price) }}</td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="6" class="no-records">
-                    {{ popupLoading() ? '' : ('msg.no.records' | i18n) }}
-                  </td>
-                </tr>
-              }
-            </tbody>
-            <tfoot>
-              <tr class="report-footer-row">
-                <td colspan="5" class="amount-col">
-                  {{ 'current.day.total.commission.popup.total' | i18n }}
-                </td>
-                <td class="amount-col">{{ formatCurrency(popupTotal()) }}</td>
-              </tr>
-              <tr class="report-footer-row rpt-total-row">
-                <td colspan="5" class="amount-col">
-                  {{ 'current.day.total.commission.popup.commission' | i18n }}
-                </td>
-                <td class="amount-col">{{ formatCurrency(popupCommission()) }}</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
+        <app-data-table
+          [columns]="popupColumns"
+          [data]="popupItems()"
+          [enableFilter]="false"
+          tableClasses="report-table"
+          wrapperClasses="table-container"
+          [emptyKey]="popupLoading() ? '' : 'msg.no.records'"
+        >
+          <ng-template #row let-item>
+            <tr>
+            <td>{{ salesNameLabel(item.farmerName) }}</td>
+            <td>{{ salesNameLabel(item.custName) }}</td>
+            <td>{{ item.flowerType }}</td>
+            <td class="amount-col">{{ formatDecimal(item.totalWeight) }}</td>
+            <td class="amount-col">{{ formatCurrency(item.perKgRate) }}</td>
+            <td class="amount-col">{{ formatCurrency(item.price) }}</td>
+            </tr>
+          </ng-template>
+          <ng-template #footer>
+            <tr class="report-footer-row">
+              <td colspan="5" class="amount-col">
+                {{ 'current.day.total.commission.popup.total' | i18n }}
+              </td>
+              <td class="amount-col">{{ formatCurrency(popupTotal()) }}</td>
+            </tr>
+            <tr class="report-footer-row rpt-total-row">
+              <td colspan="5" class="amount-col">
+                {{ ('current.day.total.commission.popup.commission' | i18n).replace('{pct}', commissionConfig.percentLabel()) }}
+              </td>
+              <td class="amount-col">{{ formatCurrency(popupCommission()) }}</td>
+            </tr>
+          </ng-template>
+        </app-data-table>
       </div>
     </div>
   </div>

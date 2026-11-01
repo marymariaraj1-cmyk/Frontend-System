@@ -61,6 +61,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'cash-book-field-config',
+        loadComponent: () =>
+          import('./features/cash-book-field-config/cash-book-field-config.component').then(
+            (m) => m.CashBookFieldConfigComponent,
+          ),
+      },
+      {
         path: 'tamilnadu-flower-price-report',
         loadComponent: () =>
           import('./features/vayal-agro-flower-price/vayal-agro-flower-price.component').then(
@@ -82,6 +89,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'farmer-commission-config',
+          loadComponent: () =>
+            import('./features/farmer-commission-config/farmer-commission-config.component').then(
+              (m) => m.FarmerCommissionConfigComponent,
+            ),
+      },
+      {
         path: 'sales-details-edit',
         loadComponent: () =>
           import('./features/sales-details-edit/sales-details-edit.component').then(
@@ -100,6 +114,34 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/flower-loot-sale-edit/flower-loot-sale-edit.component').then(
             (m) => m.FlowerLootSaleEditComponent,
+          ),
+      },
+      {
+        path: 'flower-intake-sale',
+        loadComponent: () =>
+          import('./features/flower-intake-sale/flower-intake-sale.component').then(
+            (m) => m.FlowerIntakeSaleComponent,
+          ),
+      },
+      {
+        path: 'flower-intake-sale-edit',
+        loadComponent: () =>
+          import('./features/flower-intake-sale-edit/flower-intake-sale-edit.component').then(
+            (m) => m.FlowerIntakeSaleEditComponent,
+          ),
+      },
+      {
+        path: 'buyer-direct-sale',
+        loadComponent: () =>
+          import('./features/buyer-direct-sale/buyer-direct-sale.component').then(
+            (m) => m.BuyerDirectSaleComponent,
+          ),
+      },
+      {
+        path: 'buyer-direct-sale-edit',
+        loadComponent: () =>
+          import('./features/buyer-direct-sale-edit/buyer-direct-sale-edit.component').then(
+            (m) => m.BuyerDirectSaleEditComponent,
           ),
       },
       {

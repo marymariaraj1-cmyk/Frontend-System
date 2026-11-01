@@ -97,33 +97,35 @@
       @if (activeRows().length === 0) {
         <p class="no-data">{{ 'fac.no.active.rows' | i18n }}</p>
       } @else {
-        <div class="table-wrap">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th class="left">#</th>
-                <th class="left">{{ 'ledger.report.col.sales.date' | i18n }}</th>
-                <th class="right">{{ 'fac.col.credit.or.sale' | i18n }}</th>
-                <th class="right">{{ 'fac.col.debit.or.advance' | i18n }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (row of activeRows(); track $index) {
-                <tr>
-                  <td class="left">{{ $index + 1 }}</td>
-                  <td class="left">{{ row.salesDate }}</td>
-                  <td class="right">{{ formatCurrency(row.creditAmt) }}</td>
-                  <td class="right">{{ formatCurrency(row.debitAmt) }}</td>
-                </tr>
-              }
-              <tr class="total-row">
-                <td class="left"></td>
-                <td class="left"><strong>{{ 'fac.total' | i18n }}</strong></td>
-                <td class="right"><strong>{{ formatCurrency(totalCredit()) }}</strong></td>
-                <td class="right"><strong>{{ formatCurrency(totalDebit()) }}</strong></td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="fac-ledger-table">
+        <app-data-table
+          [columns]="activeColumns"
+          [data]="activeRows()"
+          [enableSort]="false"
+          [enableFilter]="false"
+          [showClearFilters]="false"
+          [pageSizeSelector]="false"
+          tableClasses="data-table"
+          wrapperClasses="table-wrap"
+          emptyKey="fac.no.active.rows"
+        >
+          <ng-template #row let-row let-idx="idx" let-pageStart="pageStart">
+            <tr>
+              <td class="left">{{ pageStart + idx + 1 }}</td>
+              <td class="left">{{ row.salesDate | dateFormat }}</td>
+              <td class="amount-col">{{ formatCurrency(row.creditAmt) }}</td>
+              <td class="amount-col">{{ formatCurrency(row.debitAmt) }}</td>
+            </tr>
+          </ng-template>
+          <ng-template #bodyFooter>
+            <tr class="total-row">
+              <td class="left"></td>
+              <td class="left"><strong>{{ 'fac.total' | i18n }}</strong></td>
+              <td class="amount-col"><strong>{{ formatCurrency(totalCredit()) }}</strong></td>
+              <td class="amount-col"><strong>{{ formatCurrency(totalDebit()) }}</strong></td>
+            </tr>
+          </ng-template>
+        </app-data-table>
         </div>
 
         <div class="model-buttons">
@@ -163,43 +165,30 @@
           <div class="calc-result">
             <span class="calc-result-chip material-symbols-rounded">fact_check</span>
             <h3>{{ modelResult()!.label }}</h3>
-            <table class="calc-table">
-              <thead>
-                <tr>
-                  <th class="lbl">{{ 'fac.calc.col.description' | i18n }}</th>
-                  <th class="amt">{{ 'fac.calc.col.amount' | i18n }}</th>
-                  <th class="desc">{{ 'fac.calc.col.formula' | i18n }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (line of modelResult()!.lines; track $index) {
-                  <tr>
-                    <td class="lbl">{{ line.label }}</td>
-                    <td class="amt">{{ formatCurrency(line.sign ? absAmount(line.value) : line.value) }}</td>
-                    <td class="desc">
-                      {{ line.desc }}
-                      @if (line.sign && line.value < 0) {
+            <div class="calc-stmt">
+              @for (row of modelResult()!.rows; track $index) {
+                @if (row.type === 'line') {
+                  <div class="calc-line" [class.calc-line-final]="row.final">
+                    <span class="calc-lbl">
+                      {{ row.label }}
+                      @if (row.note) {
+                        <span class="calc-note">{{ row.note }}</span>
+                      }
+                    </span>
+                    <span class="calc-amt">
+                      @if (row.badge === 'debit') {
                         <span class="fac-tag fac-tag-debit">{{ 'fac.debit' | i18n }}</span>
-                      } @else if (line.sign && line.value > 0) {
+                      } @else if (row.badge === 'credit') {
                         <span class="fac-tag fac-tag-credit">{{ 'fac.credit' | i18n }}</span>
                       }
-                    </td>
-                  </tr>
+                      <span class="calc-val">{{ formatCurrency(row.absolute ? absAmount(row.amount) : row.amount) }}</span>
+                    </span>
+                  </div>
+                } @else {
+                  <div class="calc-hr"></div>
                 }
-                <tr class="final">
-                  <td class="lbl">{{ modelResult()!.finalLabel }}</td>
-                  <td class="amt">{{ formatCurrency(absAmount(modelResult()!.finalAmount)) }}</td>
-                  <td class="desc">
-                    {{ modelResult()!.finalDesc }}
-                    @if (modelResult()!.finalAmount < 0) {
-                      <span class="fac-tag fac-tag-debit">{{ 'fac.debit' | i18n }}</span>
-                    } @else if (modelResult()!.finalAmount > 0) {
-                      <span class="fac-tag fac-tag-credit">{{ 'fac.credit' | i18n }}</span>
-                    }
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+              }
+            </div>
           </div>
 
           <div class="form-actions">

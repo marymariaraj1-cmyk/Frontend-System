@@ -6,6 +6,7 @@ import {
   BuyerMasterData,
   BuyerTransaction,
   BuyerTransactionRequest,
+  BuyerTransactionUpdateRequest,
   OpeningBalanceData,
 } from '../models/transaction';
 import { ApiService } from './api.service';
@@ -20,6 +21,14 @@ export class BuyerTransactionService {
 
   save(request: BuyerTransactionRequest): Observable<ApiResponse<BuyerTransaction>> {
     return this.api.post<BuyerTransaction>('/buyer-transaction/save', request);
+  }
+
+  update(request: BuyerTransactionUpdateRequest): Observable<ApiResponse<BuyerTransaction>> {
+    return this.api.put<BuyerTransaction>('/buyer-transaction/update', request);
+  }
+
+  remove(buyerTransactionId: number): Observable<ApiResponse<unknown>> {
+    return this.api.delete<unknown>(`/buyer-transaction/delete?buyerTransactionId=${buyerTransactionId}`);
   }
 
   getOpeningBalance(buyerName: string): Observable<ApiResponse<OpeningBalanceData>> {

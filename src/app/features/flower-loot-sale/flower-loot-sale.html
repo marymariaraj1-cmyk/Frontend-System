@@ -50,98 +50,102 @@
       <span class="se-head-count">{{ buyerRows().length }}</span>
     </div>
     <div class="card-body">
-      <div class="table-container">
-        <table class="sales-grid-table">
-          <colgroup>
-            <col class="c-sno" />
-            <col class="c-bag" />
-            <col class="c-name" />
-            <col class="c-qty" />
-            <col class="c-rate" />
-            <col class="c-amount" />
-            <col class="c-actions" />
-          </colgroup>
-          <thead>
-            <tr>
-              <th style="width: 50px">{{ 'flower.sno' | i18n }}</th>
-              <th style="width: 60px">{{ 'sales.bag' | i18n }}</th>
-              <th>{{ 'fls.buyer.name' | i18n }}</th>
-              <th>{{ 'sales.qty' | i18n }}</th>
-              <th>{{ 'sales.rate' | i18n }}</th>
-              <th>{{ 'sales.amount' | i18n }}</th>
-              <th style="width: 90px">{{ 'flower.actions' | i18n }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (row of buyerRows(); track $index; let i = $index) {
-              <tr>
-                <td class="row-index text-center">{{ i + 1 }}</td>
-                <td>
-                  <input
-                    type="text"
-                    inputmode="numeric"
-                    class="grid-input bag-input"
-                    [ngModel]="row.bag"
-                    (ngModelChange)="updateBuyerRow(i, { bag: $event }); onBagInput('buyer', i)"
-                  />
-                </td>
-                <td>
-                  <app-autocomplete
-                    [items]="master().buyers"
-                    [invalid]="row.buyerInvalid"
-                    [value]="row.buyerName"
-                    (valueChange)="updateBuyerRow(i, { buyerName: $event, buyerInvalid: false })"
-                    (onSelect)="updateBuyerRow(i, { buyerName: $event, buyerInvalid: false })"
-                    (blur)="validateBuyer(i)"
-                  />
-                  @if (row.buyerInvalid) {
-                    <span class="field-error">{{ 'sales.error.buyer.notfound' | i18n }}</span>
-                  }
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    class="grid-input"
-                    [ngModel]="row.qty"
-                    (ngModelChange)="updateBuyerRow(i, { qty: sanitizeDecimal($event) }); onQtyChange('buyer', i)"
-                    (keydown)="onDecimalKeydown($event)"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    class="grid-input"
-                    [ngModel]="row.rate"
-                    (ngModelChange)="updateBuyerRow(i, { rate: sanitizeDecimal($event) })"
-                    (input)="recalcBuyerRowAmount(i)"
-                    (keydown)="onDecimalKeydown($event)"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    class="grid-input"
-                    [ngModel]="row.amount"
-                    (ngModelChange)="updateBuyerRow(i, { amount: sanitizeDecimal($event) }); onBuyerAmountInput(i)"
-                    (keydown.enter)="onBuyerAmountEnter(i)"
-                    (keydown)="onDecimalKeydown($event)"
-                  />
-                </td>
-                <td class="text-center action-cell">
-                  <span class="action-icon add-row-icon" title="{{ 'sales.add.row' | i18n }}" (click)="addBuyerRowBelow(i)">+</span>
-                  <span
-                    class="action-icon remove-row-icon"
-                    title="{{ 'sales.remove.row' | i18n }}"
-                    [class.disabled-icon]="buyerRows().length <= 1"
-                    (click)="removeBuyerRow(i)"
-                    >&times;</span
-                  >
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+      <app-data-table
+        [columns]="buyerColumns"
+        [data]="buyerRows()"
+        [enablePagination]="false"
+        [enableSort]="false"
+        [enableFilter]="false"
+        [showClearFilters]="false"
+        [pageSizeSelector]="false"
+        [resultInfo]="false"
+        tableClasses="sales-grid-table"
+        wrapperClasses="table-container"
+      >
+        <ng-template #row let-row let-idx="idx">
+          <tr>
+            <td class="row-index text-center">{{ idx + 1 }}</td>
+            <td>
+              <input
+                type="text"
+                inputmode="numeric"
+                class="grid-input bag-input"
+                style="text-align: right"
+                [ngModel]="row.bag"
+                (ngModelChange)="updateBuyerRow(idx, { bag: $event }); onBagInput('buyer', idx)"
+              />
+            </td>
+            <td>
+              <app-autocomplete
+                [items]="master().buyers"
+                [invalid]="row.buyerInvalid"
+                [value]="row.buyerName"
+                (valueChange)="updateBuyerRow(idx, { buyerName: $event, buyerInvalid: false })"
+                (onSelect)="updateBuyerRow(idx, { buyerName: $event, buyerInvalid: false })"
+                (blur)="validateBuyer(idx)"
+              />
+              @if (row.buyerInvalid) {
+                <span class="field-error">{{ 'sales.error.buyer.notfound' | i18n }}</span>
+              }
+            </td>
+            <td>
+              <input
+                type="text"
+                class="grid-input"
+                style="text-align: right"
+                [ngModel]="row.qty"
+                (ngModelChange)="updateBuyerRow(idx, { qty: sanitizeDecimal($event) }); onQtyChange('buyer', idx)"
+                (keydown)="onDecimalKeydown($event)"
+              />
+            </td>
+            <td>
+              <input
+                type="text"
+                class="grid-input"
+                style="text-align: right"
+                [ngModel]="row.rate"
+                (ngModelChange)="updateBuyerRow(idx, { rate: sanitizeDecimal($event) })"
+                (input)="recalcBuyerRowAmount(idx)"
+                (keydown)="onDecimalKeydown($event)"
+              />
+            </td>
+            <td>
+              <input
+                type="text"
+                class="grid-input"
+                style="text-align: right"
+                [ngModel]="row.amount"
+                (ngModelChange)="updateBuyerRow(idx, { amount: sanitizeDecimal($event) }); onBuyerAmountInput(idx)"
+                (keydown.enter)="onBuyerAmountEnter(idx)"
+                (keydown)="onDecimalKeydown($event)"
+              />
+            </td>
+            <td class="text-center action-cell">
+              <span class="action-icon add-row-icon" title="{{ 'sales.add.row' | i18n }}" (click)="addBuyerRowBelow(idx)">+</span>
+              <span
+                class="action-icon remove-row-icon"
+                title="{{ 'sales.remove.row' | i18n }}"
+                [class.disabled-icon]="buyerRows().length <= 1"
+                (click)="removeBuyerRow(idx)"
+                >&times;</span
+              >
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template #footer>
+          <tr class="grid-totals-row">
+            <td class="totals-label text-center">
+              <img class="totals-icon" src="total-icon.png" [attr.alt]="'sales.total' | i18n" [attr.title]="'sales.total' | i18n" />
+            </td>
+            <td class="totals-num-center">{{ buyerTotals().bag }}</td>
+            <td class="totals-empty"></td>
+            <td class="totals-num">{{ buyerTotals().qty }}</td>
+            <td class="totals-empty"></td>
+            <td class="totals-num">{{ buyerTotals().amount }}</td>
+            <td class="totals-empty"></td>
+          </tr>
+        </ng-template>
+      </app-data-table>
     </div>
   </div>
 
@@ -152,92 +156,96 @@
       <span class="se-head-count">{{ farmerRows().length }}</span>
     </div>
     <div class="card-body">
-      <div class="table-container">
-<table class="sales-grid-table">
-          <colgroup>
-            <col class="c-sno" />
-            <col class="c-bag" />
-            <col class="c-name" />
-            <col class="c-qty" />
-            <col class="c-rate" />
-            <col class="c-amount" />
-            <col class="c-actions" />
-          </colgroup>
-          <thead>
-            <tr>
-              <th style="width: 50px">{{ 'flower.sno' | i18n }}</th>
-              <th style="width: 60px">{{ 'sales.bag' | i18n }}</th>
-              <th>{{ 'farmer.name' | i18n }}</th>
-              <th>{{ 'sales.qty' | i18n }}</th>
-              <th>{{ 'sales.rate' | i18n }}</th>
-              <th>{{ 'sales.amount' | i18n }}</th>
-              <th style="width: 80px">{{ 'flower.actions' | i18n }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (row of farmerRows(); track $index; let i = $index) {
-              <tr>
-                <td class="row-index text-center">{{ i + 1 }}</td>
-                <td>
-                  <input
-                    type="text"
-                    inputmode="numeric"
-                    class="grid-input bag-input"
-                    [ngModel]="row.bag"
-                    (ngModelChange)="updateFarmerRow(i, { bag: $event }); onBagInput('farmer', i)"
-                  />
-                </td>
-                <td>
-                  <app-autocomplete
-                    [items]="master().farmers"
-                    [invalid]="row.farmerInvalid"
-                    [value]="row.farmerName"
-                    (valueChange)="updateFarmerRow(i, { farmerName: $event, farmerInvalid: false })"
-                    (onSelect)="updateFarmerRow(i, { farmerName: $event, farmerInvalid: false })"
-                    (blur)="validateFarmer(i)"
-                  />
-                  @if (row.farmerInvalid) {
-                    <span class="field-error">{{ 'sales.error.farmer.notfound' | i18n }}</span>
-                  }
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    class="grid-input"
-                    [ngModel]="row.qty"
-                    (ngModelChange)="updateFarmerRow(i, { qty: sanitizeDecimal($event) }); onQtyChange('farmer', i)"
-                    (keydown)="onDecimalKeydown($event)"
-                    (keydown.enter)="onFarmerQtyEnter(i)"
-                  />
-                </td>
-                <td>
-                  <input type="text" class="grid-input" [value]="row.rate" readonly />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    class="grid-input"
-                    [value]="row.amount"
-                    readonly
-                    (keydown.enter)="onFarmerAmountEnter(i)"
-                  />
-                </td>
-                <td class="text-center action-cell">
-                  <span class="action-icon add-row-icon" title="{{ 'sales.add.row' | i18n }}" (click)="addFarmerRowBelow(i)">+</span>
-                  <span
-                    class="action-icon remove-row-icon"
-                    title="{{ 'sales.remove.row' | i18n }}"
-                    [class.disabled-icon]="farmerRows().length <= 1"
-                    (click)="removeFarmerRow(i)"
-                    >&times;</span
-                  >
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      <div class="fls-actions">
+      <app-data-table
+        [columns]="farmerColumns"
+        [data]="farmerRows()"
+        [enablePagination]="false"
+        [enableSort]="false"
+        [enableFilter]="false"
+        [showClearFilters]="false"
+        [pageSizeSelector]="false"
+        [resultInfo]="false"
+        tableClasses="sales-grid-table"
+        wrapperClasses="table-container"
+      >
+        <ng-template #row let-row let-idx="idx">
+          <tr>
+            <td class="row-index text-center">{{ idx + 1 }}</td>
+            <td>
+              <input
+                type="text"
+                inputmode="numeric"
+class="grid-input bag-input"
+                  style="text-align: right"
+                  [ngModel]="row.bag"
+                  (ngModelChange)="updateFarmerRow(idx, { bag: $event }); onBagInput('farmer', idx)"
+              />
+            </td>
+            <td>
+              <app-autocomplete
+                [items]="master().farmers"
+                [invalid]="row.farmerInvalid"
+                [value]="row.farmerName"
+                (valueChange)="updateFarmerRow(idx, { farmerName: $event, farmerInvalid: false })"
+                (onSelect)="updateFarmerRow(idx, { farmerName: $event, farmerInvalid: false })"
+                (blur)="validateFarmer(idx)"
+              />
+              @if (row.farmerInvalid) {
+                <span class="field-error">{{ 'sales.error.farmer.notfound' | i18n }}</span>
+              }
+            </td>
+            <td>
+              <input
+                type="text"
+class="grid-input"
+                  style="text-align: right"
+                  [ngModel]="row.qty"
+                  (ngModelChange)="updateFarmerRow(idx, { qty: sanitizeDecimal($event) }); onQtyChange('farmer', idx)"
+                (keydown)="onDecimalKeydown($event)"
+                (keydown.enter)="onFarmerQtyEnter(idx)"
+              />
+            </td>
+            <td>
+              <input type="text" class="grid-input" style="text-align: right" [value]="row.rate" readonly />
+            </td>
+            <td>
+              <input
+                type="text"
+class="grid-input"
+                  style="text-align: right"
+                  [value]="row.amount"
+                readonly
+                (keydown.enter)="onFarmerAmountEnter(idx)"
+              />
+            </td>
+            <td class="text-center action-cell">
+              <span class="action-icon add-row-icon" title="{{ 'sales.add.row' | i18n }}" (click)="addFarmerRowBelow(idx)">+</span>
+              <span
+                class="action-icon remove-row-icon"
+                title="{{ 'sales.remove.row' | i18n }}"
+                [class.disabled-icon]="farmerRows().length <= 1"
+                (click)="removeFarmerRow(idx)"
+                >&times;</span
+              >
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template #footer>
+          <tr class="grid-totals-row">
+            <td class="totals-label text-center">
+              <img class="totals-icon" src="total-icon.png" [attr.alt]="'sales.total' | i18n" [attr.title]="'sales.total' | i18n" />
+            </td>
+            <td class="totals-num-center">{{ farmerTotals().bag }}</td>
+            <td class="totals-empty"></td>
+            <td class="totals-num">{{ farmerTotals().qty }}</td>
+            <td class="totals-empty"></td>
+            <td class="totals-num">{{ farmerTotals().amount }}</td>
+            <td class="totals-empty"></td>
+          </tr>
+        </ng-template>
+      </app-data-table>
+    </div>
+    <div class="fls-actions">
         <button
           type="button"
           class="fls-calc-btn"
@@ -252,8 +260,7 @@
           {{ 'btn.save' | i18n }}
         </button>
         <app-receipt-print-buttons [cssClass]="'btn btn-secondary fls-action-btn'" (print)="printReport($event)" />
-      </div>
-    </div>
+</div>
   </div>
 </div>
 

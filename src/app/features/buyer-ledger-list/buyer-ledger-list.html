@@ -42,18 +42,7 @@
     <div class="lgr-card-top">
       <div class="lgr-card-title">
         <h3>{{ 'buyer.ledger.list.title' | i18n }}</h3>
-        <span class="lgr-count-badge">{{ filteredEntries().length }}</span>
-      </div>
-    </div>
-
-    <div class="lgr-searchbar">
-      <div class="lgr-search">
-        <span class="material-symbols-rounded">search</span>
-        <input
-          type="text"
-          [(ngModel)]="search"
-          [placeholder]="'buyer.ledger.list.search.placeholder' | i18n"
-        />
+        <span class="lgr-count-badge">{{ ledgerTable()?.visibleCount() ?? 0 }}</span>
       </div>
     </div>
 
@@ -63,48 +52,37 @@
       </div>
     }
 
-    <div class="table-container">
-      <table class="report-table lgr-table ldg-tbl tbl-teal">
-        <thead>
+    @if (!loading()) {
+      <app-data-table
+        #ledgerTable
+        [columns]="columns"
+        [data]="entries()"
+        tableClasses="report-table lgr-table ldg-tbl tbl-teal"
+        wrapperClasses="table-container"
+        trackKey="buyerId"
+      >
+        <ng-template #row let-row let-idx="idx" let-pageStart="pageStart">
           <tr>
-            <th class="col-no">{{ 'txn.sno' | i18n }}</th>
-            <th class="col-name">{{ 'ledger.list.col.buyer.name' | i18n }}</th>
-            <th class="col-outstanding">{{ 'ledger.list.col.outstanding.balance' | i18n }}</th>
-            <th class="col-action">{{ 'ledger.list.col.action' | i18n }}</th>
+            <td class="col-no lgr-sno">{{ pageStart + idx + 1 }}</td>
+            <td class="col-name">
+              <div class="lgr-name-cell">
+                <span class="lgr-avatar">{{ initials(row.buyerName) }}</span>
+                <span class="lgr-name">{{ row.buyerName }}</span>
+              </div>
+            </td>
+            <td class="col-outstanding">
+              <span class="lgr-balance" [class]="balanceClass(row.outstandingBalance)">
+                {{ formatCurrency(row.outstandingBalance) }}
+              </span>
+            </td>
+            <td class="col-action">
+              <button type="button" class="ldg-act-btn ldg-act-btn-teal" [attr.title]="'btn.view' | i18n" [attr.aria-label]="'btn.view' | i18n" (click)="viewDetail(row)">
+                <span class="material-symbols-rounded">visibility</span>
+              </button>
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          @for (entry of filteredEntries(); track entry.buyerId; let i = $index) {
-            <tr>
-              <td class="col-no lgr-sno">{{ i + 1 }}</td>
-              <td class="col-name">
-                <div class="lgr-name-cell">
-                  <span class="lgr-avatar">{{ initials(entry.buyerName) }}</span>
-                  <span class="lgr-name">{{ entry.buyerName }}</span>
-                </div>
-              </td>
-              <td class="col-outstanding">
-                <span class="lgr-balance" [class]="balanceClass(entry.outstandingBalance)">
-                  {{ formatCurrency(entry.outstandingBalance) }}
-                </span>
-              </td>
-              <td class="col-action">
-                <button type="button" class="ldg-act-btn ldg-act-btn-teal" [attr.title]="'btn.view' | i18n" [attr.aria-label]="'btn.view' | i18n" (click)="viewDetail(entry)">
-                  <span class="material-symbols-rounded">visibility</span>
-                </button>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="4" class="no-records">
-                @if (loaded() && !loading()) {
-                  {{ 'msg.no.records' | i18n }}
-                }
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+        </ng-template>
+      </app-data-table>
+    }
   </div>
 </div>

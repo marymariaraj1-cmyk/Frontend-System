@@ -2,20 +2,13 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { ApiResponse } from '../models/api-response';
-import { CashBookRecord, CashBookBlocks } from '../models/daily-cash-book';
+import { CashBookRecord, CashBookBlocks, ManualAmountEntry } from '../models/daily-cash-book';
 import { ApiService } from './api.service';
 
 export interface DailyCashBookSavePayload {
   bookDate: string;
-  rentAmt: number;
-  expenseAmt: number;
-  chitAmt: number;
-  financeAmt: number;
-  noteAmt: number;
-  salaryAmt: number;
-  coinAmt: number;
-  cashInHandAmt: number;
-  openingBalance: number;
+  manualDebitEntries: ManualAmountEntry[];
+  manualCreditEntries: ManualAmountEntry[];
   remarks: string;
 }
 

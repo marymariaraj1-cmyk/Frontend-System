@@ -3,37 +3,46 @@ import { FormsModule } from '@angular/forms';
 
 import { AutocompleteComponent } from '../../core/components/autocomplete/autocomplete.component';
 import { ReceiptPrintButtonsComponent } from '../../core/components/receipt-print-buttons/receipt-print-buttons.component';
+import { DataTableComponent, DataTableColumn } from '../../core/components/data-table/data-table.component';
 import { ActiveLedgerRow } from '../../core/models/ledger';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
+import { DateFormatPipe } from '../../core/pipes/date-format.pipe';
 import { FarmerAccountCheckService } from '../../core/services/farmer-account-check.service';
 import { FarmerLedgerService } from '../../core/services/farmer-ledger.service';
+import { FarmerService } from '../../core/services/farmer.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { ReceiptFormat, ReceiptService } from '../../core/services/receipt.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatCurrency } from '../../core/utils/currency-format.util';
+import { formatDate } from '../../core/utils/date.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
 
 type CalcModel = 'model1' | 'model2' | 'model3' | null;
 
+type PanelBadge = 'debit' | 'credit' | null;
+
+type PanelRow =
+  | { type: 'line'; label: string; amount: number; badge: PanelBadge; note?: string; final: boolean; absolute: boolean }
+  | { type: 'divider' };
+
 interface ModelResult {
   model: CalcModel;
   label: string;
-  lines: { label: string; value: number; desc: string; sign?: boolean }[];
-  finalLabel: string;
+  rows: PanelRow[];
   finalAmount: number;
-  finalDesc: string;
 }
 
 @Component({
   selector: 'app-farmer-account-check',
   standalone: true,
-  imports: [FormsModule, I18nPipe, AutocompleteComponent, ReceiptPrintButtonsComponent],
+  imports: [FormsModule, I18nPipe, DateFormatPipe, AutocompleteComponent, ReceiptPrintButtonsComponent, DataTableComponent],
   templateUrl: './farmer-account-check.html',
   styleUrl: './farmer-account-check.css',
 })
 export class FarmerAccountCheckComponent {
   private readonly accountCheckService = inject(FarmerAccountCheckService);
   private readonly ledgerService = inject(FarmerLedgerService);
+  private readonly farmerService = inject(FarmerService);
   private readonly i18n = inject(I18nService);
   private readonly toast = inject(ToastService);
   private readonly receipt = inject(ReceiptService);
@@ -52,6 +61,47 @@ export class FarmerAccountCheckComponent {
   protected readonly loading = signal(false);
   protected readonly activeRows = signal<ActiveLedgerRow[]>([]);
   protected readonly loaded = signal(false);
+
+  protected readonly activeColumns: DataTableColumn[] = [
+    {
+      key: 'sno',
+      header: 'txn.sno',
+      type: 'text',
+      align: 'left',
+      className: 'left',
+      width: '50px',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'salesDate',
+      header: 'ledger.report.col.sales.date',
+      type: 'date',
+      align: 'left',
+      className: 'left',
+      width: '140px',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'creditAmt',
+      header: 'fac.col.credit.or.sale',
+      type: 'currency',
+      align: 'right',
+      className: 'amount-col',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'debitAmt',
+      header: 'fac.col.debit.or.advance',
+      type: 'currency',
+      align: 'right',
+      className: 'amount-col',
+      sortable: false,
+      filterable: false,
+    },
+  ];
 
   protected readonly selectedModel = signal<CalcModel>(null);
   protected readonly modelResult = signal<ModelResult | null>(null);
@@ -117,7 +167,9 @@ export class FarmerAccountCheckComponent {
     this.selectedModel.set(null);
     this.modelResult.set(null);
 
-    this.ledgerService.getFarmerList().subscribe({
+    // Resolve the ID from Farmer Master (not the ledger list) so a farmer who exists but has no
+    // sales/ledger rows is reported as "no sales" rather than "not found in master".
+    this.farmerService.getFarmers().subscribe({
       next: (listResponse) => {
         if (!listResponse.success) {
           this.loading.set(false);
@@ -199,15 +251,17 @@ export class FarmerAccountCheckComponent {
       this.modelResult.set({
         model: 'model1',
         label: this.i18n.translate('fac.model.1.label'),
-        lines: [
-          { label: this.i18n.translate('fac.total.sale'), value: sumCredit, desc: this.i18n.translate('fac.desc.total.credit.sale') },
-          { label: this.i18n.translate('fac.farmer.advance'), value: sumDebit, desc: this.i18n.translate('fac.desc.total.farmer.advance') },
-          { label: this.i18n.translate('fac.actual.amount'), value: actual, desc: this.i18n.translate('fac.desc.total.sale.minus.advance'), sign: true },
-          { label: this.i18n.translate('fac.interest.10'), value: interest, desc: this.i18n.translate('fac.desc.interest.10.100days'), sign: true },
+        rows: [
+          this.line('fac.panel.flower.credit.sale', sumCredit),
+          this.line('fac.panel.debit.farmer.advance', sumDebit),
+          { type: 'divider' },
+          this.outstandingLine(actual),
+          this.line('fac.panel.overdraft', interest, undefined, true),
+          { type: 'divider' },
+          this.totalLine(finalAmt),
+          { type: 'divider' },
         ],
-        finalLabel: this.i18n.translate('fac.final.total'),
         finalAmount: finalAmt,
-        finalDesc: this.i18n.translate('fac.desc.actual.plus.interest'),
       });
       this.selectedModel.set(model);
     } else if (model === 'model2') {
@@ -231,19 +285,20 @@ export class FarmerAccountCheckComponent {
           const interest = Math.round(openingDebit * 0.02);
           const inwardIncome = sumCredit - Math.abs(interest);
           const finalAmt = inwardIncome - sumDebit;
+          const note = this.i18n.translate('fac.panel.interest.note', this.formatNumber(Math.abs(openingDebit)));
           this.modelResult.set({
             model: 'model2',
             label: this.i18n.translate('fac.model.2.label'),
-            lines: [
-              { label: this.i18n.translate('fac.opening.debit'), value: openingDebit, desc: this.i18n.translate('fac.desc.closing.balance.of.active.entry'), sign: true },
-              { label: this.i18n.translate('fac.interest.2'), value: interest, desc: this.i18n.translate('fac.desc.interest.2.opening.debit'), sign: true },
-              { label: this.i18n.translate('fac.total.sale'), value: sumCredit, desc: this.i18n.translate('fac.desc.total.credit.sale') },
-              { label: this.i18n.translate('fac.inward.income'), value: inwardIncome, desc: this.i18n.translate('fac.desc.total.sale.minus.interest') },
-              { label: this.i18n.translate('fac.total.farmer.advance'), value: sumDebit, desc: '' },
+            rows: [
+              this.line('fac.panel.flower.credit.sale', sumCredit),
+              this.line('fac.panel.interest', interest, note, true),
+              { type: 'divider' },
+              this.line('fac.panel.balance', inwardIncome),
+              this.line('fac.panel.debit.farmer.advance', sumDebit),
+              { type: 'divider' },
+              this.totalLine(finalAmt),
             ],
-            finalLabel: this.i18n.translate('fac.final.amount'),
             finalAmount: finalAmt,
-            finalDesc: this.i18n.translate('fac.desc.inward.minus.advance'),
           });
           this.selectedModel.set(model);
         },
@@ -257,16 +312,71 @@ export class FarmerAccountCheckComponent {
       this.modelResult.set({
         model: 'model3',
         label: this.i18n.translate('fac.model.3.label'),
-        lines: [
-          { label: this.i18n.translate('fac.inward.income'), value: sumCredit, desc: this.i18n.translate('fac.desc.total.credit.sale') },
-          { label: this.i18n.translate('fac.farmer.advance'), value: sumDebit, desc: this.i18n.translate('fac.desc.total.farmer.advance') },
+        rows: [
+          this.line('fac.panel.flower.credit.sale', sumCredit),
+          this.line('fac.panel.debit.farmer.advance', sumDebit),
+          { type: 'divider' },
+          this.totalLine(finalAmt),
+          { type: 'divider' },
         ],
-        finalLabel: this.i18n.translate('fac.final.total'),
         finalAmount: finalAmt,
-        finalDesc: this.i18n.translate('fac.desc.total.inward.minus.advance'),
       });
       this.selectedModel.set(model);
     }
+  }
+
+  private line(labelKey: string, amount: number, note?: string, absolute = false): PanelRow {
+    return { type: 'line', label: this.i18n.translate(labelKey), amount, badge: null, note, final: false, absolute };
+  }
+
+  private outstandingLine(value: number): PanelRow {
+    return {
+      type: 'line',
+      label: this.i18n.translate(this.outstandingKey(value)),
+      amount: value,
+      badge: this.badgeFor(value),
+      final: false,
+      absolute: true,
+    };
+  }
+
+  private totalLine(value: number): PanelRow {
+    return {
+      type: 'line',
+      label: this.i18n.translate(this.totalOutstandingKey(value), formatDate(new Date())),
+      amount: value,
+      badge: this.badgeFor(value),
+      final: true,
+      absolute: true,
+    };
+  }
+
+  private badgeFor(value: number): PanelBadge {
+    if (value > 0) {
+      return 'credit';
+    }
+    if (value < 0) {
+      return 'debit';
+    }
+    return null;
+  }
+
+  private labelSide(value: number): 'debit' | 'credit' {
+    return value > 0 ? 'credit' : 'debit';
+  }
+
+  private outstandingKey(value: number): string {
+    return this.labelSide(value) === 'debit' ? 'fac.panel.outstanding.debit' : 'fac.panel.outstanding.credit';
+  }
+
+  private totalOutstandingKey(value: number): string {
+    return this.labelSide(value) === 'debit'
+      ? 'fac.panel.total.outstanding.debit'
+      : 'fac.panel.total.outstanding.credit';
+  }
+
+  private formatNumber(value: number | null | undefined): string {
+    return formatCurrency(value).replace('₹ ', '');
   }
 
   protected updateLedger(): void {
@@ -322,7 +432,7 @@ export class FarmerAccountCheckComponent {
         (row, i) =>
           `<tr>` +
           `<td class="left">${i + 1}</td>` +
-          `<td class="left">${this.escapeHtml(row.salesDate)}</td>` +
+          `<td class="left">${this.escapeHtml(formatDate(row.salesDate))}</td>` +
           `<td class="right">${this.formatNum(row.creditAmt)}</td>` +
           `<td class="right">${this.formatNum(row.debitAmt)}</td>` +
           `</tr>`,
@@ -339,18 +449,36 @@ export class FarmerAccountCheckComponent {
 
     let calcHtml = '';
     if (result) {
-      const linesHtml = result.lines
-        .map(
-          (line) =>
-            `<tr><td class="lbl">${this.escapeHtml(line.label)}</td><td class="amt">${this.formatNum(line.value)}</td><td class="desc">${this.escapeHtml(line.desc)}</td></tr>`,
-        )
+      let pendingDivider = false;
+      const panelRows = result.rows
+        .map((row) => {
+          if (row.type === 'divider') {
+            pendingDivider = true;
+            return '';
+          }
+          const noteHtml = row.note
+            ? ` <span style="font-size:7px;color:#555;">${this.escapeHtml(row.note)}</span>`
+            : '';
+          const badgeHtml = row.badge
+            ? `<span style="border:1px solid #000;border-radius:6px;padding:0 3px;font-size:7px;">${this.escapeHtml(
+                this.i18n.translate(row.badge === 'debit' ? 'fac.debit' : 'fac.credit'),
+              )}</span>&nbsp;`
+            : '';
+          const amount = this.formatNum(row.absolute ? Math.abs(row.amount) : row.amount);
+          const divStyle = pendingDivider && !row.final ? ' style="border-top:1px solid #000;"' : '';
+          pendingDivider = false;
+          return (
+            `<tr${row.final ? ' class="final"' : ''}${divStyle}>` +
+            `<td class="lbl">${this.escapeHtml(row.label)}${noteHtml}</td>` +
+            `<td class="amt">${badgeHtml}${amount}</td>` +
+            `</tr>`
+          );
+        })
         .join('');
       calcHtml =
         `<div class="divider"></div>` +
         `<h3 style="font-size:9px;margin:4px 0;">${this.escapeHtml(result.label)}</h3>` +
-        `<table class="summary-table">${linesHtml}` +
-        `<tr class="final"><td class="lbl">${this.escapeHtml(result.finalLabel)}</td><td class="amt">${this.formatNum(result.finalAmount)}</td><td class="desc">${this.escapeHtml(result.finalDesc)}</td></tr>` +
-        `</table>`;
+        `<table class="summary-table">${panelRows}</table>`;
     }
 
     const content =
@@ -359,6 +487,7 @@ export class FarmerAccountCheckComponent {
       `<p>${this.escapeHtml(this.farmer())}</p>` +
       `</div>` +
       `<table>` +
+      `<colgroup><col style="width:26px;"><col style="width:78px;"><col><col></colgroup>` +
       `<thead><tr>` +
       `<th class="left">#</th>` +
       `<th class="left">${this.escapeHtml(this.i18n.translate('ledger.report.col.sales.date'))}</th>` +

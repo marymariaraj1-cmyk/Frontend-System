@@ -1,0 +1,70 @@
+<div class="mst-page">
+  <div class="mst-header">
+    <span class="mst-accent"></span>
+    <span class="mst-ring mst-ring-1"></span>
+    <span class="mst-ring mst-ring-2"></span>
+    <span class="material-symbols-rounded mst-glyph">percent</span>
+    <div class="mst-header-icon">
+      <span class="material-symbols-rounded">percent</span>
+    </div>
+    <div class="mst-header-text">
+      <h2>{{ 'farmer.commission.config.title' | i18n }}</h2>
+      <p class="mst-subtitle">{{ 'farmer.commission.config.subtitle' | i18n }}</p>
+    </div>
+    <button type="button" class="fab-btn" (click)="startAdd()" [attr.title]="'farmer.commission.config.add' | i18n" [attr.aria-label]="'farmer.commission.config.add' | i18n">
+      <span class="material-symbols-rounded">add</span>
+    </button>
+  </div>
+  @if (showForm()) {
+    <div class="card">
+      <div class="card-body">
+        <form class="master-form" (ngSubmit)="submit()">
+          <h4 class="form-title">
+            <span class="material-symbols-rounded mst-card-icon">percent</span>
+            {{ editing ? ('farmer.commission.config.edit' | i18n) : ('farmer.commission.config.add' | i18n) }}
+          </h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="commissionPercent">{{ 'farmer.commission.config.label.percent' | i18n }}</label>
+              <input id="commissionPercent" name="commissionPercent" type="number" step="0.01" min="0.01" max="100" [(ngModel)]="form.commissionPercent" />
+            </div>
+            <div class="form-group form-group-wide">
+              <label for="description">{{ 'farmer.commission.config.label.description' | i18n }}</label>
+              <input id="description" name="description" type="text" [(ngModel)]="form.description" />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="icon-btn icon-btn-primary" [disabled]="submitting">
+              <span class="material-symbols-rounded">{{ editing ? 'update' : 'save' }}</span>
+            </button>
+            <button type="button" class="icon-btn icon-btn-secondary" (click)="cancel()">
+              <span class="material-symbols-rounded">close</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+  <div class="card">
+    <div class="card-header">
+      <h3><span class="material-symbols-rounded mst-card-icon">percent</span> {{ 'farmer.commission.config.list.title' | i18n }}</h3>
+    </div>
+    <div class="card-body">
+      <app-data-table [columns]="columns" [data]="rows()" tableClasses="report-table mst-table" wrapperClasses="table-container mst-table-wrap" trackKey="commissionConfigId" emptyKey="common.no.records">
+        <ng-template #row let-config let-idx="idx" let-pageStart="pageStart">
+          <tr>
+            <td class="mst-col-sno">{{ pageStart + idx + 1 }}</td>
+            <td class="mst-col-percent">{{ config.commissionPercent }}%</td>
+            <td class="mst-col-desc">{{ config.description }}</td>
+            <td class="mst-col-date">{{ config.updatedDate | date: 'dd-MM-yyyy HH:mm' }}</td>
+            <td class="mst-col-actions">
+              <button type="button" class="icon-btn icon-btn-secondary" (click)="edit(config)" [attr.title]="'farmer.commission.config.edit' | i18n" [attr.aria-label]="'farmer.commission.config.edit' | i18n">
+                <span class="material-symbols-rounded">edit</span>
+              </button>
+            </td>
+          </tr>
+        </ng-template>
+      </app-data-table>
+    </div>
+  </div>
+</div>

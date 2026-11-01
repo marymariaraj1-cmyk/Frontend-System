@@ -252,6 +252,15 @@
   color: #475569;
 }
 
+.dcb-removed {
+  display: block;
+  margin-top: 2px;
+  color: #dc2626;
+  font-style: italic;
+  font-size: 12px;
+  font-weight: 400;
+}
+
 .dcb-amt {
   min-width: 130px;
   text-align: right;

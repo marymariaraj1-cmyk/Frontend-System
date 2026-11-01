@@ -7,9 +7,11 @@ import {
   VayalAgroPriceHistory,
 } from '../../core/models/vayal-agro-flower-price';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
+import { DateFormatPipe } from '../../core/pipes/date-format.pipe';
 import { I18nService } from '../../core/services/i18n.service';
 import { ToastService } from '../../core/services/toast.service';
 import { VayalAgroPriceService } from '../../core/services/vayal-agro-price.service';
+import { DataTableComponent, DataTableColumn } from '../../core/components/data-table/data-table.component';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
 import { formatApiDate } from '../../core/utils/sales.util';
 
@@ -23,7 +25,7 @@ interface GraphPoint {
 @Component({
   selector: 'app-vayal-agro-flower-price',
   standalone: true,
-  imports: [FormsModule, I18nPipe],
+  imports: [FormsModule, I18nPipe, DateFormatPipe, DataTableComponent],
   templateUrl: './vayal-agro-flower-price.html',
   styleUrl: './vayal-agro-flower-price.css',
 })
@@ -47,6 +49,80 @@ export class VayalAgroFlowerPriceComponent implements OnInit {
   protected readonly loaded = signal(false);
   protected readonly searched = signal(false);
   protected readonly error = signal('');
+
+  protected readonly rowColumns: DataTableColumn[] = [
+    {
+      key: 'sno',
+      header: 'txn.sno',
+      type: 'text',
+      align: 'center',
+      className: 'va-col-sno',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'category',
+      header: 'vayal.agro.col.category',
+      type: 'text',
+    },
+    {
+      key: 'district',
+      header: 'vayal.agro.col.district',
+      type: 'text',
+    },
+    {
+      key: 'city',
+      header: 'vayal.agro.col.city',
+      type: 'text',
+    },
+    {
+      key: 'price',
+      header: 'vayal.agro.col.price',
+      type: 'number',
+      className: 'va-col-price',
+    },
+    {
+      key: 'units',
+      header: 'vayal.agro.col.units',
+      type: 'text',
+    },
+    {
+      key: 'action',
+      header: 'vayal.agro.col.action',
+      type: 'text',
+      className: 'va-col-action',
+      sortable: false,
+      filterable: false,
+    },
+  ];
+
+  protected readonly historyColumns: DataTableColumn[] = [
+    {
+      key: 'sno',
+      header: 'txn.sno',
+      type: 'text',
+      align: 'center',
+      className: 'va-col-sno',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'date',
+      header: 'vayal.agro.col.date',
+      type: 'date',
+    },
+    {
+      key: 'price',
+      header: 'vayal.agro.col.price',
+      type: 'number',
+      className: 'va-col-price',
+    },
+    {
+      key: 'units',
+      header: 'vayal.agro.col.units',
+      type: 'text',
+    },
+  ];
 
   protected readonly historyOpen = signal(false);
   protected readonly historyLoading = signal(false);

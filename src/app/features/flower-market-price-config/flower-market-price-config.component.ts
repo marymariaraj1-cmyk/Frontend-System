@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
+import { DataTableComponent, DataTableColumn } from '../../core/components/data-table/data-table.component';
 import { DraggableDirective } from '../../core/directives/draggable.directive';
 import {
   FlowerPriceConfigFlower,
@@ -8,6 +9,7 @@ import {
   FlowerPriceTickerEntry,
 } from '../../core/models/flower-price-config';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
+import { DateFormatPipe } from '../../core/pipes/date-format.pipe';
 import { FlowerPriceConfigService } from '../../core/services/flower-price-config.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -27,7 +29,7 @@ interface ViewRow {
 @Component({
   selector: 'app-flower-market-price-config',
   standalone: true,
-  imports: [FormsModule, I18nPipe, DraggableDirective],
+  imports: [FormsModule, I18nPipe, DateFormatPipe, DraggableDirective, DataTableComponent],
   templateUrl: './flower-market-price-config.html',
   styleUrl: './flower-market-price-config.css',
 })
@@ -44,6 +46,33 @@ export class FlowerMarketPriceConfigComponent implements OnInit {
   protected readonly addDate = signal(formatApiDate(new Date()));
   protected readonly saving = signal(false);
 
+  protected readonly addColumns: DataTableColumn[] = [
+    {
+      key: 'sno',
+      header: 'common.sno',
+      type: 'text',
+      align: 'center',
+      sortable: false,
+      filterable: false,
+      className: 'fmpc-col-sno',
+    },
+    {
+      key: 'flowerName',
+      header: 'fmpc.flower.name',
+      type: 'text',
+      className: 'fmpc-col-flower',
+    },
+    {
+      key: 'priceTextByFlower',
+      header: 'fmpc.price',
+      type: 'text',
+      align: 'center',
+      sortable: false,
+      className: 'fmpc-col-price',
+      value: (row) => this.priceTextByFlower[(row as FlowerPriceConfigFlower).flowerId] ?? '',
+    },
+  ];
+
   protected readonly viewDate = signal(formatApiDate(new Date()));
   protected readonly viewRows = signal<ViewRow[]>([]);
   protected readonly searched = signal(false);
@@ -51,6 +80,40 @@ export class FlowerMarketPriceConfigComponent implements OnInit {
   protected readonly updating = signal(false);
   protected readonly deleteTarget = signal<ViewRow | null>(null);
   protected readonly deleting = signal(false);
+
+  protected readonly viewColumns: DataTableColumn[] = [
+    {
+      key: 'sno',
+      header: 'common.sno',
+      type: 'text',
+      align: 'center',
+      sortable: false,
+      filterable: false,
+      className: 'fmpc-col-sno',
+    },
+    {
+      key: 'flowerName',
+      header: 'fmpc.flower.name',
+      type: 'text',
+      className: 'fmpc-col-flower',
+    },
+    {
+      key: 'price',
+      header: 'fmpc.price',
+      type: 'number',
+      align: 'center',
+      className: 'fmpc-col-price',
+    },
+    {
+      key: 'actions',
+      header: 'fmpc.actions',
+      type: 'text',
+      align: 'center',
+      sortable: false,
+      filterable: false,
+      className: 'fmpc-col-action',
+    },
+  ];
 
   protected readonly ticker = signal<FlowerPriceTickerEntry[]>([]);
   protected readonly tickerPaused = signal(false);
@@ -381,42 +444,24 @@ export class FlowerMarketPriceConfigComponent implements OnInit {
     });
   }
 
-  protected toggleRowEdit(index: number): void {
-    const row = this.viewRows()[index];
-    if (!row) {
-      return;
-    }
-    const rows = [...this.viewRows()];
-    rows[index] = { ...row, enabled: !row.enabled };
-    this.viewRows.set(rows);
+  protected toggleRowEdit(row: ViewRow): void {
+    this.updateViewRow(row.priceConfigId, { enabled: !row.enabled });
   }
 
-  protected cancelRowEdit(index: number): void {
-    const row = this.viewRows()[index];
-    if (!row) {
-      return;
-    }
-    const rows = [...this.viewRows()];
-    rows[index] = { ...row, price: row.origPrice, enabled: false };
-    this.viewRows.set(rows);
+  protected cancelRowEdit(row: ViewRow): void {
+    this.updateViewRow(row.priceConfigId, { price: row.origPrice, enabled: false });
   }
 
-  protected onViewPriceInput(event: Event, index: number): void {
+  protected onViewPriceInput(event: Event, row: ViewRow): void {
     const input = event.target as HTMLInputElement;
     let value = input.value.replace(/[^0-9.]/g, '');
     value = value.replace(/(\..*)\./g, '$1');
     input.value = value;
-    const rows = [...this.viewRows()];
-    rows[index] = { ...rows[index], price: value };
-    this.viewRows.set(rows);
+    this.updateViewRow(row.priceConfigId, { price: value });
   }
 
-  protected saveRowEdit(index: number): void {
+  protected saveRowEdit(row: ViewRow): void {
     if (this.updating()) {
-      return;
-    }
-    const row = this.viewRows()[index];
-    if (!row) {
       return;
     }
     const price = row.price.trim();
@@ -429,9 +474,7 @@ export class FlowerMarketPriceConfigComponent implements OnInit {
       next: (response) => {
         this.updating.set(false);
         if (response.success) {
-          const rows = [...this.viewRows()];
-          rows[index] = { ...rows[index], price, origPrice: price, enabled: false };
-          this.viewRows.set(rows);
+          this.updateViewRow(row.priceConfigId, { price, origPrice: price, enabled: false });
           this.toast.success(response.message);
           this.loadTicker();
           this.flowerPriceConfigService.notifyTickerRefresh();
@@ -446,11 +489,8 @@ export class FlowerMarketPriceConfigComponent implements OnInit {
     });
   }
 
-  protected openDeleteConfirm(index: number): void {
-    const row = this.viewRows()[index];
-    if (row) {
-      this.deleteTarget.set(row);
-    }
+  protected openDeleteConfirm(row: ViewRow): void {
+    this.deleteTarget.set(row);
   }
 
   protected closeDelete(): void {
@@ -495,6 +535,18 @@ export class FlowerMarketPriceConfigComponent implements OnInit {
       return '';
     }
     return this.i18n.translate('fmpc.delete.confirm', row.flowerName, this.viewDate().trim());
+  }
+
+  private updateViewRow(id: number, patch: Partial<ViewRow>): void {
+    this.viewRows.update((rows) => rows.map((r) => (r.priceConfigId === id ? { ...r, ...patch } : r)));
+  }
+
+  protected addSno(row: FlowerPriceConfigFlower): number {
+    return this.flowers().findIndex((f) => f.flowerId === row.flowerId) + 1;
+  }
+
+  protected viewSno(row: ViewRow): number {
+    return this.viewRows().findIndex((r) => r.priceConfigId === row.priceConfigId) + 1;
   }
 
   private isValidApiDate(date: string): boolean {

@@ -1,0 +1,166 @@
+<div class="se-page">
+  <div class="se-header">
+    <span class="se-accent"></span>
+    <span class="se-ring se-ring-1"></span>
+    <span class="se-ring se-ring-2"></span>
+    <span class="material-symbols-rounded se-glyph">storefront</span>
+    <div class="se-head-main">
+      <div class="se-header-icon">
+        <span class="material-symbols-rounded">storefront</span>
+      </div>
+      <div class="se-header-text">
+        <h2>{{ 'direct.title' | i18n }}</h2>
+        <p class="se-subtitle">{{ 'direct.subtitle' | i18n }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="se-card-head">
+      <span class="se-chip material-symbols-rounded">storefront</span>
+      <h3>{{ 'direct.header' | i18n }}</h3>
+    </div>
+    <div class="card-body se-farmer-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="buyerName">{{ 'fls.buyer.name' | i18n }} <span class="required">*</span></label>
+          <app-autocomplete
+            [items]="master().buyers"
+            [invalid]="buyerInvalid()"
+            [(value)]="buyerName"
+            (onSelect)="buyerName.set($event)"
+            (blur)="validateBuyer()"
+          />
+          @if (buyerInvalid()) {
+            <span class="field-error">{{ 'sales.error.buyer.notfound' | i18n }}</span>
+          }
+        </div>
+        <div class="form-group">
+          <label for="salesDate">{{ 'sales.date' | i18n }} <span class="required">*</span></label>
+          <input id="salesDate" name="salesDate" type="date" [(ngModel)]="salesDate" required />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="se-card-head">
+      <span class="se-chip se-chip-pink material-symbols-rounded">shopping_cart</span>
+      <h3>{{ 'direct.rows' | i18n }}</h3>
+      <span class="se-head-count">{{ rows().length }}</span>
+    </div>
+    <div class="card-body">
+      <app-data-table
+        [columns]="columns"
+        [data]="rows()"
+        [enablePagination]="false"
+        [enableSort]="false"
+        [enableFilter]="false"
+        [showClearFilters]="false"
+        [pageSizeSelector]="false"
+        [resultInfo]="false"
+        tableClasses="sales-grid-table"
+        wrapperClasses="table-container"
+      >
+        <ng-template #row let-row let-idx="idx">
+          <tr>
+            <td class="row-index text-center">{{ idx + 1 }}</td>
+            <td>
+              <input
+                type="text"
+                inputmode="numeric"
+                class="grid-input bag-input"
+                style="text-align: right"
+                [ngModel]="row.bag"
+                (ngModelChange)="updateRow(idx, { bag: sanitizeBag($event) })"
+              />
+            </td>
+            <td>
+              <app-autocomplete
+                [items]="master().flowers"
+                [invalid]="row.flowerInvalid"
+                [value]="row.flowerType"
+                (valueChange)="updateRow(idx, { flowerType: $event, flowerInvalid: false })"
+                (onSelect)="updateRow(idx, { flowerType: $event, flowerInvalid: false })"
+                (blur)="validateFlower(idx)"
+              />
+              @if (row.flowerInvalid) {
+                <span class="field-error">{{ 'sales.error.flower.notfound' | i18n }}</span>
+              }
+            </td>
+            <td>
+              <input
+                type="text"
+                class="grid-input"
+                style="text-align: right"
+                [ngModel]="row.qty"
+                (ngModelChange)="updateRow(idx, { qty: sanitizeDecimal($event) }); onQtyChange(idx)"
+                (keydown)="onDecimalKeydown($event)"
+              />
+            </td>
+            <td>
+              <input
+                type="text"
+                class="grid-input"
+                style="text-align: right"
+                [ngModel]="row.rate"
+                (ngModelChange)="updateRow(idx, { rate: sanitizeDecimal($event) })"
+                (input)="recalcAmount(idx)"
+                (keydown)="onDecimalKeydown($event)"
+              />
+            </td>
+            <td>
+              <input
+                type="text"
+                class="grid-input"
+                style="text-align: right"
+                [ngModel]="row.amount"
+                (ngModelChange)="updateRow(idx, { amount: sanitizeDecimal($event) }); onAmountInput(idx)"
+                (keydown.enter)="onAmountEnter(idx)"
+                (keydown)="onDecimalKeydown($event)"
+              />
+            </td>
+            <td class="text-center action-cell">
+              <span class="action-icon add-row-icon" title="{{ 'sales.add.row' | i18n }}" (click)="addRowBelow(idx)">+</span>
+              <span
+                class="action-icon remove-row-icon"
+                title="{{ 'sales.remove.row' | i18n }}"
+                [class.disabled-icon]="rows().length <= 1"
+                (click)="removeRow(idx)"
+                >&times;</span
+              >
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template #footer>
+          <tr class="grid-totals-row">
+            <td class="totals-label text-center">
+              <img class="totals-icon" src="total-icon.png" [attr.alt]="'sales.total' | i18n" [attr.title]="'sales.total' | i18n" />
+            </td>
+            <td class="totals-num-center">{{ totals().bag }}</td>
+            <td class="totals-empty"></td>
+            <td class="totals-num">{{ totals().qty }}</td>
+            <td class="totals-empty"></td>
+            <td class="totals-num">{{ totals().amount }}</td>
+            <td class="totals-empty"></td>
+          </tr>
+        </ng-template>
+      </app-data-table>
+    </div>
+    <div class="card-body">
+      <div class="intake-summary">
+        <div class="intake-summary-item intake-summary-net">
+          <span class="intake-summary-label">{{ 'direct.total' | i18n }}</span>
+          <span class="intake-summary-value">{{ totals().amount }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="fls-actions">
+      <button type="button" class="btn btn-primary fls-action-btn" [disabled]="saving()" (click)="save()">
+        <span class="material-symbols-rounded">save</span>
+        {{ 'btn.save' | i18n }}
+      </button>
+      <app-receipt-print-buttons [cssClass]="'btn btn-secondary fls-action-btn'" (print)="printReport($event)" />
+    </div>
+  </div>
+</div>

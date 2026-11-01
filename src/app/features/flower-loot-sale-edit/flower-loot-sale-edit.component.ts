@@ -1,13 +1,15 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { AutocompleteComponent } from '../../core/components/autocomplete/autocomplete.component';
 import { DraggableDirective } from '../../core/directives/draggable.directive';
+import { DataTableComponent, DataTableColumn } from '../../core/components/data-table/data-table.component';
 import { FlowerLootSaleEditRow, SalesMasterData } from '../../core/models/sales';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
 import { FlowerLootSaleEditService } from '../../core/services/flower-loot-sale-edit.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { ToastService } from '../../core/services/toast.service';
+import { formatTotalWithPrecision, maxDecimalPlaces } from '../../core/utils/currency-format.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
 import { roundOff } from '../../core/utils/round-off.util';
 import { formatApiDate, isDecimal } from '../../core/utils/sales.util';
@@ -15,6 +17,7 @@ import { formatApiDate, isDecimal } from '../../core/utils/sales.util';
 interface EditRow {
   salesId: number;
   bag: string;
+  origBag: string;
   name: string;
   origName: string;
   qty: string;
@@ -31,7 +34,7 @@ interface EditRow {
 @Component({
   selector: 'app-flower-loot-sale-edit',
   standalone: true,
-  imports: [FormsModule, I18nPipe, AutocompleteComponent, DraggableDirective],
+  imports: [FormsModule, I18nPipe, AutocompleteComponent, DraggableDirective, DataTableComponent],
   templateUrl: './flower-loot-sale-edit.html',
   styleUrl: './flower-loot-sale-edit.css',
 })
@@ -50,6 +53,222 @@ export class FlowerLootSaleEditComponent implements OnInit {
   protected readonly salesDate = signal(formatApiDate(new Date()));
   protected readonly buyerRows = signal<EditRow[]>([]);
   protected readonly farmerRows = signal<EditRow[]>([]);
+
+  protected readonly buyerTotals = computed(() => {
+    let bag = 0;
+    let qty = 0;
+    let amount = 0;
+    const qtyValues: string[] = [];
+    const amountValues: string[] = [];
+    for (const row of this.buyerRows()) {
+      const b = parseInt(row.bag, 10);
+      if (!Number.isNaN(b)) {
+        bag += b;
+      }
+      const q = parseFloat(row.qty);
+      if (!Number.isNaN(q)) {
+        qty += q;
+        qtyValues.push(row.qty);
+      }
+      const a = parseFloat(row.amount);
+      if (!Number.isNaN(a)) {
+        amount += a;
+        amountValues.push(row.amount);
+      }
+    }
+    return {
+      bag: String(bag),
+      qty: formatTotalWithPrecision(qty, maxDecimalPlaces(qtyValues)),
+      amount: formatTotalWithPrecision(amount, maxDecimalPlaces(amountValues)),
+    };
+  });
+
+  protected readonly farmerTotals = computed(() => {
+    let bag = 0;
+    let qty = 0;
+    let amount = 0;
+    const qtyValues: string[] = [];
+    const amountValues: string[] = [];
+    for (const row of this.farmerRows()) {
+      const b = parseInt(row.bag, 10);
+      if (!Number.isNaN(b)) {
+        bag += b;
+      }
+      const q = parseFloat(row.qty);
+      if (!Number.isNaN(q)) {
+        qty += q;
+        qtyValues.push(row.qty);
+      }
+      const a = parseFloat(row.amount);
+      if (!Number.isNaN(a)) {
+        amount += a;
+        amountValues.push(row.amount);
+      }
+    }
+    return {
+      bag: String(bag),
+      qty: formatTotalWithPrecision(qty, maxDecimalPlaces(qtyValues)),
+      amount: formatTotalWithPrecision(amount, maxDecimalPlaces(amountValues)),
+    };
+  });
+
+  protected readonly buyerColumns: DataTableColumn[] = [
+    {
+      key: 'sno',
+      header: 'flower.sno',
+      icon: 'format_list_numbered',
+      type: 'text',
+      align: 'center',
+      width: '56px',
+      className: 'col-center',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'bag',
+      header: 'sales.bag',
+      icon: 'shopping_basket',
+      type: 'text',
+      align: 'right',
+      width: '90px',
+      className: 'col-num',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'name',
+      header: 'fls.buyer.name',
+      icon: 'storefront',
+      type: 'text',
+      width: '26%',
+      className: 'col-text col-name',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'qty',
+      header: 'sales.qty',
+      icon: 'weight',
+      type: 'text',
+      align: 'right',
+      width: '100px',
+      className: 'col-num',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'rate',
+      header: 'sales.rate',
+      icon: 'payments',
+      type: 'text',
+      align: 'right',
+      width: '100px',
+      className: 'col-num',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'amount',
+      header: 'sales.amount',
+      icon: 'currency_rupee',
+      type: 'text',
+      align: 'right',
+      width: '110px',
+      className: 'col-num',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'actions',
+      header: 'flower.actions',
+      icon: 'more_horiz',
+      type: 'text',
+      align: 'center',
+      width: '110px',
+      className: 'col-center col-actions',
+      sortable: false,
+      filterable: false,
+    },
+  ];
+
+  protected readonly farmerColumns: DataTableColumn[] = [
+    {
+      key: 'sno',
+      header: 'flower.sno',
+      icon: 'format_list_numbered',
+      type: 'text',
+      align: 'center',
+      width: '56px',
+      className: 'col-center',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'bag',
+      header: 'sales.bag',
+      icon: 'shopping_basket',
+      type: 'text',
+      align: 'right',
+      width: '90px',
+      className: 'col-num',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'name',
+      header: 'farmer.name',
+      icon: 'agriculture',
+      type: 'text',
+      width: '26%',
+      className: 'col-text col-name',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'qty',
+      header: 'sales.qty',
+      icon: 'weight',
+      type: 'text',
+      align: 'right',
+      width: '100px',
+      className: 'col-num',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'rate',
+      header: 'sales.rate',
+      icon: 'payments',
+      type: 'text',
+      align: 'right',
+      width: '100px',
+      className: 'col-num',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'amount',
+      header: 'sales.amount',
+      icon: 'currency_rupee',
+      type: 'text',
+      align: 'right',
+      width: '110px',
+      className: 'col-num',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'actions',
+      header: 'flower.actions',
+      icon: 'more_horiz',
+      type: 'text',
+      align: 'center',
+      width: '110px',
+      className: 'col-center col-actions',
+      sortable: false,
+      filterable: false,
+    },
+  ];
   protected readonly fetching = signal(false);
   protected readonly saving = signal(false);
   protected readonly deleting = signal(false);
@@ -156,6 +375,7 @@ export class FlowerLootSaleEditComponent implements OnInit {
     return {
       salesId: entry.salesId,
       bag: this.formatDecimal(entry.bag),
+      origBag: this.formatDecimal(entry.bag),
       name: entry.name ?? '',
       origName: entry.name ?? '',
       qty: this.formatDecimal(entry.qty),
@@ -216,6 +436,7 @@ export class FlowerLootSaleEditComponent implements OnInit {
   private isEdited(section: 'buyer' | 'farmer', index: number): boolean {
     const row = section === 'buyer' ? this.buyerRows()[index] : this.farmerRows()[index];
     return (
+      row.bag !== row.origBag ||
       row.name.trim() !== row.origName.trim() ||
       row.qty !== row.origQty ||
       row.rate !== row.origRate ||
@@ -274,6 +495,10 @@ export class FlowerLootSaleEditComponent implements OnInit {
       return cleaned;
     }
     return cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, '');
+  }
+
+  protected sanitizeBag(value: string): string {
+    return (value ?? '').replace(/[^0-9]/g, '');
   }
 
   protected recalcRowAmount(section: 'buyer' | 'farmer', index: number): void {
@@ -424,6 +649,7 @@ export class FlowerLootSaleEditComponent implements OnInit {
       }
       buyerEdits.push({
         salesId: row.salesId,
+        bag: row.bag.trim(),
         name: row.name.trim(),
         qty: row.qty.trim(),
         rate: row.rate.trim(),
@@ -441,6 +667,7 @@ export class FlowerLootSaleEditComponent implements OnInit {
       }
       farmerEdits.push({
         salesId: row.salesId,
+        bag: row.bag.trim(),
         name: row.name.trim(),
         qty: row.qty.trim(),
         rate: row.rate.trim(),
@@ -481,6 +708,11 @@ export class FlowerLootSaleEditComponent implements OnInit {
     section: 'buyer' | 'farmer',
     list: string[],
   ): boolean {
+    const bag = row.bag.trim();
+    if (bag === '' || parseInt(bag, 10) <= 0) {
+      this.toast.error(this.i18n.translate('bag.count.config.invalid.count'));
+      return false;
+    }
     const name = row.name.trim();
     if (!name) {
       this.toast.error(

@@ -29,10 +29,7 @@
         <span class="ilf-stat-value">{{ buyerCount() }}</span>
       </div>
     </div>
-    <button type="button" class="ilf-print-btn" (click)="print()">
-      <span class="material-symbols-rounded">print</span>
-      {{ 'btn.print' | i18n }}
-    </button>
+    <app-receipt-print-buttons [cssClass]="'ilf-print-btn'" (print)="printReport($event)" />
   </div>
 </div>
 
@@ -66,101 +63,61 @@
     }
 
     @if (section() === 'farmer') {
-      <div class="mst-search">
-        <span class="material-symbols-rounded mst-search-icon">search</span>
-        <input
-          type="text"
-          class="mst-search-input"
-          [placeholder]="'inactive.list.farmer.search.placeholder' | i18n"
-          [(ngModel)]="farmerSearch"
-        />
-      </div>
-      <div class="table-container ilf-table-wrap">
-        <table class="report-table ilf-table ldg-tbl tbl-indigo">
-          <thead>
+      @if (!isLoading()) {
+        <app-data-table
+          [columns]="farmerColumns"
+          [data]="farmers()"
+          tableClasses="report-table ilf-table ldg-tbl tbl-indigo"
+          wrapperClasses="table-container ilf-table-wrap"
+          trackKey="farmerId"
+        >
+          <ng-template #row let-row let-idx="idx" let-pageStart="pageStart">
             <tr>
-              <th class="col-no">{{ 'common.sno' | i18n }}</th>
-              <th class="col-name">{{ 'farmer.name' | i18n }}</th>
-              <th class="col-outstanding">{{ 'ledger.list.col.outstanding.balance' | i18n }}</th>
+              <td class="col-no ilf-sno">{{ pageStart + idx + 1 }}</td>
+              <td class="col-name">
+                <div class="mst-name-cell">
+                  <span class="row-avatar">{{ initials(row.farmerName) }}</span>
+                  <span class="ilf-name">{{ row.farmerName }}</span>
+                </div>
+              </td>
+              <td class="col-outstanding">
+                <span class="ilf-balance" [class]="balanceClass(row.outstandingBalance)">
+                  {{ formatCurrency(outstandingAbs(row.outstandingBalance)) }}
+                </span>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            @for (row of filteredFarmers(); track row.farmerId; let i = $index) {
-              <tr>
-                <td class="col-no ilf-sno">{{ i + 1 }}</td>
-                <td class="col-name">
-                  <div class="mst-name-cell">
-                    <span class="row-avatar">{{ initials(row.farmerName) }}</span>
-                    <span class="ilf-name">{{ row.farmerName }}</span>
-                  </div>
-                </td>
-                <td class="col-outstanding">
-                  <span class="ilf-balance" [class]="balanceClass(row.outstandingBalance)">
-                    {{ formatCurrency(outstandingAbs(row.outstandingBalance)) }}
-                  </span>
-                </td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="3" class="no-records">
-                  @if (loaded() && !isLoading()) {
-                    {{ 'inactive.list.no.farmers' | i18n }}
-                  }
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+          </ng-template>
+        </app-data-table>
+      }
     }
 
     @if (section() === 'buyer') {
-      <div class="mst-search">
-        <span class="material-symbols-rounded mst-search-icon">search</span>
-        <input
-          type="text"
-          class="mst-search-input"
-          [placeholder]="'inactive.list.buyer.search.placeholder' | i18n"
-          [(ngModel)]="buyerSearch"
-        />
-      </div>
-      <div class="table-container ilf-table-wrap">
-        <table class="report-table ilf-table ldg-tbl tbl-teal">
-          <thead>
+      @if (!isLoading()) {
+        <app-data-table
+          [columns]="buyerColumns"
+          [data]="buyers()"
+          tableClasses="report-table ilf-table ldg-tbl tbl-teal"
+          wrapperClasses="table-container ilf-table-wrap"
+          trackKey="buyerId"
+        >
+          <ng-template #row let-row let-idx="idx" let-pageStart="pageStart">
             <tr>
-              <th class="col-no">{{ 'common.sno' | i18n }}</th>
-              <th class="col-name">{{ 'buyer.name' | i18n }}</th>
-              <th class="col-outstanding">{{ 'ledger.list.col.outstanding.balance' | i18n }}</th>
+              <td class="col-no ilf-sno">{{ pageStart + idx + 1 }}</td>
+              <td class="col-name">
+                <div class="mst-name-cell">
+                  <span class="row-avatar">{{ initials(row.buyerName) }}</span>
+                  <span class="ilf-name">{{ row.buyerName }}</span>
+                </div>
+              </td>
+              <td class="col-outstanding">
+                <span class="ilf-balance" [class]="balanceClass(row.outstandingBalance)">
+                  {{ formatCurrency(outstandingAbs(row.outstandingBalance)) }}
+                </span>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            @for (row of filteredBuyers(); track row.buyerId; let i = $index) {
-              <tr>
-                <td class="col-no ilf-sno">{{ i + 1 }}</td>
-                <td class="col-name">
-                  <div class="mst-name-cell">
-                    <span class="row-avatar">{{ initials(row.buyerName) }}</span>
-                    <span class="ilf-name">{{ row.buyerName }}</span>
-                  </div>
-                </td>
-                <td class="col-outstanding">
-                  <span class="ilf-balance" [class]="balanceClass(row.outstandingBalance)">
-                    {{ formatCurrency(outstandingAbs(row.outstandingBalance)) }}
-                  </span>
-                </td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="3" class="no-records">
-                  @if (loaded() && !isLoading()) {
-                    {{ 'inactive.list.no.buyers' | i18n }}
-                  }
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+          </ng-template>
+        </app-data-table>
+      }
     }
   </div>
 </div>

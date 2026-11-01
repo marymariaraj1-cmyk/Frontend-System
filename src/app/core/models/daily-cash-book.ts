@@ -4,6 +4,11 @@ export interface CashBookFarmerRow {
   amount: number;
 }
 
+export interface ManualAmountEntry {
+  label: string;
+  amount: number;
+}
+
 export interface CashBookBlocks {
   buyerPurchaseTotal: number;
   farmerExcessDebitCashList: CashBookFarmerRow[];
@@ -19,18 +24,13 @@ export interface CashBookBlocks {
 export interface CashBookRecord {
   dailyCashBookId: number;
   bookDate: string;
-  rentAmt: number;
-  expenseAmt: number;
-  chitAmt: number;
-  financeAmt: number;
-  noteAmt: number;
-  salaryAmt: number;
-  coinAmt: number;
+  manualDebitTotal: number;
+  manualCreditTotal: number;
+  manualDebitEntries: ManualAmountEntry[];
+  manualCreditEntries: ManualAmountEntry[];
   buyerPurchaseTotal: number;
   farmerExcessDebitCash: number;
   farmerExcessDebitCashList: CashBookFarmerRow[];
-  cashInHandAmt: number;
-  openingBalance: number;
   buyerReceivedTotal: number;
   commissionTotal: number;
   installmentTotal: number;

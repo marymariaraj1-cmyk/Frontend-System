@@ -9,7 +9,12 @@ import { LoaderService } from '../../services/loader.service';
     @if (loader.loading()) {
       <div class="global-loader-overlay active">
         <div class="global-loader-spinner">
-          <div class="loader-ring"></div>
+          <div class="flower-loader">
+            @for (petal of petals; track petal) {
+              <span class="flower-petal" [style.--i]="petal"></span>
+            }
+            <span class="flower-core"></span>
+          </div>
           <div class="loader-text">Loading...</div>
         </div>
       </div>
@@ -18,4 +23,5 @@ import { LoaderService } from '../../services/loader.service';
 })
 export class LoaderComponent {
   protected readonly loader = inject(LoaderService);
+  protected readonly petals = [0, 1, 2, 3, 4, 5];
 }

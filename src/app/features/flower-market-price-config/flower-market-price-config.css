@@ -132,6 +132,10 @@
   min-width: 0;
 }
 
+.fmpc-table-wrap {
+  width: 50%;
+}
+
 .fmpc-table-wrap.mst-table-wrap .report-table th {
   padding: 7px 8px;
   font-size: 11px;
@@ -161,7 +165,7 @@
 
 .fmpc-col-price {
   width: 110px;
-  text-align: center;
+  text-align: right;
 }
 
 .fmpc-col-action {
@@ -195,7 +199,7 @@
 .fmpc-price-wrap {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   gap: 4px;
 }
@@ -216,7 +220,7 @@
 }
 
 .fmpc-price-input {
-  width: 90px;
+  width: 100%;
   text-align: right;
 }
 

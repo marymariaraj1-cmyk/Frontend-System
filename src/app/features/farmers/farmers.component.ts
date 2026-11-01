@@ -1,6 +1,7 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
+import { DataTableComponent, DataTableColumn } from '../../core/components/data-table/data-table.component';
 import { Farmer, emptyFarmer } from '../../core/models/farmer';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
 import { FarmerService } from '../../core/services/farmer.service';
@@ -10,7 +11,7 @@ import { ToastService } from '../../core/services/toast.service';
 @Component({
   selector: 'app-farmers',
   standalone: true,
-  imports: [FormsModule, I18nPipe],
+  imports: [FormsModule, I18nPipe, DataTableComponent],
   templateUrl: './farmers.html',
   styleUrl: './farmers.css',
 })
@@ -21,20 +22,42 @@ export class FarmersComponent implements OnInit {
 
   protected readonly rows = signal<Farmer[]>([]);
   protected readonly showForm = signal(false);
-  protected readonly nameFilter = signal('');
-  protected readonly contactFilter = signal('');
-  protected readonly addressFilter = signal('');
-  protected readonly filteredRows = computed(() => {
-    const name = this.nameFilter().trim().toLowerCase();
-    const contact = this.contactFilter().trim().toLowerCase();
-    const address = this.addressFilter().trim().toLowerCase();
-    return this.rows().filter((row) => {
-      const matchName = !name || (row.farmerName ?? '').toLowerCase().includes(name);
-      const matchContact = !contact || (row.farmerContactNo ?? '').toLowerCase().includes(contact);
-      const matchAddress = !address || (row.farmerAddress ?? '').toLowerCase().includes(address);
-      return matchName && matchContact && matchAddress;
-    });
-  });
+
+  protected readonly columns: DataTableColumn[] = [
+    {
+      key: 'sno',
+      header: 'farmer.sno',
+      type: 'text',
+      align: 'center',
+      width: '50px',
+      sortable: false,
+      filterable: false,
+    },
+    {
+      key: 'farmerName',
+      header: 'farmer.name',
+      type: 'text',
+    },
+    {
+      key: 'farmerContactNo',
+      header: 'farmer.contact',
+      type: 'text',
+    },
+    {
+      key: 'farmerAddress',
+      header: 'farmer.address',
+      type: 'text',
+    },
+    {
+      key: 'actions',
+      header: 'farmer.actions',
+      type: 'text',
+      align: 'center',
+      width: '100px',
+      sortable: false,
+      filterable: false,
+    },
+  ];
   protected initials(name: string): string {
     return (name || '').trim().split(/\s+/).slice(0, 2).map((part) => part.charAt(0)).join('').toUpperCase() || '?';
   }
