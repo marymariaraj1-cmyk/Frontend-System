@@ -28,14 +28,21 @@
   </div>
 </div>
 
-@if (!isToday()) {
+@if (!isToday() && !recalculated()) {
   <div class="dcb-notice">
     <span class="material-symbols-rounded">lock</span>
     {{ 'dcb.past.view.only' | i18n }}
   </div>
 }
 
-@if (loaded() && !loading() && !isToday() && !saved()) {
+@if (!isToday() && recalculated()) {
+  <div class="dcb-notice dcb-notice-ok">
+    <span class="material-symbols-rounded">check_circle</span>
+    {{ 'dcb.recalc.ready' | i18n }}
+  </div>
+}
+
+@if (loaded() && !loading() && !isToday() && !saved() && !recalculated()) {
   <div class="card">
     <div class="card-body">
       <p class="no-records">{{ 'dcb.no.record' | i18n }}</p>
@@ -51,7 +58,7 @@
   </div>
 }
 
-@if (loaded() && !loading() && (isToday() || saved())) {
+@if (loaded() && !loading()) {
   <div class="card dcb-card">
     <div class="card-body">
       <div class="dcb-cols">
@@ -75,7 +82,7 @@
                 inputmode="decimal"
                 [value]="row.amount"
                 (input)="onAmountInput(row, $event)"
-                [readonly]="!isToday()"
+                [readonly]="!canEditManual()"
               />
             </div>
           } @empty {
@@ -119,7 +126,7 @@
                 inputmode="decimal"
                 [value]="row.amount"
                 (input)="onAmountInput(row, $event)"
-                [readonly]="!isToday()"
+                [readonly]="!canEditManual()"
               />
             </div>
           } @empty {
@@ -167,20 +174,38 @@
         }
       </div>
 
-      @if (isToday()) {
-        <div class="form-row">
-          <div class="form-group">
-            <label for="dcbRemarks">{{ 'dcb.remarks' | i18n }}</label>
-            <input id="dcbRemarks" type="text" [ngModel]="remarks()" (ngModelChange)="remarks.set($event)" />
-          </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="dcbRemarks">{{ 'dcb.remarks' | i18n }}</label>
+          <input
+            id="dcbRemarks"
+            type="text"
+            [ngModel]="remarks()"
+            (ngModelChange)="remarks.set($event)"
+            [readonly]="!canEditManual()"
+          />
         </div>
-        <div class="form-actions">
-          <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="save()">
-            <span class="material-symbols-rounded">save</span>
-            {{ 'btn.save' | i18n }}
-          </button>
-        </div>
-      }
+      </div>
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          [disabled]="recalculating() || saving()"
+          (click)="recalculate()"
+        >
+          <span class="material-symbols-rounded">refresh</span>
+          {{ 'dcb.recalculate' | i18n }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          [disabled]="saving() || !canSave()"
+          (click)="save()"
+        >
+          <span class="material-symbols-rounded">save</span>
+          {{ 'btn.save' | i18n }}
+        </button>
+      </div>
     </div>
   </div>
 }

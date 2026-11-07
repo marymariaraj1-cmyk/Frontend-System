@@ -59,6 +59,8 @@ export class DailyCashBookComponent implements OnInit {
   protected readonly nonCashList = signal<CashBookFarmerRow[]>([]);
 
   protected readonly saved = signal<CashBookRecord | null>(null);
+  protected readonly recalculated = signal(false);
+  protected readonly recalculating = signal(false);
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
   protected readonly loaded = signal(false);
@@ -71,6 +73,16 @@ export class DailyCashBookComponent implements OnInit {
 
   protected isToday(): boolean {
     return this.bookDate() === this.todayStr;
+  }
+
+  /** Manual inputs are editable today, or after a live recalculation on a past date. */
+  protected canEditManual(): boolean {
+    return this.isToday() || this.recalculated();
+  }
+
+  /** Today can always be saved; past dates only after a live recalculation. */
+  protected canSave(): boolean {
+    return this.isToday() || this.recalculated();
   }
 
   protected dateLabel(): string {
@@ -129,7 +141,7 @@ export class DailyCashBookComponent implements OnInit {
   }
 
   protected save(): void {
-    if (this.saving() || !this.isToday()) {
+    if (this.saving() || !this.canSave()) {
       return;
     }
     this.saving.set(true);
@@ -145,6 +157,10 @@ export class DailyCashBookComponent implements OnInit {
           this.saving.set(false);
           if (response.success && response.data) {
             this.applySaved(response.data);
+            if (!this.isToday()) {
+              // A past-dated book becomes read-only again until the next recalculation.
+              this.recalculated.set(false);
+            }
             this.toast.success(this.i18n.translate('dcb.saved'));
           } else {
             this.toast.error(response.message);
@@ -157,10 +173,70 @@ export class DailyCashBookComponent implements OnInit {
       });
   }
 
+  /**
+   * Re-fetches the live system values for the selected date, reloads the manual
+   * amounts from the saved table row, and unlocks the manual fields + Save button.
+   */
+  protected recalculate(): void {
+    if (this.recalculating() || this.saving()) {
+      return;
+    }
+    const date = this.bookDate();
+    this.recalculating.set(true);
+    forkJoin({
+      config: this.fieldConfigService.list(),
+      blocks: this.service.compute(date),
+      saved: this.service.load(date),
+    }).subscribe({
+      next: ({ config, blocks, saved }) => {
+        this.recalculating.set(false);
+        this.loaded.set(true);
+        if (config.success) {
+          this.configFields.set(config.data ?? []);
+        } else {
+          this.toast.error(config.message);
+        }
+
+        // Manual amounts always come from the saved table row (blank when none).
+        if (saved.success && saved.data) {
+          this.applySaved(saved.data);
+        } else {
+          this.saved.set(null);
+          this.remarks.set('');
+          this.buildManualRows(this.configFields(), null);
+          if (!saved.success) {
+            this.toast.error(saved.message);
+          }
+        }
+
+        // Live system values win over the previously saved snapshot.
+        if (blocks.success && blocks.data) {
+          this.applyBlocks(
+            blocks.data.buyerPurchaseTotal,
+            blocks.data.farmerExcessDebitCashList ?? [],
+            blocks.data.buyerReceivedTotal,
+            blocks.data.commissionTotal,
+            blocks.data.installmentTotal,
+            blocks.data.farmerExcessDebitNonCashList ?? [],
+          );
+          this.recalculated.set(true);
+          this.toast.success(this.i18n.translate('dcb.recalculated'));
+        } else {
+          this.toast.error(blocks.message);
+        }
+      },
+      error: (error) => {
+        this.recalculating.set(false);
+        this.toast.error(extractErrorMessage(error, this.i18n.translate('common.load.failed')));
+      },
+    });
+  }
+
   private load(): void {
     const date = this.bookDate();
     this.loading.set(true);
     this.loaded.set(false);
+    this.recalculated.set(false);
     if (this.isToday()) {
       forkJoin({
         config: this.fieldConfigService.list(),
@@ -186,7 +262,7 @@ export class DailyCashBookComponent implements OnInit {
           } else {
             this.saved.set(null);
             this.remarks.set('');
-            this.buildManualToday(this.configFields(), null);
+            this.buildManualRows(this.configFields(), null);
           }
           if (!config.success) {
             this.toast.error(config.message);
@@ -214,8 +290,7 @@ export class DailyCashBookComponent implements OnInit {
             this.applySaved(saved.data);
           } else {
             this.saved.set(null);
-            this.manualDebit.set([]);
-            this.manualCredit.set([]);
+            this.buildManualRows(this.configFields(), null);
             this.remarks.set('');
             this.applyBlocks(0, [], 0, 0, 0, []);
             if (!saved.success) {
@@ -262,18 +337,15 @@ export class DailyCashBookComponent implements OnInit {
       record.farmerExcessDebitNonCashList ?? [],
     );
     this.remarks.set(record.remarks ?? '');
-    if (this.isToday()) {
-      this.buildManualToday(this.configFields(), record);
-    } else {
-      this.manualDebit.set(pastRows(record.manualDebitEntries ?? [], this.configFields(), 'DEBIT'));
-      this.manualCredit.set(
-        pastRows(record.manualCreditEntries ?? [], this.configFields(), 'CREDIT'),
-      );
-    }
+    this.buildManualRows(this.configFields(), record);
   }
 
-  /** Today: configured fields in display order, then saved labels that no longer exist. */
-  private buildManualToday(configs: CashBookFieldConfig[], record: CashBookRecord | null): void {
+  /**
+   * Rebuilds every configured manual field from the field configuration and
+   * overlays the saved amounts. Fields with no saved amount stay in the list
+   * as blank rows, so an unfilled field is never skipped after a save.
+   */
+  private buildManualRows(configs: CashBookFieldConfig[], record: CashBookRecord | null): void {
     this.manualDebit.set(
       mergeRows(
         configs.filter((f) => f.fieldType === 'DEBIT'),
@@ -330,26 +402,6 @@ function mergeRows(
     }
   }
   return rows;
-}
-
-function pastRows(
-  savedEntries: ManualEntryPayload[],
-  configs: CashBookFieldConfig[],
-  side: string,
-): ManualRow[] {
-  return savedEntries.map((entry, idx) => {
-    const normalized = entry.label.trim().toLowerCase();
-    const match = configs.find(
-      (f) => f.fieldType === side && f.label.trim().toLowerCase() === normalized,
-    );
-    return {
-      key: `${side}-past-${idx}-${normalized}`,
-      label: entry.label.trim(),
-      labelTa: match ? match.labelTa : null,
-      amount: strAmount(entry.amount),
-      removed: false,
-    };
-  });
 }
 
 function sanitizeAmount(value: string): string {
