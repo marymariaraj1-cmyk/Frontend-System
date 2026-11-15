@@ -22,7 +22,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { formatCurrency } from '../../core/utils/currency-format.util';
 import { formatDate } from '../../core/utils/date.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
-import { formatDecimal } from '../../core/utils/round-off.util';
+import { formatWeightFixed } from '../../core/utils/round-off.util';
 
 @Component({
   selector: 'app-farmer-ledger-detail',
@@ -41,7 +41,7 @@ export class FarmerLedgerDetailComponent implements OnInit {
   protected readonly commissionConfig = inject(FarmerCommissionConfigService);
 
   protected readonly formatCurrency = formatCurrency;
-  protected readonly formatDecimal = formatDecimal;
+  protected readonly formatWeightFixed = formatWeightFixed;
   protected readonly farmerId = signal('');
   protected readonly farmerName = signal('');
   protected readonly rows = signal<FarmerLedgerDetailRow[]>([]);
@@ -485,7 +485,7 @@ export class FarmerLedgerDetailComponent implements OnInit {
         (item, i) =>
           `<tr>` +
           `<td class="left">${this.escapeHtml(item.flowerType || '-')}</td>` +
-          `<td class="right">${this.formatDecimal(item.totalWeight)}</td>` +
+          `<td class="right">${this.formatWeightFixed(item.totalWeight)}</td>` +
           `<td class="right">${this.formatNum(item.perKgRate)}</td>` +
           `<td class="right">${this.formatNum(item.price)}</td>` +
           `</tr>`,

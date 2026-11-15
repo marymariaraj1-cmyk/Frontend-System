@@ -9,6 +9,11 @@ export interface ManualAmountEntry {
   amount: number;
 }
 
+export interface CashBookPartyRow {
+  name: string;
+  amount: number;
+}
+
 export interface CashBookBlocks {
   buyerPurchaseTotal: number;
   farmerExcessDebitCashList: CashBookFarmerRow[];
@@ -18,6 +23,18 @@ export interface CashBookBlocks {
   installmentTotal: number;
   farmerExcessDebitNonCashList: CashBookFarmerRow[];
   farmerExcessDebitNonCash: number;
+  shopName?: string | null;
+}
+
+export interface CashBookDetails {
+  buyerPurchaseList: CashBookPartyRow[];
+  buyerPurchaseTotal: number;
+  buyerReceivedList: CashBookPartyRow[];
+  buyerReceivedTotal: number;
+  commissionList: CashBookPartyRow[];
+  commissionTotal: number;
+  installmentList: CashBookPartyRow[];
+  installmentTotal: number;
   shopName?: string | null;
 }
 

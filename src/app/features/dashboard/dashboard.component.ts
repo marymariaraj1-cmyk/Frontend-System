@@ -11,7 +11,7 @@ import { DashboardService } from '../../core/services/dashboard.service';
 import { FlowerPriceConfigService } from '../../core/services/flower-price-config.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatCurrency } from '../../core/utils/currency-format.util';
-import { formatDecimal } from '../../core/utils/round-off.util';
+import { formatWeightFixed } from '../../core/utils/round-off.util';
 import { formatApiDate } from '../../core/utils/sales.util';
 
 @Component({
@@ -62,7 +62,7 @@ export class DashboardComponent implements OnInit {
   protected readonly trendRange = signal<'week' | 'month'>('week');
 
   protected readonly formatCurrency = formatCurrency;
-  protected readonly formatDecimal = formatDecimal;
+  protected readonly formatWeightFixed = formatWeightFixed;
 
   ngOnInit(): void {
     this.load();

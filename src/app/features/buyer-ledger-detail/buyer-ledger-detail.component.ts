@@ -16,7 +16,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { formatCurrency } from '../../core/utils/currency-format.util';
 import { formatDate } from '../../core/utils/date.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
-import { formatDecimal } from '../../core/utils/round-off.util';
+import { formatWeightFixed } from '../../core/utils/round-off.util';
 
 @Component({
   selector: 'app-buyer-ledger-detail',
@@ -34,7 +34,7 @@ export class BuyerLedgerDetailComponent implements OnInit {
   private readonly receipt = inject(ReceiptService);
 
   protected readonly formatCurrency = formatCurrency;
-  protected readonly formatDecimal = formatDecimal;
+  protected readonly formatWeightFixed = formatWeightFixed;
   protected readonly buyerId = signal('');
   protected readonly buyerName = signal('');
   protected readonly rows = signal<BuyerLedgerDetailRow[]>([]);
@@ -447,7 +447,7 @@ export class BuyerLedgerDetailComponent implements OnInit {
         (item, i) =>
           `<tr>` +
           `<td class="left">${this.escapeHtml(item.flowerType || '-')}</td>` +
-          `<td class="right">${this.formatDecimal(item.totalWeight)}</td>` +
+          `<td class="right">${this.formatWeightFixed(item.totalWeight)}</td>` +
           `<td class="right">${this.formatNum(item.perKgRate)}</td>` +
           `<td class="right">${this.formatNum(item.price)}</td>` +
           `</tr>`,

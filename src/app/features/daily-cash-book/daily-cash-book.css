@@ -279,6 +279,35 @@
   color: #0f766e;
 }
 
+.dcb-link {
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.dcb-link:hover,
+.dcb-link:focus {
+  background: rgba(13, 148, 136, 0.1);
+}
+
+.dcb-link .dcb-label {
+  color: #0f766e;
+  font-weight: 700;
+}
+
+.dcb-link:hover .dcb-label,
+.dcb-link:focus .dcb-label {
+  text-decoration: underline;
+}
+
+.dcb-link:hover .dcb-label {
+  color: #0f766e;
+  text-decoration: underline;
+}
+
+.dcb-link:hover .dcb-amt {
+  color: #0f766e;
+}
+
 .dcb-row.dcb-total {
   margin-top: 6px;
   padding: 10px 12px;
@@ -351,6 +380,13 @@
   color: #8a93a6;
 }
 
+/* ==================== DETAILS POPUP ==================== */
+/* Slightly narrower than the global report popup for this compact breakdown list. */
+.report-popup.dcb-details-popup {
+  width: 70%;
+  max-width: 520px;
+}
+
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
   .dcb-cols {
@@ -360,5 +396,10 @@
   .dcb-hero-head {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .report-popup.dcb-details-popup {
+    width: 92%;
+    max-width: none;
   }
 }

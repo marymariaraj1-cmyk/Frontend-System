@@ -153,7 +153,7 @@
             } @else {
               <td><div class="grid-display" style="text-align: right">{{ row.bag }}</div></td>
               <td><div class="grid-display">{{ row.name }}</div></td>
-              <td><div class="grid-display" style="text-align: right">{{ row.qty }}</div></td>
+              <td><div class="grid-display" style="text-align: right">{{ row.qty ? formatWeight(row.qty) : '' }}</div></td>
               <td><div class="grid-display" style="text-align: right">{{ row.rate }}</div></td>
               <td><div class="grid-display" style="text-align: right">{{ row.amount }}</div></td>
               <td class="text-center action-cell">
@@ -293,7 +293,7 @@
             } @else {
               <td><div class="grid-display" style="text-align: right">{{ row.bag }}</div></td>
               <td><div class="grid-display">{{ row.name }}</div></td>
-              <td><div class="grid-display" style="text-align: right">{{ row.qty }}</div></td>
+              <td><div class="grid-display" style="text-align: right">{{ row.qty ? formatWeight(row.qty) : '' }}</div></td>
               <td><div class="grid-display" style="text-align: right">{{ row.rate }}</div></td>
               <td><div class="grid-display" style="text-align: right">{{ row.amount }}</div></td>
               <td class="text-center action-cell">

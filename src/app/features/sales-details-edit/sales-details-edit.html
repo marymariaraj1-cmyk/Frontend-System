@@ -202,7 +202,7 @@
           } @else {
             <td><div class="grid-display" style="text-align: right">{{ row.bag }}</div></td>
             <td><div class="grid-display">{{ row.flower }}</div></td>
-            <td><div class="grid-display" style="text-align: right">{{ row.weight }}</div></td>
+            <td><div class="grid-display" style="text-align: right">{{ row.weight ? formatWeight(row.weight) : '' }}</div></td>
             <td><div class="grid-display" style="text-align: right">{{ row.rate }}</div></td>
             <td><div class="grid-display" style="text-align: right">{{ row.amount }}</div></td>
             <td><div class="grid-display">{{ salesNameLabel(row.customer) }}</div></td>

@@ -18,7 +18,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { formatCurrency, formatTotalWithPrecision, maxDecimalPlaces } from '../../core/utils/currency-format.util';
 import { formatDate } from '../../core/utils/date.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
-import { roundOff } from '../../core/utils/round-off.util';
+import { formatWeight, formatWeightTotal, maxWeightDecimalPlaces, roundOff } from '../../core/utils/round-off.util';
 import { formatApiDate, isDecimal } from '../../core/utils/sales.util';
 
 interface MultiSalesRow {
@@ -163,6 +163,7 @@ export class MultiSalesComponent implements OnInit {
   protected readonly bagConfigs = signal<BagCountConfigRow[]>([]);
 
   protected readonly formatCurrency = formatCurrency;
+  protected readonly formatWeight = formatWeight;
 
   protected salesNameLabel(value: string): string {
     return value && value.trim() ? value : this.i18n.translate('fls.sale.label');
@@ -211,7 +212,7 @@ export class MultiSalesComponent implements OnInit {
     }
     return {
       bag: String(bag),
-      qty: formatTotalWithPrecision(qty, maxDecimalPlaces(qtyValues)),
+      qty: formatWeightTotal(qty, maxWeightDecimalPlaces(qtyValues)),
       amount: formatTotalWithPrecision(amount, maxDecimalPlaces(amountValues)),
     };
   });
@@ -292,7 +293,7 @@ export class MultiSalesComponent implements OnInit {
       farmerName: entry.farmerName ?? '',
       flowerType: entry.flowerType ?? '',
       bagCount: entry.bagCount != null ? String(entry.bagCount) : '',
-      totalWeight: entry.totalWeight != null ? String(entry.totalWeight) : '',
+      totalWeight: entry.totalWeight != null ? formatWeight(entry.totalWeight) : '',
       price: entry.price != null ? String(entry.price) : '',
       amount: entry.amount != null ? String(entry.amount) : '',
       customerName: entry.customerName ?? '',
@@ -626,7 +627,7 @@ export class MultiSalesComponent implements OnInit {
         '<td class="left">' + (i + 1) + '</td>' +
         '<td class="left">' + this.salesNameLabel(row.farmerName) + '</td>' +
         '<td class="left">' + (row.flowerType || '-') + '</td>' +
-        '<td class="right">' + (row.totalWeight || '-') + '</td>' +
+        '<td class="right">' + (row.totalWeight ? this.formatWeight(row.totalWeight) : '-') + '</td>' +
         '<td class="right">' + (row.price || '-') + '</td>' +
         '<td class="right">' + (row.amount || '-') + '</td>' +
         '<td class="left">' + this.salesNameLabel(row.customerName) + '</td>' +
@@ -704,7 +705,7 @@ export class MultiSalesComponent implements OnInit {
     rows.forEach((row, i) => {
       lines.push(
         (i + 1) + ' | ' + this.salesNameLabel(row.farmerName) + ' | ' + (row.flowerType || '-') + ' | ' +
-        (row.totalWeight || '-') + ' | ' + (row.price || '-') + ' | ' + (row.amount || '-') + ' | ' + this.salesNameLabel(row.customerName),
+        (row.totalWeight ? this.formatWeight(row.totalWeight) : '-') + ' | ' + (row.price || '-') + ' | ' + (row.amount || '-') + ' | ' + this.salesNameLabel(row.customerName),
       );
     });
 

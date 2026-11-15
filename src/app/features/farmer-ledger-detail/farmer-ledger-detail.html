@@ -276,7 +276,7 @@
             <tr>
               <td>{{ item.flowerType }}</td>
               <td>{{ item.custName?.trim() || ('common.fls.label' | i18n) }}</td>
-              <td class="amount-col">{{ formatDecimal(item.totalWeight) }}</td>
+              <td class="amount-col">{{ formatWeightFixed(item.totalWeight) }}</td>
               <td class="amount-col">{{ formatCurrency(item.perKgRate) }}</td>
               <td class="amount-col">{{ formatCurrency(item.price) }}</td>
             </tr>

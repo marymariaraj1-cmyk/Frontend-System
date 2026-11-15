@@ -14,7 +14,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { formatCurrency, formatTotalWithPrecision, maxDecimalPlaces } from '../../core/utils/currency-format.util';
 import { formatDate } from '../../core/utils/date.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
-import { roundOff } from '../../core/utils/round-off.util';
+import { formatWeight, formatWeightTotal, maxWeightDecimalPlaces, roundOff } from '../../core/utils/round-off.util';
 import { formatApiDate, isDecimal } from '../../core/utils/sales.util';
 
 interface BuyerRow {
@@ -55,6 +55,7 @@ export class FlowerLootSaleComponent implements OnInit {
     });
 
   protected readonly formatCurrency = formatCurrency;
+  protected readonly formatWeight = formatWeight;
 
   protected readonly master = signal<SalesMasterData>({
     farmers: [],
@@ -92,7 +93,7 @@ export class FlowerLootSaleComponent implements OnInit {
     }
     return {
       bag: String(bag),
-      qty: formatTotalWithPrecision(qty, maxDecimalPlaces(qtyValues)),
+      qty: formatWeightTotal(qty, maxWeightDecimalPlaces(qtyValues)),
       amount: formatTotalWithPrecision(amount, maxDecimalPlaces(amountValues)),
     };
   });
@@ -121,7 +122,7 @@ export class FlowerLootSaleComponent implements OnInit {
     }
     return {
       bag: String(bag),
-      qty: formatTotalWithPrecision(qty, maxDecimalPlaces(qtyValues)),
+      qty: formatWeightTotal(qty, maxWeightDecimalPlaces(qtyValues)),
       amount: formatTotalWithPrecision(amount, maxDecimalPlaces(amountValues)),
     };
   });
@@ -788,7 +789,7 @@ export class FlowerLootSaleComponent implements OnInit {
         '<td class="left">' + (i + 1) + '</td>' +
         '<td class="left">' + (row.bag || '-') + '</td>' +
         '<td class="left">' + (row.buyerName || '-') + '</td>' +
-        '<td class="right">' + (row.qty || '-') + '</td>' +
+        '<td class="right">' + (row.qty ? this.formatWeight(row.qty) : '-') + '</td>' +
         '<td class="right">' + (row.rate || '-') + '</td>' +
         '<td class="right">' + (row.amount || '-') + '</td>' +
         '</tr>';
@@ -801,7 +802,7 @@ export class FlowerLootSaleComponent implements OnInit {
         '<td class="left">' + (i + 1) + '</td>' +
         '<td class="left">' + (row.bag || '-') + '</td>' +
         '<td class="left">' + (row.farmerName || '-') + '</td>' +
-        '<td class="right">' + (row.qty || '-') + '</td>' +
+        '<td class="right">' + (row.qty ? this.formatWeight(row.qty) : '-') + '</td>' +
         '<td class="right">' + (row.rate || '-') + '</td>' +
         '<td class="right">' + (row.amount || '-') + '</td>' +
         '</tr>';

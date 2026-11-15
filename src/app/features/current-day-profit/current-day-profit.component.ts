@@ -11,7 +11,7 @@ import { I18nService } from '../../core/services/i18n.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatCurrency } from '../../core/utils/currency-format.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
-import { formatDecimal } from '../../core/utils/round-off.util';
+import { formatWeightFixed } from '../../core/utils/round-off.util';
 
 @Component({
   selector: 'app-current-day-profit',
@@ -31,7 +31,7 @@ export class CurrentDayProfitComponent {
   }
 
   protected readonly formatCurrency = formatCurrency;
-  protected readonly formatDecimal = formatDecimal;
+  protected readonly formatWeightFixed = formatWeightFixed;
   protected readonly rows = signal<CurrentDayProfitRow[]>([]);
   protected readonly loading = signal(false);
   protected readonly searched = signal(false);

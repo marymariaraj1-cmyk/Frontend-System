@@ -11,7 +11,7 @@ import { I18nService } from '../../core/services/i18n.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatTotalWithPrecision, maxDecimalPlaces } from '../../core/utils/currency-format.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
-import { roundOff } from '../../core/utils/round-off.util';
+import { formatWeight, formatWeightTotal, maxWeightDecimalPlaces, roundOff } from '../../core/utils/round-off.util';
 import { formatApiDate, isDecimal } from '../../core/utils/sales.util';
 
 interface EditRow {
@@ -81,10 +81,12 @@ export class FlowerIntakeSaleEditComponent implements OnInit {
     }
     return {
       bag: String(bag),
-      qty: formatTotalWithPrecision(qty, maxDecimalPlaces(qtyValues)),
+      qty: formatWeightTotal(qty, maxWeightDecimalPlaces(qtyValues)),
       amount: formatTotalWithPrecision(amount, maxDecimalPlaces(amountValues)),
     };
   });
+
+  protected readonly formatWeight = formatWeight;
 
   protected readonly columns: DataTableColumn[] = [
     { key: 'sno', header: 'flower.sno', icon: 'format_list_numbered', type: 'text', align: 'center', width: '56px', className: 'col-center', sortable: false, filterable: false },
@@ -186,8 +188,8 @@ export class FlowerIntakeSaleEditComponent implements OnInit {
       origBag: this.formatDecimal(entry.bag),
       flowerType: entry.flowerType ?? '',
       origFlowerType: entry.flowerType ?? '',
-      qty: this.formatDecimal(entry.totalWeight),
-      origQty: this.formatDecimal(entry.totalWeight),
+      qty: entry.totalWeight != null ? formatWeight(entry.totalWeight) : '',
+      origQty: entry.totalWeight != null ? formatWeight(entry.totalWeight) : '',
       rate: this.formatDecimal(entry.rate),
       origRate: this.formatDecimal(entry.rate),
       amount: this.formatDecimal(entry.amount),

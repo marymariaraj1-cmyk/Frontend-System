@@ -59,7 +59,7 @@
               <td><div class="grid-display">{{ salesNameLabel(row.farmerName) }}</div></td>
               <td><div class="grid-display" style="text-align: right">{{ row.bagCount }}</div></td>
               <td><div class="grid-display">{{ row.flowerType }}</div></td>
-              <td><div class="grid-display" style="text-align: right">{{ row.totalWeight }}</div></td>
+              <td><div class="grid-display" style="text-align: right">{{ row.totalWeight ? formatWeight(row.totalWeight) : '' }}</div></td>
               <td><div class="grid-display" style="text-align: right">{{ row.price }}</div></td>
               <td><div class="grid-display" style="text-align: right">{{ row.amount }}</div></td>
               <td><div class="grid-display">{{ salesNameLabel(row.customerName) }}</div></td>

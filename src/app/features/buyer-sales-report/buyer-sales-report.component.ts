@@ -14,7 +14,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { formatCurrency } from '../../core/utils/currency-format.util';
 import { formatDate } from '../../core/utils/date.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
-import { formatDecimal } from '../../core/utils/round-off.util';
+import { formatWeightFixed } from '../../core/utils/round-off.util';
 import { formatApiDate } from '../../core/utils/sales.util';
 
 type ReportPeriod = 'daily' | 'monthly' | 'yearly' | 'custom';
@@ -33,7 +33,7 @@ export class BuyerSalesReportComponent {
   private readonly receipt = inject(ReceiptService);
 
   protected readonly formatCurrency = formatCurrency;
-  protected readonly formatDecimal = formatDecimal;
+  protected readonly formatWeightFixed = formatWeightFixed;
   protected readonly fromDate = signal(formatApiDate(this.daysAgo(7)));
   protected readonly toDate = signal(formatApiDate(new Date()));
   protected readonly period = signal<ReportPeriod>('custom');
@@ -273,7 +273,7 @@ export class BuyerSalesReportComponent {
           `<tr>` +
           `<td class="left">${this.escapeHtml(item.salesDate ? formatDate(item.salesDate) : '-')}</td>` +
           `<td class="left">${this.escapeHtml(item.flowerType || '-')}</td>` +
-          `<td class="right">${this.formatDecimal(item.totalWeight)}</td>` +
+          `<td class="right">${this.formatWeightFixed(item.totalWeight)}</td>` +
           `<td class="right">${this.formatNum(item.perKgRate)}</td>` +
           `<td class="right">${this.formatNum(item.price)}</td>` +
           `</tr>`,

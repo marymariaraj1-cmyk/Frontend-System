@@ -91,7 +91,7 @@
       <div class="kpi-tile kpi-tile-kg"><span class="material-symbols-rounded">scale</span></div>
       <div class="kpi-body">
         <div class="kpi-label">{{ 'dashboard.kpi.total.kg' | i18n }}</div>
-        <div class="kpi-value">{{ formatDecimal(d.kpis.todayKg) }} <span class="kpi-unit">Kg</span></div>
+        <div class="kpi-value">{{ formatWeightFixed(d.kpis.todayKg) }} <span class="kpi-unit">Kg</span></div>
       </div>
     </div>
 
@@ -323,7 +323,7 @@
                   <div class="hbar-fill" [style.width]="flowerPct(row.totalKg, flowersMax()) + '%'"></div>
                 </div>
               </div>
-              <div class="hbar-value">{{ formatDecimal(row.totalKg) }} {{ 'dashboard.top.kg.suffix' | i18n }}</div>
+              <div class="hbar-value">{{ formatWeightFixed(row.totalKg) }} {{ 'dashboard.top.kg.suffix' | i18n }}</div>
             </div>
           }
         } @else {

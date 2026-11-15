@@ -2,7 +2,8 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 
-import { CashBookFarmerRow, CashBookRecord } from '../../core/models/daily-cash-book';
+import { CashBookFarmerRow, CashBookPartyRow, CashBookRecord } from '../../core/models/daily-cash-book';
+import { DraggableDirective } from '../../core/directives/draggable.directive';
 import { CashBookFieldConfig } from '../../core/models/cash-book-field-config';
 import { I18nPipe } from '../../core/pipes/i18n.pipe';
 import { CashBookFieldConfigService } from '../../core/services/cash-book-field-config.service';
@@ -13,6 +14,8 @@ import { formatCurrency } from '../../core/utils/currency-format.util';
 import { formatDate } from '../../core/utils/date.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
 import { formatApiDate } from '../../core/utils/sales.util';
+
+export type CashBookDetailsPopupType = 'balance' | 'creditBalance' | 'commission' | 'installment';
 
 interface ManualEntryPayload {
   label: string;
@@ -30,7 +33,7 @@ interface ManualRow {
 @Component({
   selector: 'app-daily-cash-book',
   standalone: true,
-  imports: [FormsModule, I18nPipe],
+  imports: [FormsModule, I18nPipe, DraggableDirective],
   templateUrl: './daily-cash-book.html',
   styleUrl: './daily-cash-book.css',
 })
@@ -64,6 +67,15 @@ export class DailyCashBookComponent implements OnInit {
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
   protected readonly loaded = signal(false);
+
+  // Auto-calculated field popup (Balance / Commission / Installment breakdown)
+  protected readonly detailsPopupOpen = signal(false);
+  protected readonly detailsPopupLoading = signal(false);
+  protected readonly detailsPopupTitle = signal('');
+  protected readonly detailsPopupSubtitle = signal('');
+  protected readonly detailsPopupRows = signal<CashBookPartyRow[]>([]);
+  protected readonly detailsPopupTotal = signal(0);
+  protected readonly detailsPopupType = signal<CashBookDetailsPopupType>('balance');
 
   private readonly configFields = signal<CashBookFieldConfig[]>([]);
 
@@ -138,6 +150,70 @@ export class DailyCashBookComponent implements OnInit {
 
   protected remaining(): number {
     return this.leftTotal() - this.rightTotal();
+  }
+
+  protected openDetailsPopup(type: CashBookDetailsPopupType): void {
+    const date = this.bookDate();
+    this.detailsPopupType.set(type);
+    this.detailsPopupLoading.set(true);
+    this.detailsPopupOpen.set(true);
+    this.detailsPopupTitle.set(this.i18n.translate(`dcb.popup.${type}.title`));
+    this.detailsPopupSubtitle.set('');
+    this.detailsPopupRows.set([]);
+    this.detailsPopupTotal.set(0);
+    this.service.getDetails(date).subscribe({
+      next: (response) => {
+        this.detailsPopupLoading.set(false);
+        const rows = response.data
+          ? type === 'balance'
+            ? response.data.buyerPurchaseList ?? []
+            : type === 'creditBalance'
+              ? response.data.buyerReceivedList ?? []
+              : type === 'commission'
+                ? response.data.commissionList ?? []
+                : response.data.installmentList ?? []
+          : [];
+        const mapped = (rows ?? []).map((row) => ({
+          name: row?.name ?? '',
+          amount: Number(row?.amount) || 0,
+        }));
+        this.detailsPopupRows.set(mapped);
+        this.detailsPopupTotal.set(mapped.reduce((sum, row) => sum + row.amount, 0));
+        if (type === 'balance') {
+          this.detailsPopupSubtitle.set(this.i18n.translate('dcb.popup.balance.subtitle'));
+        } else if (type === 'creditBalance') {
+          this.detailsPopupSubtitle.set(this.i18n.translate('dcb.popup.creditBalance.subtitle'));
+        } else if (type === 'commission') {
+          this.detailsPopupSubtitle.set(this.i18n.translate('dcb.popup.commission.subtitle'));
+        } else {
+          this.detailsPopupSubtitle.set(this.i18n.translate('dcb.popup.installment.subtitle'));
+        }
+        if (!response.success) {
+          this.detailsPopupRows.set([]);
+          this.toast.error(response.message);
+        }
+      },
+      error: (error) => {
+        this.detailsPopupLoading.set(false);
+        this.detailsPopupRows.set([]);
+        this.toast.error(extractErrorMessage(error, this.i18n.translate('common.load.failed')));
+      },
+    });
+  }
+
+  protected closeDetailsPopup(): void {
+    this.detailsPopupOpen.set(false);
+    this.detailsPopupLoading.set(false);
+    this.detailsPopupTitle.set('');
+    this.detailsPopupSubtitle.set('');
+    this.detailsPopupRows.set([]);
+    this.detailsPopupTotal.set(0);
+  }
+
+  protected onDetailsOverlayClick(event: Event): void {
+    if (event.target === event.currentTarget) {
+      this.closeDetailsPopup();
+    }
   }
 
   protected save(): void {

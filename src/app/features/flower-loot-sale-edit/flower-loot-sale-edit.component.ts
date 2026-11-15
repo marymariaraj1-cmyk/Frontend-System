@@ -11,7 +11,7 @@ import { I18nService } from '../../core/services/i18n.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatTotalWithPrecision, maxDecimalPlaces } from '../../core/utils/currency-format.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
-import { roundOff } from '../../core/utils/round-off.util';
+import { formatWeight, formatWeightTotal, maxWeightDecimalPlaces, roundOff } from '../../core/utils/round-off.util';
 import { formatApiDate, isDecimal } from '../../core/utils/sales.util';
 
 interface EditRow {
@@ -78,7 +78,7 @@ export class FlowerLootSaleEditComponent implements OnInit {
     }
     return {
       bag: String(bag),
-      qty: formatTotalWithPrecision(qty, maxDecimalPlaces(qtyValues)),
+      qty: formatWeightTotal(qty, maxWeightDecimalPlaces(qtyValues)),
       amount: formatTotalWithPrecision(amount, maxDecimalPlaces(amountValues)),
     };
   });
@@ -107,10 +107,12 @@ export class FlowerLootSaleEditComponent implements OnInit {
     }
     return {
       bag: String(bag),
-      qty: formatTotalWithPrecision(qty, maxDecimalPlaces(qtyValues)),
+      qty: formatWeightTotal(qty, maxWeightDecimalPlaces(qtyValues)),
       amount: formatTotalWithPrecision(amount, maxDecimalPlaces(amountValues)),
     };
   });
+
+  protected readonly formatWeight = formatWeight;
 
   protected readonly buyerColumns: DataTableColumn[] = [
     {
@@ -378,8 +380,8 @@ export class FlowerLootSaleEditComponent implements OnInit {
       origBag: this.formatDecimal(entry.bag),
       name: entry.name ?? '',
       origName: entry.name ?? '',
-      qty: this.formatDecimal(entry.qty),
-      origQty: this.formatDecimal(entry.qty),
+      qty: entry.qty != null ? formatWeight(entry.qty) : '',
+      origQty: entry.qty != null ? formatWeight(entry.qty) : '',
       rate: this.formatDecimal(entry.rate),
       origRate: this.formatDecimal(entry.rate),
       amount: this.formatDecimal(entry.amount),

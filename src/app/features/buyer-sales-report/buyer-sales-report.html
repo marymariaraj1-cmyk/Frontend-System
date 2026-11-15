@@ -128,7 +128,7 @@
               <span class="rpt-name">{{ row.buyerName }}</span>
             </div>
           </td>
-          <td class="amount-col"><span class="rpt-amt chip-weight">{{ formatDecimal(row.totalWeight) }}</span></td>
+          <td class="amount-col"><span class="rpt-amt chip-weight">{{ formatWeightFixed(row.totalWeight) }}</span></td>
           <td class="amount-col"><span class="rpt-amt chip-discount">{{ formatCurrency(row.discount) }}</span></td>
           <td class="amount-col">
             <span class="rpt-amt chip-total">{{ formatCurrency(row.totalAmount) }}</span>
@@ -143,7 +143,7 @@
             <tr class="report-footer-row rpt-total-row">
               <td></td>
               <td>{{ 'report.total' | i18n }}</td>
-              <td class="amount-col"><span class="rpt-amt chip-weight">{{ formatDecimal(totalWeight(all)) }}</span></td>
+              <td class="amount-col"><span class="rpt-amt chip-weight">{{ formatWeightFixed(totalWeight(all)) }}</span></td>
               <td class="amount-col"><span class="rpt-amt chip-discount">{{ formatCurrency(totalDiscount(all)) }}</span></td>
               <td class="amount-col"><span class="rpt-amt chip-total">{{ formatCurrency(totalAmount(all)) }}</span><span class="view-slot" aria-hidden="true"></span></td>
             </tr>
@@ -175,7 +175,7 @@
               <td>{{ item.salesDate | dateFormat }}</td>
               <td>{{ item.flowerType }}</td>
               <td>{{ item.farmerName?.trim() || ('common.fls.label' | i18n) }}</td>
-              <td class="amount-col">{{ formatDecimal(item.totalWeight) }}</td>
+              <td class="amount-col">{{ formatWeightFixed(item.totalWeight) }}</td>
               <td class="amount-col">{{ formatCurrency(item.perKgRate) }}</td>
               <td class="amount-col">{{ formatCurrency(item.price) }}</td>
               </tr>

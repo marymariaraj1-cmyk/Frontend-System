@@ -89,7 +89,7 @@
             <p class="no-records">{{ 'cbcfg.no.fields' | i18n }}</p>
           }
 
-          <div class="dcb-row dcb-auto">
+          <div class="dcb-row dcb-auto dcb-link" (click)="openDetailsPopup('balance')">
             <span class="dcb-label">{{ 'dcb.balance' | i18n }}</span>
             <span class="dcb-amt">{{ formatCurrency(buyerPurchaseTotal()) }}</span>
           </div>
@@ -133,15 +133,15 @@
             <p class="no-records">{{ 'cbcfg.no.fields' | i18n }}</p>
           }
 
-          <div class="dcb-row dcb-auto">
+          <div class="dcb-row dcb-auto dcb-link" (click)="openDetailsPopup('creditBalance')">
             <span class="dcb-label">{{ 'dcb.credit.balance' | i18n }}</span>
             <span class="dcb-amt">{{ formatCurrency(buyerReceivedTotal()) }}</span>
           </div>
-          <div class="dcb-row dcb-auto">
+          <div class="dcb-row dcb-auto dcb-link" (click)="openDetailsPopup('commission')">
             <span class="dcb-label">{{ 'dcb.commission' | i18n }}</span>
             <span class="dcb-amt">{{ formatCurrency(commissionTotal()) }}</span>
           </div>
-          <div class="dcb-row dcb-auto">
+          <div class="dcb-row dcb-auto dcb-link" (click)="openDetailsPopup('installment')">
             <span class="dcb-label">{{ 'dcb.installment' | i18n }}</span>
             <span class="dcb-amt">{{ formatCurrency(installmentTotal()) }}</span>
           </div>
@@ -205,6 +205,38 @@
           <span class="material-symbols-rounded">save</span>
           {{ 'btn.save' | i18n }}
         </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (detailsPopupOpen()) {
+  <div class="report-popup-overlay" (click)="onDetailsOverlayClick($event)">
+    <div class="report-popup dcb-details-popup" appDraggable>
+      <div class="report-popup-header">
+        <div class="report-popup-title-col">
+          <h3>{{ detailsPopupTitle() }}</h3>
+          <div class="report-popup-name">{{ detailsPopupSubtitle() }}</div>
+        </div>
+        <button class="report-popup-close" (click)="closeDetailsPopup()">&times;</button>
+      </div>
+      <div class="report-popup-body">
+        @if (detailsPopupLoading()) {
+          <p class="no-records">Loading...</p>
+        } @else {
+          @for (row of detailsPopupRows(); track $index) {
+            <div class="dcb-row">
+              <span class="dcb-label">{{ row.name }}</span>
+              <span class="dcb-amt">{{ formatCurrency(row.amount) }}</span>
+            </div>
+          } @empty {
+            <p class="no-records">{{ 'msg.no.records' | i18n }}</p>
+          }
+          <div class="dcb-row dcb-total">
+            <span class="dcb-label">{{ 'dcb.popup.total' | i18n }}</span>
+            <span class="dcb-amt">{{ formatCurrency(detailsPopupTotal()) }}</span>
+          </div>
+        }
       </div>
     </div>
   </div>

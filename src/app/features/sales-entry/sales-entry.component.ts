@@ -19,7 +19,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { formatCurrency, formatTotalWithPrecision, maxDecimalPlaces } from '../../core/utils/currency-format.util';
 import { formatDate } from '../../core/utils/date.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
-import { roundOff } from '../../core/utils/round-off.util';
+import { formatWeight, formatWeightTotal, maxWeightDecimalPlaces, roundOff } from '../../core/utils/round-off.util';
 import { formatApiDate, isDecimal } from '../../core/utils/sales.util';
 
 interface SalesRow {
@@ -154,6 +154,7 @@ export class SalesEntryComponent implements OnInit {
   protected readonly bagConfigs = signal<BagCountConfigRow[]>([]);
 
   protected readonly formatCurrency = formatCurrency;
+  protected readonly formatWeight = formatWeight;
 
   protected readonly bagLimits = computed(() => {
     const farmer = this.farmer().trim();
@@ -192,7 +193,7 @@ export class SalesEntryComponent implements OnInit {
     }
     return {
       bag: String(bag),
-      qty: formatTotalWithPrecision(qty, maxDecimalPlaces(qtyValues)),
+      qty: formatWeightTotal(qty, maxWeightDecimalPlaces(qtyValues)),
       amount: formatTotalWithPrecision(amount, maxDecimalPlaces(amountValues)),
     };
   });
@@ -586,7 +587,7 @@ export class SalesEntryComponent implements OnInit {
         '<tr>' +
         '<td class="left">' + (i + 1) + '</td>' +
         '<td class="left">' + (row.flowerType || '-') + '</td>' +
-        '<td class="right">' + (row.totalWeight || '-') + '</td>' +
+        '<td class="right">' + (row.totalWeight ? this.formatWeight(row.totalWeight) : '-') + '</td>' +
         '<td class="right">' + (row.price || '-') + '</td>' +
         '<td class="right">' + (row.amount || '-') + '</td>' +
         '</tr>';
@@ -697,7 +698,7 @@ export class SalesEntryComponent implements OnInit {
 
     rows.forEach((row, i) => {
       lines.push(
-        (i + 1) + '     | ' + (row.flowerType || '-') + ' | ' + (row.totalWeight || '-') + ' | ' +
+        (i + 1) + '     | ' + (row.flowerType || '-') + ' | ' + (row.totalWeight ? this.formatWeight(row.totalWeight) : '-') + ' | ' +
         (row.price || '-') + ' | ' + (row.amount || '-') + ' | ' + (row.customerName || '-'),
       );
     });

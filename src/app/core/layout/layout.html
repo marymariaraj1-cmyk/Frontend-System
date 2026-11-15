@@ -147,6 +147,19 @@
                 </a>
               </li>
             }
+            @if (auth.user()?.role === 'ROLE_ADMIN') {
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  routerLink="/clients"
+                  routerLinkActive="active"
+                  [attr.title]="collapsed() ? ('sidebar.client.master' | i18n) : null"
+                >
+                  <span class="nav-icon material-symbols-rounded">store</span>
+                  <span class="nav-label">{{ 'sidebar.client.master' | i18n }}</span>
+                </a>
+              </li>
+            }
           </ul>
         </div>
 

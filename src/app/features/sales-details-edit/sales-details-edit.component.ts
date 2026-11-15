@@ -19,7 +19,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { formatCurrency, formatTotalWithPrecision, maxDecimalPlaces } from '../../core/utils/currency-format.util';
 import { formatDate } from '../../core/utils/date.util';
 import { extractErrorMessage } from '../../core/utils/http-error.util';
-import { roundOff } from '../../core/utils/round-off.util';
+import { formatWeight, formatWeightTotal, maxWeightDecimalPlaces, roundOff } from '../../core/utils/round-off.util';
 import { formatApiDate, isDecimal } from '../../core/utils/sales.util';
 
 interface EditRow {
@@ -169,6 +169,7 @@ export class SalesDetailsEditComponent implements OnInit {
   protected readonly noData = signal(false);
 
   protected readonly formatCurrency = formatCurrency;
+  protected readonly formatWeight = formatWeight;
 
   protected salesNameLabel(value: string): string {
     return value && value.trim() ? value : this.i18n.translate('fls.sale.label');
@@ -211,7 +212,7 @@ export class SalesDetailsEditComponent implements OnInit {
     }
     return {
       bag: String(bag),
-      qty: formatTotalWithPrecision(qty, maxDecimalPlaces(qtyValues)),
+      qty: formatWeightTotal(qty, maxWeightDecimalPlaces(qtyValues)),
       amount: formatTotalWithPrecision(amount, maxDecimalPlaces(amountValues)),
     };
   });
@@ -316,8 +317,8 @@ export class SalesDetailsEditComponent implements OnInit {
             origFlower: entry.flowerType ?? '',
             bag: entry.bagCount != null ? String(entry.bagCount) : '',
             origBag: entry.bagCount != null ? String(entry.bagCount) : '',
-            weight: this.formatDecimal(entry.totalWeight),
-            origWeight: this.formatDecimal(entry.totalWeight),
+            weight: entry.totalWeight != null ? formatWeight(entry.totalWeight) : '',
+            origWeight: entry.totalWeight != null ? formatWeight(entry.totalWeight) : '',
             rate: this.formatDecimal(entry.perKgRate),
             origRate: this.formatDecimal(entry.perKgRate),
             amount: this.formatDecimal(entry.price),
@@ -570,7 +571,7 @@ export class SalesDetailsEditComponent implements OnInit {
         '<tr>' +
         '<td class="left">' + (i + 1) + '</td>' +
         '<td class="left">' + (row.flower || '-') + '</td>' +
-        '<td class="right">' + (row.weight || '-') + '</td>' +
+        '<td class="right">' + (row.weight ? this.formatWeight(row.weight) : '-') + '</td>' +
         '<td class="right">' + (row.rate || '-') + '</td>' +
         '<td class="right">' + (row.amount || '-') + '</td>' +
         '<td class="left">' + this.salesNameLabel(row.customer) + '</td>' +
